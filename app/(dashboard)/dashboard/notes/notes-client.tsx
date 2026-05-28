@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getErrorMessage } from "@/utils/errors";
 import { createNote, deleteNote, updateNote } from "./actions";
 
 interface NotesClientProps {
@@ -65,8 +66,8 @@ export function NotesClient({ initialNotes }: NotesClientProps) {
       } else {
         toast.error("Failed to create note");
       }
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -92,8 +93,8 @@ export function NotesClient({ initialNotes }: NotesClientProps) {
       } else {
         toast.error(res.error || "Failed to save note");
       }
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -112,8 +113,8 @@ export function NotesClient({ initialNotes }: NotesClientProps) {
         } else {
           toast.error(res.error || "Failed to delete note");
         }
-      } catch (err: any) {
-        toast.error(err.message);
+      } catch (err: unknown) {
+        toast.error(getErrorMessage(err));
       } finally {
         setIsLoading(false);
       }

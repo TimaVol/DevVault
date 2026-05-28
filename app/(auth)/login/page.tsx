@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getErrorMessage } from "@/utils/errors";
 import { signInWithEmail, signUpWithEmail } from "./actions";
 
 export default function LoginPage() {
@@ -56,8 +57,8 @@ export default function LoginPage() {
           toast.error(res.error || "Invalid email or password");
         }
       }
-    } catch (err: any) {
-      toast.error(err.message || "An unexpected error occurred");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

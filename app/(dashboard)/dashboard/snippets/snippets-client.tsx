@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getErrorMessage } from "@/utils/errors";
 import { deleteSnippet } from "./actions";
 import { SnippetDialog } from "@/components/layout/snippet-dialog";
 
@@ -52,8 +53,8 @@ export function SnippetsClient({ initialSnippets }: SnippetsClientProps) {
         } else {
           toast.error(res.error || "Failed to delete snippet");
         }
-      } catch (err: any) {
-        toast.error(err.message || "An unexpected error occurred");
+      } catch (err: unknown) {
+        toast.error(getErrorMessage(err));
       }
     }
   };

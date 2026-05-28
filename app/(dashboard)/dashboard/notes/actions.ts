@@ -5,6 +5,7 @@ import { notes } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { getErrorMessage } from "@/utils/errors";
 
 export async function createNote(data: {
   title: string;
@@ -32,8 +33,8 @@ export async function createNote(data: {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/notes");
     return { success: true, note: newNote };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: getErrorMessage(err) };
   }
 }
 
@@ -69,8 +70,8 @@ export async function updateNote(
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/notes");
     return { success: true, note: updatedNote };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: getErrorMessage(err) };
   }
 }
 
@@ -95,7 +96,7 @@ export async function deleteNote(id: string) {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/notes");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: getErrorMessage(err) };
   }
 }

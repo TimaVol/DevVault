@@ -5,6 +5,7 @@ import { snippets } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { getErrorMessage } from "@/utils/errors";
 
 export async function createSnippet(data: {
   title: string;
@@ -36,8 +37,8 @@ export async function createSnippet(data: {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/snippets");
     return { success: true, snippet: newSnippet };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: getErrorMessage(err) };
   }
 }
 
@@ -75,8 +76,8 @@ export async function updateSnippet(
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/snippets");
     return { success: true, snippet: updatedSnippet };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: getErrorMessage(err) };
   }
 }
 
@@ -101,7 +102,7 @@ export async function deleteSnippet(id: string) {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/snippets");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: getErrorMessage(err) };
   }
 }

@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getErrorMessage } from "@/utils/errors";
 import { createChecklist, deleteChecklist, toggleChecklistItem } from "./actions";
 
 interface ChecklistsClientProps {
@@ -55,8 +56,8 @@ export function ChecklistsClient({ initialChecklists }: ChecklistsClientProps) {
       } else {
         toast.error("Failed to toggle item state");
       }
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -69,8 +70,8 @@ export function ChecklistsClient({ initialChecklists }: ChecklistsClientProps) {
         } else {
           toast.error(res.error || "Failed to delete checklist");
         }
-      } catch (err: any) {
-        toast.error(err.message);
+      } catch (err: unknown) {
+        toast.error(getErrorMessage(err));
       }
     }
   };
@@ -101,8 +102,8 @@ export function ChecklistsClient({ initialChecklists }: ChecklistsClientProps) {
       } else {
         toast.error(res.error || "Failed to create checklist");
       }
-    } catch (err: any) {
-      toast.error(err.message || "An unexpected error occurred");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

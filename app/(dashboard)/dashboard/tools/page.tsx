@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getErrorMessage } from "@/utils/errors";
 
 type ActiveTool = "json" | "base64" | "jwt" | "url" | "regex";
 
@@ -45,8 +46,8 @@ export default function ToolsPage() {
       const parsed = JSON.parse(jsonInput);
       setJsonOutput(JSON.stringify(parsed, null, jsonIndent));
       toast.success("JSON Formatted successfully");
-    } catch (err: any) {
-      setJsonOutput(`[ERROR] Invalid JSON:\n${err.message}`);
+    } catch (err: unknown) {
+      setJsonOutput(`[ERROR] Invalid JSON:\n${getErrorMessage(err)}`);
       toast.error("Invalid JSON input");
     }
   };
@@ -57,8 +58,8 @@ export default function ToolsPage() {
       const parsed = JSON.parse(jsonInput);
       setJsonOutput(JSON.stringify(parsed));
       toast.success("JSON Minified");
-    } catch (err: any) {
-      setJsonOutput(`[ERROR] Invalid JSON:\n${err.message}`);
+    } catch (err: unknown) {
+      setJsonOutput(`[ERROR] Invalid JSON:\n${getErrorMessage(err)}`);
       toast.error("Invalid JSON input");
     }
   };
@@ -71,8 +72,8 @@ export default function ToolsPage() {
     try {
       setB64Output(btoa(b64Input));
       toast.success("Encoded successfully");
-    } catch (err: any) {
-      setB64Output(`[ERROR] Encoding failed:\n${err.message}`);
+    } catch (err: unknown) {
+      setB64Output(`[ERROR] Encoding failed:\n${getErrorMessage(err)}`);
     }
   };
 
@@ -80,8 +81,8 @@ export default function ToolsPage() {
     try {
       setB64Output(atob(b64Input));
       toast.success("Decoded successfully");
-    } catch (err: any) {
-      setB64Output(`[ERROR] Decoding failed:\n${err.message}`);
+    } catch (err: unknown) {
+      setB64Output(`[ERROR] Decoding failed:\n${getErrorMessage(err)}`);
       toast.error("Invalid Base64 string");
     }
   };
@@ -107,9 +108,9 @@ export default function ToolsPage() {
       setJwtHeader(JSON.stringify(JSON.parse(headerDecoded), null, 2));
       setJwtPayload(JSON.stringify(JSON.parse(payloadDecoded), null, 2));
       toast.success("JWT decoded successfully");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setJwtHeader("");
-      setJwtPayload(`[ERROR] JWT Decoding failed:\n${err.message}`);
+      setJwtPayload(`[ERROR] JWT Decoding failed:\n${getErrorMessage(err)}`);
       toast.error("Failed to decode token");
     }
   };
@@ -163,8 +164,8 @@ export default function ToolsPage() {
 
       setRegexMatches(matches);
       toast.success(`Regex matched ${matches.length} instances`);
-    } catch (err: any) {
-      setRegexMatches([`[ERROR] Invalid Regex: ${err.message}`]);
+    } catch (err: unknown) {
+      setRegexMatches([`[ERROR] Invalid Regex: ${getErrorMessage(err)}`]);
       toast.error("Invalid Regex pattern");
     }
   };

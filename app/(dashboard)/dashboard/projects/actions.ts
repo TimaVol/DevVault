@@ -6,6 +6,8 @@ import { eq, and } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+import { getErrorMessage } from "@/utils/errors";
+
 export async function createProject(data: {
   name: string;
   description?: string;
@@ -38,8 +40,9 @@ export async function createProject(data: {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/projects");
     return { success: true, project: newProject };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const errorMessage = getErrorMessage(err);
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -78,8 +81,9 @@ export async function updateProject(
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/projects");
     return { success: true, project: updatedProject };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const errorMessage = getErrorMessage(err);
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -104,7 +108,8 @@ export async function deleteProject(id: string) {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/projects");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    const errorMessage = getErrorMessage(err);
+    return { success: false, error: errorMessage };
   }
 }

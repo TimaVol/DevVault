@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getErrorMessage } from "@/utils/errors";
 import { createProject, deleteProject, updateProject } from "./actions";
 
 interface ProjectsClientProps {
@@ -69,8 +70,8 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
         } else {
           toast.error(res.error || "Failed to delete project");
         }
-      } catch (err: any) {
-        toast.error(err.message || "An unexpected error occurred");
+      } catch (err: unknown) {
+        toast.error(getErrorMessage(err));
       }
     }
   };
@@ -125,8 +126,8 @@ export function ProjectsClient({ initialProjects }: ProjectsClientProps) {
           toast.error(res.error || "Failed to create project");
         }
       }
-    } catch (err: any) {
-      toast.error(err.message || "An unexpected error occurred");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

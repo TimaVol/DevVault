@@ -5,6 +5,7 @@ import { checklists, checklistItems } from "@/lib/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { getErrorMessage } from "@/utils/errors";
 
 export async function createChecklist(data: {
   title: string;
@@ -44,8 +45,8 @@ export async function createChecklist(data: {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/checklists");
     return { success: true, checklist: newChecklist };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: getErrorMessage(err) };
   }
 }
 
@@ -67,8 +68,8 @@ export async function toggleChecklistItem(id: string, isCompleted: boolean) {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/checklists");
     return { success: true, item: updated };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: getErrorMessage(err) };
   }
 }
 
@@ -93,7 +94,7 @@ export async function deleteChecklist(id: string) {
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/checklists");
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: getErrorMessage(err) };
   }
 }
