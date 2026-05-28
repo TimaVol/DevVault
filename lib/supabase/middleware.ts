@@ -32,7 +32,31 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
+  const isLoginRoute = request.nextUrl.pathname === "/login";
+
+  if (isDashboardRoute && !user) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    // Propagate cookie changes
+    const response = NextResponse.redirect(redirectUrl);
+    request.cookies.getAll().forEach((cookie) => {
+      response.cookies.set(cookie.name, cookie.value);
+    });
+    return response;
+  }
+
+  if (isLoginRoute && user) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/dashboard";
+    const response = NextResponse.redirect(redirectUrl);
+    request.cookies.getAll().forEach((cookie) => {
+      response.cookies.set(cookie.name, cookie.value);
+    });
+    return response;
+  }
 
   return supabaseResponse;
 }
