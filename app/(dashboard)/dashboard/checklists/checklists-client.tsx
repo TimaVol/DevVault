@@ -317,7 +317,9 @@ export function ChecklistsClient({ initialChecklists }: ChecklistsClientProps) {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-xs text-muted-foreground italic py-1">// Added items list will appear here</p>
+                    <p className="text-xs text-muted-foreground italic py-1">
+                      {/* Added items list will appear here */}
+                    </p>
                   )}
                 </div>
               </div>

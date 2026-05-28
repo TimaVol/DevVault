@@ -41,8 +41,7 @@ export async function createProject(data: {
     revalidatePath("/dashboard/projects");
     return { success: true, project: newProject };
   } catch (err: unknown) {
-    const errorMessage = getErrorMessage(err);
-    return { success: false, error: errorMessage };
+    return { success: false, error: getErrorMessage(err) };
   }
 }
 

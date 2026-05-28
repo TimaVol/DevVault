@@ -514,7 +514,9 @@ export default function ToolsPage() {
                         </div>
                       )
                     ) : (
-                      <span className="text-muted-foreground text-xs italic">// Match outcomes will render here</span>
+                      <span className="text-muted-foreground text-xs italic">
+                        {/* Match outcomes will render here */}
+                      </span>
                     )}
                   </div>
                 </div>

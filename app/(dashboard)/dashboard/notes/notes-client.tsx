@@ -274,7 +274,10 @@ export function NotesClient({ initialNotes }: NotesClientProps) {
                 
                 {isPreview ? (
                   <div className="flex-1 w-full overflow-y-auto p-4 rounded-md border border-border-subtle bg-background/30 font-sans text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                    {content || <span className="italic text-muted-foreground">// Empty note body</span>}
+                    {content || 
+                    <span className="italic text-muted-foreground">
+                      {/* Empty note body */}
+                    </span>}
                   </div>
                 ) : (
                   <textarea

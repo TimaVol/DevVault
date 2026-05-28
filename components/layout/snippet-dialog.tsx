@@ -6,6 +6,7 @@ import { Loader2, Pin, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createSnippet, updateSnippet } from "@/app/(dashboard)/dashboard/snippets/actions";
+import { getErrorMessage } from "@/utils/errors";
 
 interface SnippetDialogProps {
   isOpen: boolean;
@@ -102,8 +103,8 @@ export function SnippetDialog({ isOpen, onClose, snippet }: SnippetDialogProps) 
           toast.error(res.error || "Failed to create snippet");
         }
       }
-    } catch (err: any) {
-      toast.error(err.message || "An unexpected error occurred");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
