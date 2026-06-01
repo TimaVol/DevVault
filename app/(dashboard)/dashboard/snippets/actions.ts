@@ -1,9 +1,11 @@
 "use server";
 
-import { db } from "@/lib/db";
 import { snippets } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { createClient } from "@/lib/supabase/server";
+import { eq } from "drizzle-orm";
+import {
+  isUnauthorized,
+  requireDrizzleAction,
+} from "@/lib/auth/require-user";
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
 
@@ -14,25 +16,25 @@ export async function createSnippet(data: {
   tags?: string[];
   isPinned?: boolean;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [newSnippet] = await db
-      .insert(snippets)
-      .values({
-        userId: user.id,
-        title: data.title,
-        content: data.content,
-        language: data.language || "javascript",
-        tags: data.tags || [],
-        isPinned: data.isPinned || false,
-      })
-      .returning();
+    const [newSnippet] = await ctx.rls((tx) =>
+      tx
+        .insert(snippets)
+        .values({
+          userId: ctx.user.id,
+          title: data.title,
+          content: data.content,
+          language: data.language || "javascript",
+          tags: data.tags || [],
+          isPinned: data.isPinned || false,
+        })
+        .returning(),
+    );
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/snippets");
@@ -50,24 +52,24 @@ export async function updateSnippet(
     language?: string;
     tags?: string[];
     isPinned?: boolean;
-  }
+  },
 ) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [updatedSnippet] = await db
-      .update(snippets)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(snippets.id, id), eq(snippets.userId, user.id)))
-      .returning();
+    const [updatedSnippet] = await ctx.rls((tx) =>
+      tx
+        .update(snippets)
+        .set({
+          ...data,
+          updatedAt: new Date(),
+        })
+        .where(eq(snippets.id, id))
+        .returning(),
+    );
 
     if (!updatedSnippet) {
       return { success: false, error: "Snippet not found or unauthorized" };
@@ -82,18 +84,15 @@ export async function updateSnippet(
 }
 
 export async function deleteSnippet(id: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [deleted] = await db
-      .delete(snippets)
-      .where(and(eq(snippets.id, id), eq(snippets.userId, user.id)))
-      .returning();
+    const [deleted] = await ctx.rls((tx) =>
+      tx.delete(snippets).where(eq(snippets.id, id)).returning(),
+    );
 
     if (!deleted) {
       return { success: false, error: "Snippet not found or unauthorized" };

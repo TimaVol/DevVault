@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -13,7 +13,6 @@ import {
   Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,18 +23,12 @@ const navItems = [
   { href: "/dashboard/notes", label: "Notes", icon: StickyNote },
 ];
 
-export function DashboardSidebar() {
+export function DashboardSidebar({
+  userEmail,
+}: {
+  userEmail: string | null;
+}) {
   const pathname = usePathname();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.email) {
-        setUserEmail(user.email);
-      }
-    });
-  }, []);
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col gap-4 border-r border-border-subtle bg-surface-container-lowest p-4 md:flex justify-between">

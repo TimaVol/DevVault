@@ -1,11 +1,25 @@
 "use server";
 
-import { db } from "@/lib/db";
-import { projects } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { projects, projectStatusEnum } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
+type ProjectStatus = (typeof projectStatusEnum.enumValues)[number];
+
+function parseProjectStatus(status: string): ProjectStatus {
+  if (
+    status === "backlog" ||
+    status === "active" ||
+    status === "completed"
+  ) {
+    return status;
+  }
+  return "active";
+}
+import {
+  isUnauthorized,
+  requireDrizzleAction,
+} from "@/lib/auth/require-user";
+import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
 
 export async function createProject(data: {
@@ -16,26 +30,26 @@ export async function createProject(data: {
   status: string;
   techStack?: string[];
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [newProject] = await db
-      .insert(projects)
-      .values({
-        userId: user.id,
-        name: data.name,
-        description: data.description || null,
-        repositoryUrl: data.repositoryUrl || null,
-        demoUrl: data.demoUrl || null,
-        status: data.status || "active",
-        techStack: data.techStack || [],
-      })
-      .returning();
+    const [newProject] = await ctx.rls((tx) =>
+      tx
+        .insert(projects)
+        .values({
+          userId: ctx.user.id,
+          name: data.name,
+          description: data.description || null,
+          repositoryUrl: data.repositoryUrl || null,
+          demoUrl: data.demoUrl || null,
+          status: parseProjectStatus(data.status || "active"),
+          techStack: data.techStack || [],
+        })
+        .returning(),
+    );
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/projects");
@@ -54,24 +68,28 @@ export async function updateProject(
     demoUrl?: string;
     status?: string;
     techStack?: string[];
-  }
+  },
 ) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [updatedProject] = await db
-      .update(projects)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(projects.id, id), eq(projects.userId, user.id)))
-      .returning();
+    const { status, ...rest } = data;
+    const [updatedProject] = await ctx.rls((tx) =>
+      tx
+        .update(projects)
+        .set({
+          ...rest,
+          ...(status !== undefined
+            ? { status: parseProjectStatus(status) }
+            : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(projects.id, id))
+        .returning(),
+    );
 
     if (!updatedProject) {
       return { success: false, error: "Project not found or unauthorized" };
@@ -81,24 +99,20 @@ export async function updateProject(
     revalidatePath("/dashboard/projects");
     return { success: true, project: updatedProject };
   } catch (err: unknown) {
-    const errorMessage = getErrorMessage(err);
-    return { success: false, error: errorMessage };
+    return { success: false, error: getErrorMessage(err) };
   }
 }
 
 export async function deleteProject(id: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [deleted] = await db
-      .delete(projects)
-      .where(and(eq(projects.id, id), eq(projects.userId, user.id)))
-      .returning();
+    const [deleted] = await ctx.rls((tx) =>
+      tx.delete(projects).where(eq(projects.id, id)).returning(),
+    );
 
     if (!deleted) {
       return { success: false, error: "Project not found or unauthorized" };
@@ -108,7 +122,6 @@ export async function deleteProject(id: string) {
     revalidatePath("/dashboard/projects");
     return { success: true };
   } catch (err: unknown) {
-    const errorMessage = getErrorMessage(err);
-    return { success: false, error: errorMessage };
+    return { success: false, error: getErrorMessage(err) };
   }
 }

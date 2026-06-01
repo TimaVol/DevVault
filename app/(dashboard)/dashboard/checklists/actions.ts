@@ -1,9 +1,11 @@
 "use server";
 
-import { db } from "@/lib/db";
 import { checklists, checklistItems } from "@/lib/db/schema";
-import { eq, and, asc } from "drizzle-orm";
-import { createClient } from "@/lib/supabase/server";
+import { eq } from "drizzle-orm";
+import {
+  isUnauthorized,
+  requireDrizzleAction,
+} from "@/lib/auth/require-user";
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
 
@@ -12,35 +14,35 @@ export async function createChecklist(data: {
   description?: string;
   items: string[];
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    // 1. Insert checklist
-    const [newChecklist] = await db
-      .insert(checklists)
-      .values({
-        userId: user.id,
-        title: data.title,
-        description: data.description || null,
-      })
-      .returning();
+    const newChecklist = await ctx.rls(async (tx) => {
+      const [checklist] = await tx
+        .insert(checklists)
+        .values({
+          userId: ctx.user.id,
+          title: data.title,
+          description: data.description || null,
+        })
+        .returning();
 
-    // 2. Insert checklist items in bulk or sequence
-    if (data.items && data.items.length > 0) {
-      const itemsToInsert = data.items.map((content, idx) => ({
-        checklistId: newChecklist.id,
-        content,
-        isCompleted: false,
-        position: idx,
-      }));
+      if (data.items && data.items.length > 0) {
+        const itemsToInsert = data.items.map((content, idx) => ({
+          checklistId: checklist.id,
+          content,
+          isCompleted: false,
+          position: idx,
+        }));
 
-      await db.insert(checklistItems).values(itemsToInsert);
-    }
+        await tx.insert(checklistItems).values(itemsToInsert);
+      }
+
+      return checklist;
+    });
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/checklists");
@@ -51,19 +53,23 @@ export async function createChecklist(data: {
 }
 
 export async function toggleChecklistItem(id: string, isCompleted: boolean) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [updated] = await db
-      .update(checklistItems)
-      .set({ isCompleted, updatedAt: new Date() })
-      .where(eq(checklistItems.id, id))
-      .returning();
+    const [updated] = await ctx.rls((tx) =>
+      tx
+        .update(checklistItems)
+        .set({ isCompleted, updatedAt: new Date() })
+        .where(eq(checklistItems.id, id))
+        .returning(),
+    );
+
+    if (!updated) {
+      return { success: false, error: "Item not found or unauthorized" };
+    }
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/checklists");
@@ -74,18 +80,15 @@ export async function toggleChecklistItem(id: string, isCompleted: boolean) {
 }
 
 export async function deleteChecklist(id: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [deleted] = await db
-      .delete(checklists)
-      .where(and(eq(checklists.id, id), eq(checklists.userId, user.id)))
-      .returning();
+    const [deleted] = await ctx.rls((tx) =>
+      tx.delete(checklists).where(eq(checklists.id, id)).returning(),
+    );
 
     if (!deleted) {
       return { success: false, error: "Checklist not found or unauthorized" };

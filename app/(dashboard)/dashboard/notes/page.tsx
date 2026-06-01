@@ -1,25 +1,15 @@
 import React from "react";
-import { redirect } from "next/navigation";
-import { eq, desc } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { desc } from "drizzle-orm";
+import { requireDrizzle } from "@/lib/auth/require-user";
 import { notes } from "@/lib/db/schema";
-import { createClient } from "@/lib/supabase/server";
 import { NotesClient } from "./notes-client";
 
 export default async function NotesPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await requireDrizzle();
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Load user's notes from database
-  const userNotes = await db
-    .select()
-    .from(notes)
-    .where(eq(notes.userId, user.id))
-    .orderBy(desc(notes.createdAt));
+  const userNotes = await db.rls((tx) =>
+    tx.select().from(notes).orderBy(desc(notes.createdAt)),
+  );
 
   return <NotesClient initialNotes={userNotes} />;
 }

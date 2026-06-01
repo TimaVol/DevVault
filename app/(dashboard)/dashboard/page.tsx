@@ -1,60 +1,55 @@
 import React from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { count, desc, eq } from "drizzle-orm";
+import { count, desc } from "drizzle-orm";
 import { CheckSquare, Code2, ExternalLink, FolderKanban, Plus, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { db } from "@/lib/db";
+import { requireDrizzle } from "@/lib/auth/require-user";
 import { checklists, notes, projects, snippets } from "@/lib/db/schema";
-import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await requireDrizzle();
 
-  if (!user) {
-    redirect("/login");
-  }
+  const {
+    snippetsCount,
+    projectsCount,
+    checklistsCount,
+    notesCount,
+    recentSnippets,
+    activeProjects,
+  } = await db.rls(async (tx) => {
+    const [snippetsCountRes] = await tx
+      .select({ value: count() })
+      .from(snippets);
+    const [projectsCountRes] = await tx
+      .select({ value: count() })
+      .from(projects);
+    const [checklistsCountRes] = await tx
+      .select({ value: count() })
+      .from(checklists);
+    const [notesCountRes] = await tx.select({ value: count() }).from(notes);
 
-  // Live queries using Drizzle ORM
-  const [snippetsCountRes] = await db
-    .select({ value: count() })
-    .from(snippets)
-    .where(eq(snippets.userId, user.id));
-  const snippetsCount = snippetsCountRes?.value ?? 0;
+    const recent = await tx
+      .select()
+      .from(snippets)
+      .orderBy(desc(snippets.createdAt))
+      .limit(3);
 
-  const [projectsCountRes] = await db
-    .select({ value: count() })
-    .from(projects)
-    .where(eq(projects.userId, user.id));
-  const projectsCount = projectsCountRes?.value ?? 0;
+    const active = await tx
+      .select()
+      .from(projects)
+      .orderBy(desc(projects.createdAt))
+      .limit(3);
 
-  const [checklistsCountRes] = await db
-    .select({ value: count() })
-    .from(checklists)
-    .where(eq(checklists.userId, user.id));
-  const checklistsCount = checklistsCountRes?.value ?? 0;
-
-  const [notesCountRes] = await db
-    .select({ value: count() })
-    .from(notes)
-    .where(eq(notes.userId, user.id));
-  const notesCount = notesCountRes?.value ?? 0;
-
-  const recentSnippets = await db
-    .select()
-    .from(snippets)
-    .where(eq(snippets.userId, user.id))
-    .orderBy(desc(snippets.createdAt))
-    .limit(3);
-
-  const activeProjects = await db
-    .select()
-    .from(projects)
-    .where(eq(projects.userId, user.id))
-    .orderBy(desc(projects.createdAt))
-    .limit(3);
+    return {
+      snippetsCount: snippetsCountRes?.value ?? 0,
+      projectsCount: projectsCountRes?.value ?? 0,
+      checklistsCount: checklistsCountRes?.value ?? 0,
+      notesCount: notesCountRes?.value ?? 0,
+      recentSnippets: recent,
+      activeProjects: active,
+    };
+  });
 
   const stats = [
     { label: "Snippets", value: snippetsCount.toString(), icon: Code2, href: "/dashboard/snippets" },
@@ -83,7 +78,6 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      {/* Grid count cards */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
@@ -105,9 +99,7 @@ export default async function DashboardPage() {
         })}
       </section>
 
-      {/* Dynamic contents lists */}
       <section className="grid gap-6 lg:grid-cols-2">
-        {/* Recent snippets block */}
         <Card className="border-border-subtle bg-surface-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -146,7 +138,6 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Active projects block */}
         <Card className="border-border-subtle bg-surface-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>

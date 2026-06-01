@@ -1,25 +1,15 @@
 import React from "react";
-import { redirect } from "next/navigation";
-import { eq, desc } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { desc } from "drizzle-orm";
+import { requireDrizzle } from "@/lib/auth/require-user";
 import { projects } from "@/lib/db/schema";
-import { createClient } from "@/lib/supabase/server";
 import { ProjectsClient } from "./projects-client";
 
 export default async function ProjectsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await requireDrizzle();
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Load user's projects from database
-  const userProjects = await db
-    .select()
-    .from(projects)
-    .where(eq(projects.userId, user.id))
-    .orderBy(desc(projects.createdAt));
+  const userProjects = await db.rls((tx) =>
+    tx.select().from(projects).orderBy(desc(projects.createdAt)),
+  );
 
   return <ProjectsClient initialProjects={userProjects} />;
 }

@@ -1,9 +1,11 @@
 "use server";
 
-import { db } from "@/lib/db";
 import { notes } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { createClient } from "@/lib/supabase/server";
+import { eq } from "drizzle-orm";
+import {
+  isUnauthorized,
+  requireDrizzleAction,
+} from "@/lib/auth/require-user";
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
 
@@ -12,23 +14,23 @@ export async function createNote(data: {
   content: string;
   isPinned?: boolean;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [newNote] = await db
-      .insert(notes)
-      .values({
-        userId: user.id,
-        title: data.title,
-        content: data.content,
-        isPinned: data.isPinned || false,
-      })
-      .returning();
+    const [newNote] = await ctx.rls((tx) =>
+      tx
+        .insert(notes)
+        .values({
+          userId: ctx.user.id,
+          title: data.title,
+          content: data.content,
+          isPinned: data.isPinned || false,
+        })
+        .returning(),
+    );
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/notes");
@@ -44,24 +46,24 @@ export async function updateNote(
     title?: string;
     content?: string;
     isPinned?: boolean;
-  }
+  },
 ) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [updatedNote] = await db
-      .update(notes)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(notes.id, id), eq(notes.userId, user.id)))
-      .returning();
+    const [updatedNote] = await ctx.rls((tx) =>
+      tx
+        .update(notes)
+        .set({
+          ...data,
+          updatedAt: new Date(),
+        })
+        .where(eq(notes.id, id))
+        .returning(),
+    );
 
     if (!updatedNote) {
       return { success: false, error: "Note not found or unauthorized" };
@@ -76,18 +78,15 @@ export async function updateNote(
 }
 
 export async function deleteNote(id: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Unauthorized" };
+  const ctx = await requireDrizzleAction();
+  if (isUnauthorized(ctx)) {
+    return ctx;
   }
 
   try {
-    const [deleted] = await db
-      .delete(notes)
-      .where(and(eq(notes.id, id), eq(notes.userId, user.id)))
-      .returning();
+    const [deleted] = await ctx.rls((tx) =>
+      tx.delete(notes).where(eq(notes.id, id)).returning(),
+    );
 
     if (!deleted) {
       return { success: false, error: "Note not found or unauthorized" };

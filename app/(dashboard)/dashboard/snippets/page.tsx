@@ -1,25 +1,15 @@
 import React from "react";
-import { redirect } from "next/navigation";
-import { eq, desc } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { desc } from "drizzle-orm";
+import { requireDrizzle } from "@/lib/auth/require-user";
 import { snippets } from "@/lib/db/schema";
-import { createClient } from "@/lib/supabase/server";
 import { SnippetsClient } from "./snippets-client";
 
 export default async function SnippetsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await requireDrizzle();
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Load user's snippets from the database
-  const userSnippets = await db
-    .select()
-    .from(snippets)
-    .where(eq(snippets.userId, user.id))
-    .orderBy(desc(snippets.createdAt));
+  const userSnippets = await db.rls((tx) =>
+    tx.select().from(snippets).orderBy(desc(snippets.createdAt)),
+  );
 
   return <SnippetsClient initialSnippets={userSnippets} />;
 }

@@ -1,41 +1,33 @@
 import React from "react";
-import { redirect } from "next/navigation";
-import { eq, desc, asc } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { asc, desc, eq } from "drizzle-orm";
+import { requireDrizzle } from "@/lib/auth/require-user";
 import { checklists, checklistItems } from "@/lib/db/schema";
-import { createClient } from "@/lib/supabase/server";
 import { ChecklistsClient } from "./checklists-client";
 
 export default async function ChecklistsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await requireDrizzle();
 
-  if (!user) {
-    redirect("/login");
-  }
+  const enrichedChecklists = await db.rls(async (tx) => {
+    const userChecklists = await tx
+      .select()
+      .from(checklists)
+      .orderBy(desc(checklists.createdAt));
 
-  // Load checklists belonging to the current user
-  const userChecklists = await db
-    .select()
-    .from(checklists)
-    .where(eq(checklists.userId, user.id))
-    .orderBy(desc(checklists.createdAt));
+    return Promise.all(
+      userChecklists.map(async (checklist) => {
+        const items = await tx
+          .select()
+          .from(checklistItems)
+          .where(eq(checklistItems.checklistId, checklist.id))
+          .orderBy(asc(checklistItems.position));
 
-  // Enrich checklists with their corresponding items
-  const enrichedChecklists = await Promise.all(
-    userChecklists.map(async (checklist) => {
-      const items = await db
-        .select()
-        .from(checklistItems)
-        .where(eq(checklistItems.checklistId, checklist.id))
-        .orderBy(asc(checklistItems.position));
-      
-      return {
-        ...checklist,
-        items,
-      };
-    })
-  );
+        return {
+          ...checklist,
+          items,
+        };
+      }),
+    );
+  });
 
   return <ChecklistsClient initialChecklists={enrichedChecklists} />;
 }
