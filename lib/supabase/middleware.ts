@@ -42,9 +42,11 @@ export async function updateSession(request: NextRequest) {
     redirectUrl.pathname = "/login";
     // Propagate cookie changes
     const response = NextResponse.redirect(redirectUrl);
+    
     request.cookies.getAll().forEach((cookie) => {
       response.cookies.set(cookie.name, cookie.value);
     });
+
     return response;
   }
 
@@ -52,9 +54,11 @@ export async function updateSession(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/dashboard";
     const response = NextResponse.redirect(redirectUrl);
+
     request.cookies.getAll().forEach((cookie) => {
       response.cookies.set(cookie.name, cookie.value);
     });
+
     return response;
   }
 

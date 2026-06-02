@@ -40,8 +40,3 @@ export const admin: AppDatabase = drizzle({
   client: adminSql,
   ...drizzleConfig,
 });
-
-/**
- * @deprecated Use `createDrizzleSupabaseClient()` + `.rls()` or `admin` explicitly.
- */
-export const db = admin;
