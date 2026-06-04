@@ -1,195 +1,207 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import {
-  CheckSquare,
-  Loader2,
-  Plus,
-  Trash2,
-  X,
-} from "lucide-react";
+import { CheckSquare, Loader2, Plus, Trash2, X } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { getErrorMessage } from "@/utils/errors";
-import { createChecklist, deleteChecklist, toggleChecklistItem } from "./actions";
+import {
+  createChecklist,
+  deleteChecklist,
+  toggleChecklistItem,
+} from "./actions";
 
-interface ChecklistsClientProps {
-  initialChecklists: any[];
-}
+type ChecklistItem = {
+  id: string;
+  content: string;
+  isCompleted: boolean;
+};
 
-export function ChecklistsClient({ initialChecklists }: ChecklistsClientProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+type Checklist = {
+  id: string;
+  title: string;
+  description: string | null;
+  items: ChecklistItem[];
+};
 
-  // Form states
+export function ChecklistsClient({
+  initialChecklists,
+}: {
+  initialChecklists: Checklist[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [newItemText, setNewItemText] = useState("");
-  const [itemsList, setItemsList] = useState<string[]>([]);
+  const [newItem, setNewItem] = useState("");
+  const [items, setItems] = useState<string[]>([]);
 
-  const handleAddItem = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newItemText.trim()) return;
-    setItemsList([...itemsList, newItemText.trim()]);
-    setNewItemText("");
+  const addItem = () => {
+    if (!newItem.trim()) return;
+    setItems([...items, newItem.trim()]);
+    setNewItem("");
   };
 
-  const handleRemoveItem = (idx: number) => {
-    setItemsList(itemsList.filter((_, i) => i !== idx));
-  };
-
-  const handleCreateChecklist = () => {
-    setTitle("");
-    setDescription("");
-    setNewItemText("");
-    setItemsList([]);
-    setIsDialogOpen(true);
-  };
-
-  const handleToggleItem = async (itemId: string, currentStatus: boolean) => {
-    try {
-      const res = await toggleChecklistItem(itemId, !currentStatus);
-      if (res.success) {
-        toast.success("Item state saved");
-      } else {
-        toast.error("Failed to toggle item state");
-      }
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this checklist?")) {
-      try {
-        const res = await deleteChecklist(id);
-        if (res.success) {
-          toast.success("Checklist deleted successfully!");
-        } else {
-          toast.error(res.error || "Failed to delete checklist");
-        }
-      } catch (err: unknown) {
-        toast.error(getErrorMessage(err));
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      toast.error("Checklist title is required");
+      toast.error("Title is required");
       return;
     }
-    if (itemsList.length === 0) {
-      toast.error("Please add at least one item to the checklist");
+    if (items.length === 0) {
+      toast.error("Add at least one item");
       return;
     }
 
-    setIsLoading(true);
-
+    setLoading(true);
     try {
       const res = await createChecklist({
         title,
         description: description || undefined,
-        items: itemsList,
+        items,
       });
-
       if (res.success) {
-        toast.success("Checklist created successfully!");
-        setIsDialogOpen(false);
+        toast.success("Checklist created");
+        setOpen(false);
+        setTitle("");
+        setDescription("");
+        setItems([]);
       } else {
-        toast.error(res.error || "Failed to create checklist");
+        toast.error(res.error || "Create failed");
       }
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const toggle = async (itemId: string, done: boolean) => {
+    try {
+      const res = await toggleChecklistItem(itemId, !done);
+      if (!res.success) toast.error("Could not update item");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("Delete checklist?")) return;
+    try {
+      const res = await deleteChecklist(id);
+      if (res.success) toast.success("Checklist deleted");
+      else toast.error(res.error || "Delete failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     }
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      
-      {/* Header */}
-      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-subtle pb-6">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
-            Release Checklists
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Build launch templates, audit checklists, and ship production ready features securely.
-          </p>
-        </div>
-        <Button
-          onClick={handleCreateChecklist}
-          size="sm"
-          className="bg-primary hover:bg-primary-container text-primary-foreground font-semibold flex items-center gap-1.5 cursor-pointer self-start md:self-auto h-9"
-        >
-          <Plus className="h-4 w-4" /> Add Checklist
-        </Button>
-      </section>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Checklists"
+        description="Launch templates and repeatable QA flows."
+        actions={
+          <Button
+            onClick={() => {
+              setTitle("");
+              setDescription("");
+              setItems([]);
+              setOpen(true);
+            }}
+          >
+            <Plus data-icon="inline-start" />
+            New checklist
+          </Button>
+        }
+      />
 
-      {/* Checklists grid list */}
-      <section className="grid gap-6 md:grid-cols-2">
-        {initialChecklists.length > 0 ? (
-          initialChecklists.map((checklist) => {
-            const completedCount = checklist.items.filter((i: any) => i.isCompleted).length;
-            const totalCount = checklist.items.length;
-            const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+      {initialChecklists.length === 0 ? (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <CheckSquare />
+            </EmptyMedia>
+            <EmptyTitle>No checklists</EmptyTitle>
+            <EmptyDescription>Create your first launch checklist.</EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button variant="outline" onClick={() => setOpen(true)}>
+              Create checklist
+            </Button>
+          </EmptyContent>
+        </Empty>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {initialChecklists.map((checklist) => {
+            const done = checklist.items.filter((i) => i.isCompleted).length;
+            const total = checklist.items.length;
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
             return (
-              <Card key={checklist.id} className="border-border-subtle bg-surface-card flex flex-col justify-between">
-                <CardContent className="p-5 space-y-4">
-                  {/* Top Info */}
-                  <div className="flex justify-between items-start gap-4">
-                    <div>
-                      <h3 className="text-base font-bold text-foreground">{checklist.title}</h3>
-                      {checklist.description && (
-                        <p className="text-xs text-muted-foreground mt-1">{checklist.description}</p>
-                      )}
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleDelete(checklist.id)}
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0 cursor-pointer"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+              <Card key={checklist.id}>
+                <CardHeader className="flex flex-row items-start justify-between gap-2">
+                  <div>
+                    <CardTitle>{checklist.title}</CardTitle>
+                    {checklist.description ? (
+                      <p className="text-sm text-muted-foreground">{checklist.description}</p>
+                    ) : null}
                   </div>
-
-                  {/* Progress Indicator */}
-                  <div className="space-y-1.5 pt-1">
-                    <div className="flex justify-between items-center text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                      <span>Progress</span>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => remove(checklist.id)}
+                  >
+                    <Trash2 />
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-muted-foreground">
                       <span>
-                        {completedCount} of {totalCount} completed ({percent}%)
+                        {done}/{total} done
                       </span>
+                      <Badge variant="secondary">{pct}%</Badge>
                     </div>
-                    <div className="w-full h-1.5 bg-accent border border-border-subtle rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary transition-all duration-300 rounded-full"
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
+                    <Progress value={pct} />
                   </div>
-
-                  {/* Items list */}
-                  <ul className="space-y-2 border-t border-border-subtle pt-3 mt-2">
-                    {checklist.items.map((item: any) => (
-                      <li
-                        key={item.id}
-                        className="flex items-center gap-3 py-1 text-sm font-medium text-foreground"
-                      >
-                        <input
-                          type="checkbox"
+                  <ul className="space-y-2">
+                    {checklist.items.map((item) => (
+                      <li key={item.id} className="flex items-center gap-2 text-sm">
+                        <Checkbox
                           checked={item.isCompleted}
-                          onChange={() => handleToggleItem(item.id, item.isCompleted)}
-                          className="h-4 w-4 rounded-sm border border-border-subtle bg-input/50 text-primary focus:ring-primary cursor-pointer accent-primary"
+                          onCheckedChange={() => toggle(item.id, item.isCompleted)}
                         />
-                        <span className={item.isCompleted ? "line-through text-muted-foreground" : "text-foreground"}>
+                        <span
+                          className={
+                            item.isCompleted
+                              ? "text-muted-foreground line-through"
+                              : undefined
+                          }
+                        >
                           {item.content}
                         </span>
                       </li>
@@ -198,161 +210,86 @@ export function ChecklistsClient({ initialChecklists }: ChecklistsClientProps) {
                 </CardContent>
               </Card>
             );
-          })
-        ) : (
-          <div className="md:col-span-2 text-center py-16 text-sm text-muted-foreground border border-dashed border-border-subtle rounded-md">
-            <CheckSquare className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="font-medium text-foreground">No checklists found</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Add QA checklists, launch preps, and secure checks to prevent bugs.
-            </p>
-            <Button onClick={handleCreateChecklist} variant="outline" size="sm" className="mt-4 cursor-pointer">
-              Create your first checklist
-            </Button>
-          </div>
-        )}
-      </section>
+          })}
+        </div>
+      )}
 
-      {/* Editor Modal */}
-      {isDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-lg border border-border-subtle bg-surface-card p-6 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-border-subtle pb-4 mb-4">
-              <div>
-                <h2 className="font-display text-lg font-bold text-foreground">Create Launch Checklist</h2>
-                <p className="text-xs text-muted-foreground">Add checks and repeat launch parameters</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsDialogOpen(false)}
-                className="text-muted-foreground hover:text-foreground h-8 w-8 rounded-sm cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Form body */}
-            <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Checklist Title <span className="text-primary">*</span>
-                </label>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New checklist</DialogTitle>
+            <DialogDescription>Add items for your launch or review flow.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submit}>
+            <FieldGroup className="py-2">
+              <Field>
+                <FieldLabel htmlFor="cl-title">Title</FieldLabel>
                 <Input
-                  placeholder="e.g. Production Release Checklist"
+                  id="cl-title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
-                  className="bg-input/50 border-border-subtle text-sm h-10"
                 />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Description
-                </label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="cl-desc">Description</FieldLabel>
                 <Input
-                  placeholder="Summarize when to execute this checklist..."
+                  id="cl-desc"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="bg-input/50 border-border-subtle text-sm h-10"
                 />
-              </div>
-
-              {/* Add item tools */}
-              <div className="border-t border-border-subtle pt-3 space-y-3">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Add Checklist Items <span className="text-primary">*</span>
-                </label>
+              </Field>
+              <Field>
+                <FieldLabel>Items</FieldLabel>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="e.g. Run database migrations"
-                    value={newItemText}
-                    onChange={(e) => setNewItemText(e.target.value)}
+                    value={newItem}
+                    onChange={(e) => setNewItem(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        if (newItemText.trim()) {
-                          setItemsList([...itemsList, newItemText.trim()]);
-                          setNewItemText("");
-                        }
+                        addItem();
                       }
                     }}
-                    className="bg-input/50 border-border-subtle text-sm h-10 flex-1"
+                    placeholder="Add item…"
                   />
-                  <Button
-                    type="button"
-                    onClick={(e) => {
-                      if (newItemText.trim()) {
-                        setItemsList([...itemsList, newItemText.trim()]);
-                        setNewItemText("");
-                      }
-                    }}
-                    className="bg-primary hover:bg-primary-container text-primary-foreground cursor-pointer h-10 text-xs px-4"
-                  >
+                  <Button type="button" onClick={addItem}>
                     Add
                   </Button>
                 </div>
-
-                {/* Items draft lists */}
-                <div className="space-y-1.5 max-h-36 overflow-y-auto border border-border-subtle bg-input/20 p-3 rounded-md">
-                  {itemsList.length > 0 ? (
-                    <ul className="space-y-2">
-                      {itemsList.map((item, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-center justify-between gap-3 text-xs bg-accent/40 p-2 rounded border border-border-subtle font-medium text-foreground"
+                {items.length > 0 ? (
+                  <ul className="space-y-1 rounded-md border p-2">
+                    {items.map((item, idx) => (
+                      <li
+                        key={idx}
+                        className="flex items-center justify-between gap-2 text-sm"
+                      >
+                        <span>{item}</span>
+                        <Button
+                          type="button"
+                          size="icon-sm"
+                          variant="ghost"
+                          onClick={() => setItems(items.filter((_, i) => i !== idx))}
                         >
-                          <span>{item}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItem(idx)}
-                            className="text-muted-foreground hover:text-destructive bg-transparent cursor-pointer"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-xs text-muted-foreground italic py-1">
-                      {/* Added items list will appear here */}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Actions footer */}
-              <div className="border-t border-border-subtle pt-4 mt-2 flex justify-end gap-2 shrink-0">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setIsDialogOpen(false)}
-                  className="text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bg-primary hover:bg-primary-container text-primary-foreground font-semibold cursor-pointer"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Checklist"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                          <X />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </Field>
+            </FieldGroup>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? <Loader2 className="animate-spin" /> : "Save"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

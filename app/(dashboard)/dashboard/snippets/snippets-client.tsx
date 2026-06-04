@@ -1,248 +1,223 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   Check,
   Code2,
   Copy,
   Edit2,
-  ExternalLink,
-  Filter,
   Pin,
   Plus,
-  Search,
   Trash2,
 } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
+import { SnippetDialog } from "@/components/layout/snippet-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { getErrorMessage } from "@/utils/errors";
 import { deleteSnippet } from "./actions";
-import { SnippetDialog } from "@/components/layout/snippet-dialog";
 
-interface SnippetsClientProps {
-  initialSnippets: any[];
-}
+type Snippet = {
+  id: string;
+  title: string;
+  content: string;
+  language: string;
+  tags: string[] | null;
+  isPinned: boolean;
+  createdAt: Date | string;
+};
 
-export function SnippetsClient({ initialSnippets }: SnippetsClientProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState("all");
+export function SnippetsClient({ initialSnippets }: { initialSnippets: Snippet[] }) {
+  const [search, setSearch] = useState("");
+  const [language, setLanguage] = useState("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingSnippet, setEditingSnippet] = useState<any | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Snippet | null>(null);
 
-  // Extract unique languages present in snippets
-  const uniqueLanguages = Array.from(
-    new Set(initialSnippets.map((s) => s.language))
-  );
+  const languages = Array.from(new Set(initialSnippets.map((s) => s.language)));
 
-  const handleCopy = (id: string, content: string) => {
-    navigator.clipboard.writeText(content);
+  const filtered = initialSnippets.filter((s) => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      s.title.toLowerCase().includes(q) ||
+      s.content.toLowerCase().includes(q) ||
+      (s.tags?.some((t) => t.toLowerCase().includes(q)) ?? false);
+    const matchesLang = language === "all" || s.language === language;
+    return matchesSearch && matchesLang;
+  });
+
+  const copy = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
     setCopiedId(id);
-    toast.success("Snippet copied to clipboard!");
+    toast.success("Copied to clipboard");
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this snippet?")) {
-      try {
-        const res = await deleteSnippet(id);
-        if (res.success) {
-          toast.success("Snippet deleted successfully!");
-        } else {
-          toast.error(res.error || "Failed to delete snippet");
-        }
-      } catch (err: unknown) {
-        toast.error(getErrorMessage(err));
-      }
+  const remove = async (id: string) => {
+    if (!confirm("Delete this snippet?")) return;
+    try {
+      const res = await deleteSnippet(id);
+      if (res.success) toast.success("Snippet deleted");
+      else toast.error(res.error || "Delete failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     }
   };
 
-  const handleEdit = (snippet: any) => {
-    setEditingSnippet(snippet);
-    setIsDialogOpen(true);
-  };
-
-  const handleCreate = () => {
-    setEditingSnippet(null);
-    setIsDialogOpen(true);
-  };
-
-  // Filter snippets
-  const filteredSnippets = initialSnippets.filter((snippet) => {
-    const matchesSearch =
-      snippet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      snippet.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (snippet.tags &&
-        snippet.tags.some((tag: string) =>
-          tag.toLowerCase().includes(searchQuery.toLowerCase())
-        ));
-
-    const matchesLanguage =
-      selectedLanguage === "all" || snippet.language === selectedLanguage;
-
-    return matchesSearch && matchesLanguage;
-  });
-
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Header section */}
-      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-subtle pb-6">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
-            Code Snippets
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Store, view, and search through your reusable fragments of code.
-          </p>
-        </div>
-        <Button
-          onClick={handleCreate}
-          size="sm"
-          className="bg-primary hover:bg-primary-container text-primary-foreground font-semibold flex items-center gap-1.5 cursor-pointer self-start md:self-auto h-9"
-        >
-          <Plus className="h-4 w-4" /> Add Snippet
-        </Button>
-      </section>
-
-      {/* Filter and Search actions bar */}
-      <section className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search title, content, or tags..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-input/50 border-border-subtle text-sm h-10"
-          />
-        </div>
-        <div className="flex gap-2 shrink-0">
-          <select
-            value={selectedLanguage}
-            onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="rounded-md border border-border-subtle bg-input/50 px-3 h-10 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary cursor-pointer max-w-[160px]"
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Snippets"
+        description="Search and manage reusable code fragments."
+        actions={
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setDialogOpen(true);
+            }}
           >
-            <option value="all">All Languages</option>
-            {uniqueLanguages.map((lang: any) => (
-              <option key={lang} value={lang} className="bg-surface-card">
-                {lang.charAt(0).toUpperCase() + lang.slice(1)}
-              </option>
+            <Plus data-icon="inline-start" />
+            Add snippet
+          </Button>
+        }
+      />
+
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Input
+          placeholder="Search title, content, tags…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1"
+        />
+        <Select value={language} onValueChange={(v) => v && setLanguage(v)}>
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue placeholder="Language" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All languages</SelectItem>
+            {languages.map((lang) => (
+              <SelectItem key={lang} value={lang}>
+                {lang}
+              </SelectItem>
             ))}
-          </select>
-        </div>
-      </section>
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Listings Grid */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredSnippets.length > 0 ? (
-          filteredSnippets.map((snippet) => (
-            <Card
-              key={snippet.id}
-              className={`relative overflow-hidden transition-all duration-200 border-border-subtle bg-surface-card hover:border-primary/20 ${
-                snippet.isPinned ? "ring-1 ring-primary/20 border-primary/20 bg-surface-card" : ""
-              }`}
+      {filtered.length === 0 ? (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Code2 />
+            </EmptyMedia>
+            <EmptyTitle>No snippets</EmptyTitle>
+            <EmptyDescription>
+              Adjust filters or create your first snippet.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditing(null);
+                setDialogOpen(true);
+              }}
             >
-              <CardContent className="p-5 space-y-4">
-                {/* Card Title & Info */}
+              Create snippet
+            </Button>
+          </EmptyContent>
+        </Empty>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((snippet) => (
+            <Card key={snippet.id} size="sm">
+              <CardHeader>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-foreground truncate group-hover:text-primary leading-tight">
-                      {snippet.title}
-                    </h3>
-                    <span className="inline-block text-[10px] font-mono uppercase tracking-widest text-muted-foreground mt-1">
-                      {snippet.language}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {snippet.isPinned && (
-                      <Pin className="h-3.5 w-3.5 text-primary fill-primary" />
-                    )}
-                  </div>
+                  <CardTitle className="line-clamp-1">{snippet.title}</CardTitle>
+                  {snippet.isPinned ? (
+                    <Pin className="size-4 shrink-0 text-primary" />
+                  ) : null}
                 </div>
-
-                {/* Snippet body preview */}
-                <div className="relative rounded-md bg-background/50 border border-border-subtle p-3 font-mono text-[10px] text-foreground leading-relaxed overflow-hidden h-28 max-h-28">
-                  <pre className="overflow-x-auto select-all h-full pr-4">{snippet.content}</pre>
-                  <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-surface-card to-transparent pointer-events-none" />
-                </div>
-
-                {/* Tags lists */}
-                {snippet.tags && snippet.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {snippet.tags.map((tag: string) => (
-                      <span
-                        key={tag}
-                        onClick={() => setSearchQuery(tag)}
-                        className="text-[9px] font-mono px-2 py-0.5 rounded bg-primary/10 hover:bg-primary/20 text-primary border border-primary/10 cursor-pointer uppercase transition-colors"
-                      >
+                <Badge variant="outline">{snippet.language}</Badge>
+              </CardHeader>
+              <CardContent>
+                <pre className="max-h-28 overflow-hidden rounded-md border bg-muted/40 p-2 font-mono text-[11px] leading-relaxed">
+                  {snippet.content}
+                </pre>
+                {snippet.tags && snippet.tags.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {snippet.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary">
                         {tag}
-                      </span>
+                      </Badge>
                     ))}
                   </div>
-                )}
-
-                {/* Bottom Row Actions */}
-                <div className="flex items-center justify-between border-t border-border-subtle pt-3">
-                  <span className="text-[9px] font-mono text-muted-foreground">
-                    {new Date(snippet.createdAt).toLocaleDateString()}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleCopy(snippet.id, snippet.content)}
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
-                      title="Copy Code"
-                    >
-                      {copiedId === snippet.id ? (
-                        <Check className="h-3.5 w-3.5 text-accent-lime" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleEdit(snippet)}
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
-                      title="Edit"
-                    >
-                      <Edit2 className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => handleDelete(snippet.id)}
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive cursor-pointer"
-                      title="Delete"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
+                ) : null}
               </CardContent>
+              <CardFooter className="justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {new Date(snippet.createdAt).toLocaleDateString()}
+                </span>
+                <div className="flex gap-1">
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => copy(snippet.id, snippet.content)}
+                  >
+                    {copiedId === snippet.id ? <Check /> : <Copy />}
+                  </Button>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setEditing(snippet);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <Edit2 />
+                  </Button>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={() => remove(snippet.id)}
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              </CardFooter>
             </Card>
-          ))
-        ) : (
-          <div className="sm:col-span-2 lg:col-span-3 text-center py-16 text-sm text-muted-foreground border border-dashed border-border-subtle rounded-md">
-            <Code2 className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="font-medium text-foreground">No snippets found</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Try modifying your search filter or create a new code snippet.
-            </p>
-            <Button onClick={handleCreate} variant="outline" size="sm" className="mt-4 cursor-pointer">
-              Create your first snippet
-            </Button>
-          </div>
-        )}
-      </section>
+          ))}
+        </div>
+      )}
 
-      {/* Snippet Dialog modal */}
       <SnippetDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        snippet={editingSnippet}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        snippet={editing}
       />
     </div>
   );

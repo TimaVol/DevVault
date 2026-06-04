@@ -98,10 +98,25 @@ app/           # Routes (marketing, auth, dashboard)
 components/    # UI and layout components
 lib/           # Supabase clients, Drizzle, utils
 hooks/         # Client hooks
-types/         # Shared TypeScript types
-utils/         # Constants and helpers
+utils/         # Helpers (e.g. errors)
 ```
 
 ## Design
 
 See [DESIGN.md](./DESIGN.md) for tokens, typography, and layout rules.
+
+### UI (shadcn/ui)
+
+Initialized with the [shadcn CLI](https://ui.shadcn.com) (`base-nova` style). Add primitives:
+
+```bash
+pnpm dlx shadcn@latest add <component> -y -o
+```
+
+| Area | Path |
+|------|------|
+| Primitives | `components/ui/*` |
+| App shell | `DashboardLayout`, `AppSidebar` in `components/layout/` |
+| Page chrome | `PageHeader`, `AuthShell`, `SiteHeader` |
+
+Dashboard routes use `SidebarProvider` + `SidebarInset`; page content is `flex flex-col gap-6` with shadcn `Card`, `Empty`, `Dialog`, etc. Links styled as buttons use `buttonVariants` + `Link` (not `Button` + `render={<Link />}` — Base UI expects a real `<button>` unless `nativeButton={false}`).

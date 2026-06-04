@@ -1,18 +1,29 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Pin, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Loader2, Pin } from "lucide-react";
 import { createSnippet, updateSnippet } from "@/app/(dashboard)/dashboard/snippets/actions";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/utils/errors";
-
-interface SnippetDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  snippet?: any; // If passed, we are in Edit Mode
-}
 
 const LANGUAGES = [
   { value: "javascript", label: "JavaScript" },
@@ -21,15 +32,32 @@ const LANGUAGES = [
   { value: "sql", label: "SQL" },
   { value: "html", label: "HTML" },
   { value: "css", label: "CSS" },
-  { value: "bash", label: "Bash/Shell" },
+  { value: "bash", label: "Bash" },
   { value: "go", label: "Go" },
   { value: "rust", label: "Rust" },
   { value: "json", label: "JSON" },
   { value: "yaml", label: "YAML" },
   { value: "plaintext", label: "Plaintext" },
-];
+] as const;
 
-export function SnippetDialog({ isOpen, onClose, snippet }: SnippetDialogProps) {
+type Snippet = {
+  id: string;
+  title?: string;
+  content?: string;
+  language?: string;
+  tags?: string[] | null;
+  isPinned?: boolean;
+};
+
+export function SnippetDialog({
+  open,
+  onOpenChange,
+  snippet,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  snippet?: Snippet | null;
+}) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [language, setLanguage] = useState("javascript");
@@ -38,12 +66,13 @@ export function SnippetDialog({ isOpen, onClose, snippet }: SnippetDialogProps) 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    if (!open) return;
     if (snippet) {
       setTitle(snippet.title || "");
       setContent(snippet.content || "");
       setLanguage(snippet.language || "javascript");
-      setTagsInput(snippet.tags ? snippet.tags.join(", ") : "");
-      setIsPinned(snippet.isPinned || false);
+      setTagsInput(snippet.tags?.join(", ") ?? "");
+      setIsPinned(snippet.isPinned ?? false);
     } else {
       setTitle("");
       setContent("");
@@ -51,57 +80,37 @@ export function SnippetDialog({ isOpen, onClose, snippet }: SnippetDialogProps) 
       setTagsInput("");
       setIsPinned(false);
     }
-  }, [snippet, isOpen]);
-
-  if (!isOpen) return null;
+  }, [snippet, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      toast.error("Please fill in all required fields");
+      toast.error("Title and content are required");
       return;
     }
 
-    const tagsArray = tagsInput
+    const tags = tagsInput
       .split(",")
       .map((t) => t.trim())
-      .filter((t) => t.length > 0);
+      .filter(Boolean);
 
     setIsLoading(true);
-
     try {
-      if (snippet) {
-        // Update mode
-        const res = await updateSnippet(snippet.id, {
-          title,
-          content,
-          language,
-          tags: tagsArray,
-          isPinned,
-        });
+      const res = snippet
+        ? await updateSnippet(snippet.id, {
+            title,
+            content,
+            language,
+            tags,
+            isPinned,
+          })
+        : await createSnippet({ title, content, language, tags, isPinned });
 
-        if (res.success) {
-          toast.success("Snippet updated successfully!");
-          onClose();
-        } else {
-          toast.error(res.error || "Failed to update snippet");
-        }
+      if (res.success) {
+        toast.success(snippet ? "Snippet updated" : "Snippet created");
+        onOpenChange(false);
       } else {
-        // Create mode
-        const res = await createSnippet({
-          title,
-          content,
-          language,
-          tags: tagsArray,
-          isPinned,
-        });
-
-        if (res.success) {
-          toast.success("Snippet created successfully!");
-          onClose();
-        } else {
-          toast.error(res.error || "Failed to create snippet");
-        }
+        toast.error(res.error || "Something went wrong");
       }
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
@@ -111,145 +120,83 @@ export function SnippetDialog({ isOpen, onClose, snippet }: SnippetDialogProps) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl rounded-lg border border-border-subtle bg-surface-card p-6 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border-subtle pb-4 mb-4">
-          <div>
-            <h2 className="font-display text-lg font-bold text-foreground">
-              {snippet ? "Edit Code Snippet" : "Create New Snippet"}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Store reusable code bits with easy syntax tags
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground h-8 w-8 rounded-sm cursor-pointer"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {/* Title */}
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Title <span className="text-primary">*</span>
-              </label>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{snippet ? "Edit snippet" : "New snippet"}</DialogTitle>
+          <DialogDescription>
+            Store reusable code with language and tags.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <FieldGroup className="py-2">
+            <Field>
+              <FieldLabel htmlFor="snippet-title">Title</FieldLabel>
               <Input
-                placeholder="e.g. Supabase Server Client Initializer"
+                id="snippet-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                className="bg-input/50 border-border-subtle text-sm h-10"
               />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel>Language</FieldLabel>
+                <Select value={language} onValueChange={(v) => v && setLanguage(v)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LANGUAGES.map((lang) => (
+                      <SelectItem key={lang.value} value={lang.value}>
+                        {lang.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel>Pinned</FieldLabel>
+                <Button
+                  type="button"
+                  variant={isPinned ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => setIsPinned(!isPinned)}
+                >
+                  <Pin className={isPinned ? "fill-current" : undefined} />
+                  {isPinned ? "Pinned" : "Not pinned"}
+                </Button>
+              </Field>
             </div>
-
-            {/* Language */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Syntax / Language
-              </label>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="w-full rounded-md border border-border-subtle bg-input/50 px-3 h-10 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary cursor-pointer"
-              >
-                {LANGUAGES.map((lang) => (
-                  <option key={lang.value} value={lang.value} className="bg-surface-card">
-                    {lang.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Pinned toggle */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Workspace Pin status
-              </label>
-              <button
-                type="button"
-                onClick={() => setIsPinned(!isPinned)}
-                className={`w-full flex items-center justify-between rounded-md border px-3 h-10 text-sm font-medium transition-colors cursor-pointer ${
-                  isPinned
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-border-subtle bg-input/50 text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <Pin className={`h-4 w-4 ${isPinned ? "fill-primary" : ""}`} />
-                  {isPinned ? "Pinned Snippet" : "Unpinned Snippet"}
-                </span>
-                <span className="text-[10px] uppercase font-mono tracking-wider">
-                  {isPinned ? "Active" : "Off"}
-                </span>
-              </button>
-            </div>
-
-            {/* Tags */}
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Tags (Comma-separated)
-              </label>
+            <Field>
+              <FieldLabel htmlFor="snippet-tags">Tags (comma-separated)</FieldLabel>
               <Input
-                placeholder="e.g. auth, supabase, utils, backend"
+                id="snippet-tags"
                 value={tagsInput}
                 onChange={(e) => setTagsInput(e.target.value)}
-                className="bg-input/50 border-border-subtle text-sm h-10"
               />
-            </div>
-
-            {/* Content (Textarea) */}
-            <div className="space-y-1.5 sm:col-span-2 flex-1 flex flex-col">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Code Content <span className="text-primary">*</span>
-              </label>
-              <textarea
-                placeholder="// Write your code snippet here..."
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="snippet-content">Code</FieldLabel>
+              <Textarea
+                id="snippet-content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                className="min-h-[200px] font-mono text-xs"
                 required
-                className="w-full flex-1 min-h-[220px] rounded-md border border-border-subtle bg-input/50 p-4 font-mono text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary leading-relaxed resize-none"
               />
-            </div>
-          </div>
-
-          {/* Footer Actions */}
-          <div className="border-t border-border-subtle pt-4 mt-2 flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onClose}
-              className="text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer"
-            >
+            </Field>
+          </FieldGroup>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="bg-primary hover:bg-primary-container text-primary-foreground font-semibold cursor-pointer"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                  Saving...
-                </>
-              ) : snippet ? (
-                "Save Changes"
-              ) : (
-                "Create Snippet"
-              )}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? <Loader2 className="animate-spin" /> : "Save"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

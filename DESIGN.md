@@ -1,5 +1,7 @@
 ---
 name: DevVault Design System
+
+> **Implementation:** Runtime tokens live in `app/globals.css` (shadcn CSS variables). This file is the design reference; use `bg-background`, `text-muted-foreground`, `border-border`, etc. in UI — not legacy names like `border-subtle` or `surface-card`.
 colors:
   surface: '#131313'
   surface-dim: '#131313'

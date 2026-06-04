@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Inter, JetBrains_Mono } from "next/font/google";
-import { Toaster } from "@/components/providers/toaster";
+import { Geist, Inter, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
@@ -37,11 +33,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
+      className={`dark ${geistSans.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans">
-        {children}
-        <Toaster />
+      <body className="min-h-svh">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <TooltipProvider delay={200}>{children}</TooltipProvider>
+          <Toaster richColors closeButton position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

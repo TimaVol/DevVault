@@ -13,8 +13,20 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { FieldLabel } from "@/components/ui/field";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { getErrorMessage } from "@/utils/errors";
 
 type ActiveTool = "json" | "base64" | "jwt" | "url" | "regex";
@@ -179,28 +191,35 @@ export default function ToolsPage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto flex flex-col md:flex-row gap-6">
-      
-      {/* Sidebar Tool Switcher */}
-      <aside className="w-full md:w-56 shrink-0 flex flex-row md:flex-col gap-1 border border-border-subtle bg-surface-card rounded-lg p-2 overflow-x-auto md:overflow-x-visible">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTool === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTool(item.id)}
-              className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-left transition-all shrink-0 cursor-pointer ${
-                isActive
-                  ? "bg-primary text-primary-foreground font-bold shadow-sm"
-                  : "text-muted-foreground hover:bg-accent/40 hover:text-foreground"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Developer tools"
+        description="Built-in utilities for everyday tasks."
+      />
+      <div className="flex flex-col gap-6 md:flex-row">
+      <aside className="w-full shrink-0 md:w-56">
+        <Tabs
+          value={activeTool}
+          onValueChange={(v) => setActiveTool(v as ActiveTool)}
+          orientation="vertical"
+          className="w-full"
+        >
+          <TabsList className="flex h-auto w-full flex-row gap-1 overflow-x-auto md:flex-col">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <TabsTrigger
+                  key={item.id}
+                  value={item.id}
+                  className="shrink-0 justify-start gap-2 px-3 py-2.5 text-xs uppercase"
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{item.label}</span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </Tabs>
       </aside>
 
       {/* Main workspace */}
@@ -208,63 +227,64 @@ export default function ToolsPage() {
         
         {/* JSON Tool Content */}
         {activeTool === "json" && (
-          <Card className="border-border-subtle bg-surface-card h-full flex flex-col">
+          <Card className="h-full flex flex-col">
             <CardHeader className="flex flex-row items-start justify-between">
               <div>
-                <CardTitle className="font-display text-lg font-bold">JSON Formatter & Validator</CardTitle>
+                <CardTitle>JSON Formatter & Validator</CardTitle>
                 <CardDescription className="text-xs">Format, minify, and validate JSON payloads instantly</CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={jsonIndent}
-                  onChange={(e) => setJsonIndent(Number(e.target.value))}
-                  className="rounded-md border border-border-subtle bg-input px-2 py-1 text-xs font-medium text-foreground cursor-pointer"
-                >
-                  <option value={2}>2 Spaces</option>
-                  <option value={4}>4 Spaces</option>
-                </select>
-              </div>
+              <Select
+                value={String(jsonIndent)}
+                onValueChange={(v) => v && setJsonIndent(Number(v))}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2">2 spaces</SelectItem>
+                  <SelectItem value="4">4 spaces</SelectItem>
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent className="space-y-4 flex-1 flex flex-col min-h-[480px]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                 {/* Input */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Input Payload</label>
-                  <textarea
+                  <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Input Payload</FieldLabel>
+                  <Textarea
                     placeholder='{ "key": "value" }'
                     value={jsonInput}
                     onChange={(e) => setJsonInput(e.target.value)}
-                    className="flex-1 w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-input/50 focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed resize-none min-h-[220px]"
+                    className="min-h-[220px] flex-1 font-mono text-xs"
                   />
                 </div>
                 {/* Output */}
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Formatted Output</label>
+                    <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Formatted Output</FieldLabel>
                     {jsonOutput && (
                       <Button
-                        size="icon"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => handleCopy(jsonOutput)}
-                        className="h-6 w-6 text-muted-foreground hover:text-foreground cursor-pointer"
                       >
-                        {copied ? <Check className="h-3 w-3 text-accent-lime" /> : <Copy className="h-3 w-3" />}
+                        {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
                       </Button>
                     )}
                   </div>
-                  <textarea
+                  <Textarea
                     readOnly
                     placeholder="// Output will appear here"
                     value={jsonOutput}
-                    className="flex-1 w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-background/50 focus:outline-none leading-relaxed resize-none min-h-[220px]"
+                    className="min-h-[220px] flex-1 font-mono text-xs"
                   />
                 </div>
               </div>
               <div className="flex gap-2 justify-end mt-4">
-                <Button onClick={minifyJson} variant="outline" className="border-border-subtle cursor-pointer h-9 text-xs">
+                <Button onClick={minifyJson} variant="outline" size="sm">
                   Minify JSON
                 </Button>
-                <Button onClick={formatJson} className="bg-primary hover:bg-primary-container text-primary-foreground cursor-pointer h-9 text-xs">
+                <Button onClick={formatJson} size="sm">
                   Format JSON
                 </Button>
               </div>
@@ -274,49 +294,48 @@ export default function ToolsPage() {
 
         {/* Base64 Content */}
         {activeTool === "base64" && (
-          <Card className="border-border-subtle bg-surface-card h-full flex flex-col">
+          <Card className="h-full flex flex-col">
             <CardHeader>
-              <CardTitle className="font-display text-lg font-bold">Base64 Encoder / Decoder</CardTitle>
+              <CardTitle>Base64 Encoder / Decoder</CardTitle>
               <CardDescription className="text-xs">Convert raw text strings to and from Base64 hash standards</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 flex-1 flex flex-col min-h-[480px]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Input String</label>
-                  <textarea
+                  <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Input String</FieldLabel>
+                  <Textarea
                     placeholder="Enter plain text or Base64 string..."
                     value={b64Input}
                     onChange={(e) => setB64Input(e.target.value)}
-                    className="flex-1 w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-input/50 focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed resize-none min-h-[220px]"
+                    className="min-h-[220px] flex-1 font-mono text-xs"
                   />
                 </div>
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Base64 Output</label>
+                    <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Base64 Output</FieldLabel>
                     {b64Output && (
                       <Button
-                        size="icon"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => handleCopy(b64Output)}
-                        className="h-6 w-6 text-muted-foreground hover:text-foreground cursor-pointer"
                       >
-                        {copied ? <Check className="h-3 w-3 text-accent-lime" /> : <Copy className="h-3 w-3" />}
+                        {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
                       </Button>
                     )}
                   </div>
-                  <textarea
+                  <Textarea
                     readOnly
                     placeholder="// Result will appear here"
                     value={b64Output}
-                    className="flex-1 w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-background/50 focus:outline-none leading-relaxed resize-none min-h-[220px]"
+                    className="min-h-[220px] flex-1 font-mono text-xs"
                   />
                 </div>
               </div>
               <div className="flex gap-2 justify-end mt-4">
-                <Button onClick={decodeBase64} variant="outline" className="border-border-subtle cursor-pointer h-9 text-xs">
+                <Button onClick={decodeBase64} variant="outline" size="sm">
                   Base64 Decode
                 </Button>
-                <Button onClick={encodeBase64} className="bg-primary hover:bg-primary-container text-primary-foreground cursor-pointer h-9 text-xs">
+                <Button onClick={encodeBase64} size="sm">
                   Base64 Encode
                 </Button>
               </div>
@@ -326,24 +345,24 @@ export default function ToolsPage() {
 
         {/* JWT Decoder Content */}
         {activeTool === "jwt" && (
-          <Card className="border-border-subtle bg-surface-card h-full flex flex-col">
+          <Card className="h-full flex flex-col">
             <CardHeader>
-              <CardTitle className="font-display text-lg font-bold">JWT Token Decoder</CardTitle>
+              <CardTitle>JWT Token Decoder</CardTitle>
               <CardDescription className="text-xs">Inspect JWT token headers, payload claims, and expiration details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 flex-1 flex flex-col min-h-[480px]">
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Encoded JWT Token</label>
-                  <Button onClick={decodeJwt} size="sm" className="bg-primary hover:bg-primary-container text-primary-foreground cursor-pointer h-8 text-xs">
+                  <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Encoded JWT Token</FieldLabel>
+                  <Button onClick={decodeJwt} size="sm">
                     <RefreshCw className="h-3 w-3 mr-1" /> Decode Token
                   </Button>
                 </div>
-                <textarea
+                <Textarea
                   placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                   value={jwtInput}
                   onChange={(e) => setJwtInput(e.target.value)}
-                  className="w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-input/50 focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed resize-none h-20 min-h-[80px]"
+                  className="min-h-20 font-mono text-xs"
                 />
               </div>
 
@@ -351,46 +370,48 @@ export default function ToolsPage() {
                 {/* Header */}
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-primary">JWT Header</label>
+                    <FieldLabel className="text-xs font-medium uppercase tracking-wider text-primary">
+                      JWT Header
+                    </FieldLabel>
                     {jwtHeader && (
                       <Button
-                        size="icon"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => handleCopy(jwtHeader)}
-                        className="h-6 w-6 text-muted-foreground hover:text-foreground cursor-pointer"
                       >
-                        {copied ? <Check className="h-3 w-3 text-accent-lime" /> : <Copy className="h-3 w-3" />}
+                        {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
                       </Button>
                     )}
                   </div>
-                  <textarea
+                  <Textarea
                     readOnly
                     placeholder="// Encoded JWT header segment"
                     value={jwtHeader}
-                    className="flex-1 w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-background/50 focus:outline-none leading-relaxed resize-none min-h-[160px]"
+                    className="min-h-[160px] flex-1 font-mono text-xs"
                   />
                 </div>
 
                 {/* Payload */}
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider text-secondary">JWT Payload</label>
+                    <FieldLabel className="text-xs font-medium uppercase tracking-wider text-secondary">
+                      JWT Payload
+                    </FieldLabel>
                     {jwtPayload && (
                       <Button
-                        size="icon"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => handleCopy(jwtPayload)}
-                        className="h-6 w-6 text-muted-foreground hover:text-foreground cursor-pointer"
                       >
-                        {copied ? <Check className="h-3 w-3 text-accent-lime" /> : <Copy className="h-3 w-3" />}
+                        {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
                       </Button>
                     )}
                   </div>
-                  <textarea
+                  <Textarea
                     readOnly
                     placeholder="// Decoded JWT payload payload claims"
                     value={jwtPayload}
-                    className="flex-1 w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-background/50 focus:outline-none leading-relaxed resize-none min-h-[160px]"
+                    className="min-h-[160px] flex-1 font-mono text-xs"
                   />
                 </div>
               </div>
@@ -400,49 +421,48 @@ export default function ToolsPage() {
 
         {/* URL Content */}
         {activeTool === "url" && (
-          <Card className="border-border-subtle bg-surface-card h-full flex flex-col">
+          <Card className="h-full flex flex-col">
             <CardHeader>
-              <CardTitle className="font-display text-lg font-bold">URL Encoder / Decoder</CardTitle>
+              <CardTitle>URL Encoder / Decoder</CardTitle>
               <CardDescription className="text-xs">Convert raw text string formatting safely to and from RFC web parameters</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 flex-1 flex flex-col min-h-[480px]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Input String</label>
-                  <textarea
+                  <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Input String</FieldLabel>
+                  <Textarea
                     placeholder="Enter URL queries or parameter string..."
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
-                    className="flex-1 w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-input/50 focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed resize-none min-h-[220px]"
+                    className="min-h-[220px] flex-1 font-mono text-xs"
                   />
                 </div>
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">URL Output</label>
+                    <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">URL Output</FieldLabel>
                     {urlOutput && (
                       <Button
-                        size="icon"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => handleCopy(urlOutput)}
-                        className="h-6 w-6 text-muted-foreground hover:text-foreground cursor-pointer"
                       >
-                        {copied ? <Check className="h-3 w-3 text-accent-lime" /> : <Copy className="h-3 w-3" />}
+                        {copied ? <Check className="h-3 w-3 text-primary" /> : <Copy className="h-3 w-3" />}
                       </Button>
                     )}
                   </div>
-                  <textarea
+                  <Textarea
                     readOnly
                     placeholder="// Result will appear here"
                     value={urlOutput}
-                    className="flex-1 w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-background/50 focus:outline-none leading-relaxed resize-none min-h-[220px]"
+                    className="min-h-[220px] flex-1 font-mono text-xs"
                   />
                 </div>
               </div>
               <div className="flex gap-2 justify-end mt-4">
-                <Button onClick={decodeUrl} variant="outline" className="border-border-subtle cursor-pointer h-9 text-xs">
+                <Button onClick={decodeUrl} variant="outline" size="sm">
                   URL Decode
                 </Button>
-                <Button onClick={encodeUrl} className="bg-primary hover:bg-primary-container text-primary-foreground cursor-pointer h-9 text-xs">
+                <Button onClick={encodeUrl} size="sm">
                   URL Encode
                 </Button>
               </div>
@@ -452,55 +472,53 @@ export default function ToolsPage() {
 
         {/* Regex Tester Content */}
         {activeTool === "regex" && (
-          <Card className="border-border-subtle bg-surface-card h-full flex flex-col">
+          <Card className="h-full flex flex-col">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <CardTitle className="font-display text-lg font-bold">Regex Regular Expression Tester</CardTitle>
+                <CardTitle>Regex Regular Expression Tester</CardTitle>
                 <CardDescription className="text-xs">Create, test, and validate regular expressions instantly</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="flags e.g. g, i, m"
+                <Input
+                  placeholder="gim"
                   value={regexFlags}
                   onChange={(e) => setRegexFlags(e.target.value)}
-                  className="rounded-md border border-border-subtle bg-input/50 px-2 py-1 text-xs w-20 text-center font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-20 text-center font-mono text-xs"
                 />
               </div>
             </CardHeader>
             <CardContent className="space-y-4 flex-1 flex flex-col min-h-[480px]">
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Regex Pattern</label>
-                  <Button onClick={testRegex} size="sm" className="bg-primary hover:bg-primary-container text-primary-foreground cursor-pointer h-8 text-xs">
+                  <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Regex Pattern</FieldLabel>
+                  <Button onClick={testRegex} size="sm">
                     <Search className="h-3 w-3 mr-1" /> Find Matches
                   </Button>
                 </div>
-                <input
-                  type="text"
-                  placeholder="e.g. [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                <Input
+                  placeholder="Pattern…"
                   value={regexPattern}
                   onChange={(e) => setRegexPattern(e.target.value)}
-                  className="w-full px-3 h-10 font-mono text-xs rounded-md border border-border-subtle bg-input/50 focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
+                  className="font-mono text-xs"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                 {/* Input Text */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Test Text</label>
-                  <textarea
+                  <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Test Text</FieldLabel>
+                  <Textarea
                     placeholder="Enter text strings to search for patterns..."
                     value={regexText}
                     onChange={(e) => setRegexText(e.target.value)}
-                    className="flex-1 w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-input/50 focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed resize-none min-h-[160px]"
+                    className="min-h-[160px] flex-1 font-mono text-xs"
                   />
                 </div>
 
                 {/* Match Outcomes */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Match results</label>
-                  <div className="flex-1 w-full p-3 font-mono text-xs rounded-md border border-border-subtle bg-background/50 h-[160px] overflow-y-auto leading-relaxed border-dashed">
+                  <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Match results</FieldLabel>
+                  <div className="min-h-[160px] flex-1 overflow-y-auto rounded-lg border border-dashed bg-muted/30 p-3 font-mono text-xs leading-relaxed">
                     {regexMatches.length > 0 ? (
                       regexMatches[0].startsWith("[ERROR]") ? (
                         <span className="text-destructive font-semibold">{regexMatches[0]}</span>
@@ -525,6 +543,7 @@ export default function ToolsPage() {
           </Card>
         )}
 
+      </div>
       </div>
     </div>
   );
