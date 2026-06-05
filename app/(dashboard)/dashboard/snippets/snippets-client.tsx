@@ -2,34 +2,10 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  Check,
-  Code2,
-  Copy,
-  Edit2,
-  Pin,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Code2, Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
-import { SnippetDialog } from "@/components/layout/snippet-dialog";
-import { Badge } from "@/components/ui/badge";
+import { SnippetDialog } from "@/app/(dashboard)/dashboard/snippets/snippet-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Empty,
   EmptyContent,
@@ -40,6 +16,8 @@ import {
 } from "@/components/ui/empty";
 import { getErrorMessage } from "@/utils/errors";
 import { deleteSnippet } from "./actions";
+import { SnippetCard } from "./snippet-card";
+import { SnippetsFilterBar } from "./snippets-filter-bar";
 
 type Snippet = {
   id: string;
@@ -106,27 +84,13 @@ export function SnippetsClient({ initialSnippets }: { initialSnippets: Snippet[]
         }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Input
-          placeholder="Search title, content, tags…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1"
-        />
-        <Select value={language} onValueChange={(v) => v && setLanguage(v)}>
-          <SelectTrigger className="w-full sm:w-44">
-            <SelectValue placeholder="Language" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All languages</SelectItem>
-            {languages.map((lang) => (
-              <SelectItem key={lang} value={lang}>
-                {lang}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <SnippetsFilterBar
+        search={search}
+        language={language}
+        languages={languages}
+        onSearchChange={setSearch}
+        onLanguageChange={setLanguage}
+      />
 
       {filtered.length === 0 ? (
         <Empty>
@@ -154,67 +118,23 @@ export function SnippetsClient({ initialSnippets }: { initialSnippets: Snippet[]
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((snippet) => (
-            <Card key={snippet.id} size="sm">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="line-clamp-1">{snippet.title}</CardTitle>
-                  {snippet.isPinned ? (
-                    <Pin className="size-4 shrink-0 text-primary" />
-                  ) : null}
-                </div>
-                <Badge variant="outline">{snippet.language}</Badge>
-              </CardHeader>
-              <CardContent>
-                <pre className="max-h-28 overflow-hidden rounded-md border bg-muted/40 p-2 font-mono text-[11px] leading-relaxed">
-                  {snippet.content}
-                </pre>
-                {snippet.tags && snippet.tags.length > 0 ? (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {snippet.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : null}
-              </CardContent>
-              <CardFooter className="justify-between">
-                <span className="text-xs text-muted-foreground">
-                  {new Date(snippet.createdAt).toLocaleDateString()}
-                </span>
-                <div className="flex gap-1">
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => copy(snippet.id, snippet.content)}
-                  >
-                    {copiedId === snippet.id ? <Check /> : <Copy />}
-                  </Button>
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setEditing(snippet);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <Edit2 />
-                  </Button>
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    onClick={() => remove(snippet.id)}
-                  >
-                    <Trash2 />
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
+            <SnippetCard
+              key={snippet.id}
+              snippet={snippet}
+              copiedId={copiedId}
+              onCopy={copy}
+              onEdit={(s) => {
+                setEditing(s);
+                setDialogOpen(true);
+              }}
+              onDelete={remove}
+            />
           ))}
         </div>
       )}
 
       <SnippetDialog
+        key={editing?.id ?? "new"}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         snippet={editing}

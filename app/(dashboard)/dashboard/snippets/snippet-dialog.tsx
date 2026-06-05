@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Pin } from "lucide-react";
 import { createSnippet, updateSnippet } from "@/app/(dashboard)/dashboard/snippets/actions";
@@ -58,29 +58,12 @@ export function SnippetDialog({
   onOpenChange: (open: boolean) => void;
   snippet?: Snippet | null;
 }) {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [language, setLanguage] = useState("javascript");
-  const [tagsInput, setTagsInput] = useState("");
-  const [isPinned, setIsPinned] = useState(false);
+  const [title, setTitle] = useState(snippet?.title ?? "");
+  const [content, setContent] = useState(snippet?.content ?? "");
+  const [language, setLanguage] = useState(snippet?.language ?? "javascript");
+  const [tagsInput, setTagsInput] = useState(snippet?.tags?.join(", ") ?? "");
+  const [isPinned, setIsPinned] = useState(snippet?.isPinned ?? false);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    if (snippet) {
-      setTitle(snippet.title || "");
-      setContent(snippet.content || "");
-      setLanguage(snippet.language || "javascript");
-      setTagsInput(snippet.tags?.join(", ") ?? "");
-      setIsPinned(snippet.isPinned ?? false);
-    } else {
-      setTitle("");
-      setContent("");
-      setLanguage("javascript");
-      setTagsInput("");
-      setIsPinned(false);
-    }
-  }, [snippet, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
