@@ -1,26 +1,47 @@
 "use server";
 
-import { projects, projectStatusEnum } from "@/lib/db/schema";
+import { z } from "zod";
+import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
+import { projects } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-
-type ProjectStatus = (typeof projectStatusEnum.enumValues)[number];
-
-function parseProjectStatus(status: string): ProjectStatus {
-  if (
-    status === "backlog" ||
-    status === "active" ||
-    status === "completed"
-  ) {
-    return status;
-  }
-  return "active";
-}
 import {
   isUnauthorized,
   requireDrizzleAction,
 } from "@/lib/auth/require-user";
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
+
+const serverFields = {
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+const urlField = z
+  .string()
+  .url("Invalid URL")
+  .nullish()
+  .or(z.literal(""))
+  .transform((v) => v || null);
+
+const techStackField = z.array(z.string()).optional();
+
+const insertProjectSchema = createInsertSchema(projects)
+  .omit(serverFields)
+  .extend({
+    repositoryUrl: urlField,
+    demoUrl: urlField,
+    techStack: techStackField,
+  });
+
+const updateProjectSchema = createUpdateSchema(projects)
+  .omit(serverFields)
+  .extend({
+    repositoryUrl: urlField,
+    demoUrl: urlField,
+    techStack: techStackField,
+  });
 
 export async function createProject(data: {
   name: string;
@@ -30,6 +51,11 @@ export async function createProject(data: {
   status: string;
   techStack?: string[];
 }) {
+  const result = insertProjectSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0].message };
+  }
+
   const ctx = await requireDrizzleAction();
   if (isUnauthorized(ctx)) {
     return ctx;
@@ -41,12 +67,12 @@ export async function createProject(data: {
         .insert(projects)
         .values({
           userId: ctx.user.id,
-          name: data.name,
-          description: data.description || null,
-          repositoryUrl: data.repositoryUrl || null,
-          demoUrl: data.demoUrl || null,
-          status: parseProjectStatus(data.status || "active"),
-          techStack: data.techStack || [],
+          name: result.data.name,
+          description: result.data.description ?? null,
+          repositoryUrl: result.data.repositoryUrl ?? null,
+          demoUrl: result.data.demoUrl ?? null,
+          status: result.data.status ?? "active",
+          techStack: result.data.techStack ?? [],
         })
         .returning(),
     );
@@ -70,21 +96,22 @@ export async function updateProject(
     techStack?: string[];
   },
 ) {
+  const result = updateProjectSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0].message };
+  }
+
   const ctx = await requireDrizzleAction();
   if (isUnauthorized(ctx)) {
     return ctx;
   }
 
   try {
-    const { status, ...rest } = data;
     const [updatedProject] = await ctx.rls((tx) =>
       tx
         .update(projects)
         .set({
-          ...rest,
-          ...(status !== undefined
-            ? { status: parseProjectStatus(status) }
-            : {}),
+          ...result.data,
           updatedAt: new Date(),
         })
         .where(eq(projects.id, id))

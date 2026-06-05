@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "type-check": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:up": "drizzle-kit up",
     "db:migrate": "drizzle-kit migrate",
@@ -19,6 +20,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "1.0.0-beta.22",
+    "drizzle-zod": "^0.8.3",
     "jose": "^6.0.11",
     "lucide-react": "^0.575.0",
     "next": "16.2.6",
@@ -32,7 +34,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "shadcn": "^4.10.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -41,6 +42,7 @@
     "drizzle-kit": "1.0.0-beta.22",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "shadcn": "^4.10.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

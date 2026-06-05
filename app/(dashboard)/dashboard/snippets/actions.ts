@@ -1,5 +1,6 @@
 "use server";
 
+import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { snippets } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import {
@@ -9,6 +10,24 @@ import {
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
 
+import { z } from "zod";
+
+const serverFields = {
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+const tagsField = z.array(z.string()).optional();
+
+const insertSnippetSchema = createInsertSchema(snippets)
+  .omit(serverFields)
+  .extend({ tags: tagsField });
+const updateSnippetSchema = createUpdateSchema(snippets)
+  .omit(serverFields)
+  .extend({ tags: tagsField });
+
 export async function createSnippet(data: {
   title: string;
   content: string;
@@ -16,6 +35,11 @@ export async function createSnippet(data: {
   tags?: string[];
   isPinned?: boolean;
 }) {
+  const result = insertSnippetSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0].message };
+  }
+
   const ctx = await requireDrizzleAction();
   if (isUnauthorized(ctx)) {
     return ctx;
@@ -27,11 +51,11 @@ export async function createSnippet(data: {
         .insert(snippets)
         .values({
           userId: ctx.user.id,
-          title: data.title,
-          content: data.content,
-          language: data.language || "javascript",
-          tags: data.tags || [],
-          isPinned: data.isPinned || false,
+          title: result.data.title,
+          content: result.data.content,
+          language: result.data.language ?? "javascript",
+          tags: result.data.tags ?? [],
+          isPinned: result.data.isPinned ?? false,
         })
         .returning(),
     );
@@ -54,6 +78,11 @@ export async function updateSnippet(
     isPinned?: boolean;
   },
 ) {
+  const result = updateSnippetSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0].message };
+  }
+
   const ctx = await requireDrizzleAction();
   if (isUnauthorized(ctx)) {
     return ctx;
@@ -64,7 +93,7 @@ export async function updateSnippet(
       tx
         .update(snippets)
         .set({
-          ...data,
+          ...result.data,
           updatedAt: new Date(),
         })
         .where(eq(snippets.id, id))

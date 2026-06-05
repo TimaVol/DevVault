@@ -1,5 +1,7 @@
 "use server";
 
+import { z } from "zod";
+import { createInsertSchema } from "drizzle-zod";
 import { checklists, checklistItems } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import {
@@ -9,11 +11,29 @@ import {
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
 
+const serverFields = {
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+const insertChecklistSchema = createInsertSchema(checklists)
+  .omit(serverFields)
+  .extend({
+    items: z.array(z.string().min(1, "Item cannot be empty")).min(1, "At least one item required"),
+  });
+
 export async function createChecklist(data: {
   title: string;
   description?: string;
   items: string[];
 }) {
+  const result = insertChecklistSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0].message };
+  }
+
   const ctx = await requireDrizzleAction();
   if (isUnauthorized(ctx)) {
     return ctx;
@@ -25,21 +45,19 @@ export async function createChecklist(data: {
         .insert(checklists)
         .values({
           userId: ctx.user.id,
-          title: data.title,
-          description: data.description || null,
+          title: result.data.title,
+          description: result.data.description ?? null,
         })
         .returning();
 
-      if (data.items && data.items.length > 0) {
-        const itemsToInsert = data.items.map((content, idx) => ({
-          checklistId: checklist.id,
-          content,
-          isCompleted: false,
-          position: idx,
-        }));
+      const itemsToInsert = result.data.items.map((content, idx) => ({
+        checklistId: checklist.id,
+        content,
+        isCompleted: false,
+        position: idx,
+      }));
 
-        await tx.insert(checklistItems).values(itemsToInsert);
-      }
+      await tx.insert(checklistItems).values(itemsToInsert);
 
       return checklist;
     });

@@ -1,5 +1,6 @@
 "use server";
 
+import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { notes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import {
@@ -9,11 +10,26 @@ import {
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
 
+const serverFields = {
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+const insertNoteSchema = createInsertSchema(notes).omit(serverFields);
+const updateNoteSchema = createUpdateSchema(notes).omit(serverFields);
+
 export async function createNote(data: {
   title: string;
   content: string;
   isPinned?: boolean;
 }) {
+  const result = insertNoteSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0].message };
+  }
+
   const ctx = await requireDrizzleAction();
   if (isUnauthorized(ctx)) {
     return ctx;
@@ -25,9 +41,9 @@ export async function createNote(data: {
         .insert(notes)
         .values({
           userId: ctx.user.id,
-          title: data.title,
-          content: data.content,
-          isPinned: data.isPinned || false,
+          title: result.data.title,
+          content: result.data.content,
+          isPinned: result.data.isPinned ?? false,
         })
         .returning(),
     );
@@ -48,6 +64,11 @@ export async function updateNote(
     isPinned?: boolean;
   },
 ) {
+  const result = updateNoteSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.issues[0].message };
+  }
+
   const ctx = await requireDrizzleAction();
   if (isUnauthorized(ctx)) {
     return ctx;
@@ -58,7 +79,7 @@ export async function updateNote(
       tx
         .update(notes)
         .set({
-          ...data,
+          ...result.data,
           updatedAt: new Date(),
         })
         .where(eq(notes.id, id))
