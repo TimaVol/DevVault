@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ROUTES } from "@/lib/routes";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -28,7 +29,7 @@ export function DashboardLayout({
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="flex flex-1 items-center justify-end gap-2">
             <Link
-              href="/dashboard/snippets"
+              href={ROUTES.snippets}
               className={cn(buttonVariants({ size: "sm" }))}
             >
               <Plus data-icon="inline-start" />

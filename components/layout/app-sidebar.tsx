@@ -12,6 +12,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { signOut } from "@/app/(auth)/login/actions";
+import { ROUTES } from "@/lib/routes";
 import {
   Sidebar,
   SidebarContent,
@@ -28,12 +29,12 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/snippets", label: "Snippets", icon: Code2 },
-  { href: "/dashboard/projects", label: "Projects", icon: FolderKanban },
-  { href: "/dashboard/tools", label: "Tools", icon: Wrench },
-  { href: "/dashboard/checklists", label: "Checklists", icon: CheckSquare },
-  { href: "/dashboard/notes", label: "Notes", icon: StickyNote },
+  { href: ROUTES.dashboard, label: "Overview", icon: LayoutDashboard },
+  { href: ROUTES.snippets, label: "Snippets", icon: Code2 },
+  { href: ROUTES.projects, label: "Projects", icon: FolderKanban },
+  { href: ROUTES.tools, label: "Tools", icon: Wrench },
+  { href: ROUTES.checklists, label: "Checklists", icon: CheckSquare },
+  { href: ROUTES.notes, label: "Notes", icon: StickyNote },
 ] as const;
 
 export function AppSidebar({ userEmail }: { userEmail: string | null }) {

@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth/require-user";
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
+import { ROUTES } from "@/lib/routes";
 
 const serverFields = {
   id: true,
@@ -48,8 +49,8 @@ export async function createNote(data: {
         .returning(),
     );
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/notes");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.notes);
     return { success: true, note: newNote };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };
@@ -90,8 +91,8 @@ export async function updateNote(
       return { success: false, error: "Note not found or unauthorized" };
     }
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/notes");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.notes);
     return { success: true, note: updatedNote };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };
@@ -113,8 +114,8 @@ export async function deleteNote(id: string) {
       return { success: false, error: "Note not found or unauthorized" };
     }
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/notes");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.notes);
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };

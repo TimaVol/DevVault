@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth/require-user";
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
+import { ROUTES } from "@/lib/routes";
 
 const serverFields = {
   id: true,
@@ -77,8 +78,8 @@ export async function createProject(data: {
         .returning(),
     );
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/projects");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.projects);
     return { success: true, project: newProject };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };
@@ -122,8 +123,8 @@ export async function updateProject(
       return { success: false, error: "Project not found or unauthorized" };
     }
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/projects");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.projects);
     return { success: true, project: updatedProject };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };
@@ -145,8 +146,8 @@ export async function deleteProject(id: string) {
       return { success: false, error: "Project not found or unauthorized" };
     }
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/projects");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.projects);
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };

@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth/require-user";
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
+import { ROUTES } from "@/lib/routes";
 
 import { z } from "zod";
 
@@ -60,8 +61,8 @@ export async function createSnippet(data: {
         .returning(),
     );
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/snippets");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.snippets);
     return { success: true, snippet: newSnippet };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };
@@ -104,8 +105,8 @@ export async function updateSnippet(
       return { success: false, error: "Snippet not found or unauthorized" };
     }
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/snippets");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.snippets);
     return { success: true, snippet: updatedSnippet };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };
@@ -127,8 +128,8 @@ export async function deleteSnippet(id: string) {
       return { success: false, error: "Snippet not found or unauthorized" };
     }
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/snippets");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.snippets);
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };

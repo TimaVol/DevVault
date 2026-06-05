@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth/require-user";
 import { revalidatePath } from "next/cache";
 import { getErrorMessage } from "@/utils/errors";
+import { ROUTES } from "@/lib/routes";
 
 const serverFields = {
   id: true,
@@ -62,8 +63,8 @@ export async function createChecklist(data: {
       return checklist;
     });
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/checklists");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.checklists);
     return { success: true, checklist: newChecklist };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };
@@ -89,8 +90,8 @@ export async function toggleChecklistItem(id: string, isCompleted: boolean) {
       return { success: false, error: "Item not found or unauthorized" };
     }
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/checklists");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.checklists);
     return { success: true, item: updated };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };
@@ -112,8 +113,8 @@ export async function deleteChecklist(id: string) {
       return { success: false, error: "Checklist not found or unauthorized" };
     }
 
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/checklists");
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.checklists);
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: getErrorMessage(err) };
