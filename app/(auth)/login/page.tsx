@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Card, CardHeader } from "@/components/ui/card";
+import { ROUTES } from "@/lib/routes";
 import { AuthForm } from "./auth-form";
 
 export default function LoginPage() {
@@ -18,7 +19,7 @@ export default function LoginPage() {
         <AuthForm />
       </Card>
       <p className="mt-4 text-center text-sm text-muted-foreground">
-        <Link href="/" className="hover:text-foreground">
+        <Link href={ROUTES.home} className="hover:text-foreground">
           ← Back to home
         </Link>
       </p>
