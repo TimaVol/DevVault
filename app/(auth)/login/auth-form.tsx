@@ -16,13 +16,19 @@ import { Separator } from "@/components/ui/separator";
 import { authenticate, signInWithGoogle } from "./actions";
 import { SubmitButton } from "./submit-button";
 
-export function AuthForm() {
+export function AuthForm({ callbackError }: { callbackError?: string }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [state, formAction] = useActionState(authenticate, null);
 
   // After a successful signup the server returns a message; derive sign-in
   // mode from that so the UI switches without a setState call inside an effect.
   const mode = isSignUp && !state?.message ? "signup" : "signin";
+
+  useEffect(() => {
+    if (callbackError) {
+      toast.error("Sign in failed. Please try again.");
+    }
+  }, [callbackError]);
 
   useEffect(() => {
     if (state?.error) {

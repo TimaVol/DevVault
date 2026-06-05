@@ -4,7 +4,13 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { ROUTES } from "@/lib/routes";
 import { AuthForm } from "./auth-form";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+
   return (
     <AuthShell>
       <Card>
@@ -16,7 +22,7 @@ export default function LoginPage() {
             DevVault
           </div>
         </CardHeader>
-        <AuthForm />
+        <AuthForm callbackError={error} />
       </Card>
       <p className="mt-4 text-center text-sm text-muted-foreground">
         <Link href={ROUTES.home} className="hover:text-foreground">
