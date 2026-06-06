@@ -1,7 +1,7 @@
 "use server";
 
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
-import { snippets } from "@/lib/db/schema";
+import { snippets, snippetTags } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import {
   isUnauthorized,
@@ -18,6 +18,7 @@ const serverFields = {
   userId: true,
   createdAt: true,
   updatedAt: true,
+  deletedAt: true,
 } as const;
 
 const tagsField = z.array(z.string()).optional();
@@ -47,19 +48,27 @@ export async function createSnippet(data: {
   }
 
   try {
-    const [newSnippet] = await ctx.rls((tx) =>
-      tx
+    const newSnippet = await ctx.rls(async (tx) => {
+      const [snippet] = await tx
         .insert(snippets)
         .values({
           userId: ctx.user.id,
           title: result.data.title,
           content: result.data.content,
           language: result.data.language ?? "javascript",
-          tags: result.data.tags ?? [],
           isPinned: result.data.isPinned ?? false,
         })
-        .returning(),
-    );
+        .returning();
+
+      const newTags = result.data.tags ?? [];
+      if (newTags.length > 0) {
+        await tx
+          .insert(snippetTags)
+          .values(newTags.map((tag) => ({ snippetId: snippet.id, tag })));
+      }
+
+      return snippet;
+    });
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.snippets);
@@ -90,16 +99,27 @@ export async function updateSnippet(
   }
 
   try {
-    const [updatedSnippet] = await ctx.rls((tx) =>
-      tx
+    const { tags: tagValues, ...snippetData } = result.data;
+
+    const updatedSnippet = await ctx.rls(async (tx) => {
+      const [snippet] = await tx
         .update(snippets)
-        .set({
-          ...result.data,
-          updatedAt: new Date(),
-        })
+        .set({ ...snippetData, updatedAt: new Date() })
         .where(eq(snippets.id, id))
-        .returning(),
-    );
+        .returning();
+
+      if (!snippet) return null;
+
+      await tx.delete(snippetTags).where(eq(snippetTags.snippetId, id));
+      const newTags = tagValues ?? [];
+      if (newTags.length > 0) {
+        await tx
+          .insert(snippetTags)
+          .values(newTags.map((tag) => ({ snippetId: id, tag })));
+      }
+
+      return snippet;
+    });
 
     if (!updatedSnippet) {
       return { success: false, error: "Snippet not found or unauthorized" };
@@ -121,7 +141,11 @@ export async function deleteSnippet(id: string) {
 
   try {
     const [deleted] = await ctx.rls((tx) =>
-      tx.delete(snippets).where(eq(snippets.id, id)).returning(),
+      tx
+        .update(snippets)
+        .set({ deletedAt: new Date() })
+        .where(eq(snippets.id, id))
+        .returning(),
     );
 
     if (!deleted) {

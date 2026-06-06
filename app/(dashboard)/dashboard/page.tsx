@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { count, desc } from "drizzle-orm";
+import { count, desc, isNull } from "drizzle-orm";
 import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -24,24 +24,32 @@ export default async function DashboardPage() {
   } = await db.rls(async (tx) => {
     const [snippetsCountRes] = await tx
       .select({ value: count() })
-      .from(snippets);
+      .from(snippets)
+      .where(isNull(snippets.deletedAt));
     const [projectsCountRes] = await tx
       .select({ value: count() })
-      .from(projects);
+      .from(projects)
+      .where(isNull(projects.deletedAt));
     const [checklistsCountRes] = await tx
       .select({ value: count() })
-      .from(checklists);
-    const [notesCountRes] = await tx.select({ value: count() }).from(notes);
+      .from(checklists)
+      .where(isNull(checklists.deletedAt));
+    const [notesCountRes] = await tx
+      .select({ value: count() })
+      .from(notes)
+      .where(isNull(notes.deletedAt));
 
     const recent = await tx
       .select()
       .from(snippets)
+      .where(isNull(snippets.deletedAt))
       .orderBy(desc(snippets.createdAt))
       .limit(3);
 
     const active = await tx
       .select()
       .from(projects)
+      .where(isNull(projects.deletedAt))
       .orderBy(desc(projects.createdAt))
       .limit(3);
 

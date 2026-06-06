@@ -1,13 +1,16 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  index,
   integer,
   pgEnum,
   pgPolicy,
   pgSchema,
   pgTable,
+  primaryKey,
   text,
   timestamp,
+  unique,
   uuid,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
@@ -110,7 +113,6 @@ export const snippets = pgTable(
     title: text("title").notNull(),
     content: text("content").notNull(),
     language: text("language").default("javascript").notNull(),
-    tags: text("tags").array(),
     isPinned: boolean("is_pinned").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
@@ -118,8 +120,14 @@ export const snippets = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
-  (table) => authenticatedOwnRowPolicies("snippets", table.userId),
+  (table) => [
+    index("snippets_user_id_idx").on(table.userId),
+    index("snippets_created_at_idx").on(table.createdAt),
+    index("snippets_is_pinned_idx").on(table.isPinned),
+    ...authenticatedOwnRowPolicies("snippets", table.userId),
+  ],
 );
 
 export const projects = pgTable(
@@ -134,15 +142,20 @@ export const projects = pgTable(
     repositoryUrl: text("repository_url"),
     demoUrl: text("demo_url"),
     status: projectStatusEnum("status").default("active").notNull(),
-    techStack: text("tech_stack").array(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
-  (table) => authenticatedOwnRowPolicies("projects", table.userId),
+  (table) => [
+    index("projects_user_id_idx").on(table.userId),
+    index("projects_created_at_idx").on(table.createdAt),
+    index("projects_status_idx").on(table.status),
+    ...authenticatedOwnRowPolicies("projects", table.userId),
+  ],
 );
 
 export const checklists = pgTable(
@@ -160,8 +173,13 @@ export const checklists = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
-  (table) => authenticatedOwnRowPolicies("checklists", table.userId),
+  (table) => [
+    index("checklists_user_id_idx").on(table.userId),
+    index("checklists_created_at_idx").on(table.createdAt),
+    ...authenticatedOwnRowPolicies("checklists", table.userId),
+  ],
 );
 
 export const checklistItems = pgTable(
@@ -189,6 +207,11 @@ export const checklistItems = pgTable(
     )`;
 
     return [
+      index("checklist_items_checklist_id_idx").on(table.checklistId),
+      unique("checklist_items_checklist_id_position_unique").on(
+        table.checklistId,
+        table.position,
+      ),
       pgPolicy("checklist_items select own", {
         for: "select",
         to: authenticatedRole,
@@ -230,6 +253,86 @@ export const notes = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
-  (table) => authenticatedOwnRowPolicies("notes", table.userId),
+  (table) => [
+    index("notes_user_id_idx").on(table.userId),
+    index("notes_created_at_idx").on(table.createdAt),
+    index("notes_is_pinned_idx").on(table.isPinned),
+    ...authenticatedOwnRowPolicies("notes", table.userId),
+  ],
+);
+
+export const snippetTags = pgTable(
+  "snippet_tags",
+  {
+    snippetId: uuid("snippet_id")
+      .notNull()
+      .references(() => snippets.id, { onDelete: "cascade" }),
+    tag: text("tag").notNull(),
+  },
+  (table) => {
+    const ownsSnippet = sql`exists (
+      select 1 from ${snippets}
+      where ${snippets.id} = ${table.snippetId}
+      and ${snippets.userId} = (select auth.uid())
+    )`;
+
+    return [
+      primaryKey({ columns: [table.snippetId, table.tag] }),
+      index("snippet_tags_tag_idx").on(table.tag),
+      pgPolicy("snippet_tags select own", {
+        for: "select",
+        to: authenticatedRole,
+        using: ownsSnippet,
+      }),
+      pgPolicy("snippet_tags insert own", {
+        for: "insert",
+        to: authenticatedRole,
+        withCheck: ownsSnippet,
+      }),
+      pgPolicy("snippet_tags delete own", {
+        for: "delete",
+        to: authenticatedRole,
+        using: ownsSnippet,
+      }),
+    ];
+  },
+);
+
+export const projectTechStack = pgTable(
+  "project_tech_stack",
+  {
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    tech: text("tech").notNull(),
+  },
+  (table) => {
+    const ownsProject = sql`exists (
+      select 1 from ${projects}
+      where ${projects.id} = ${table.projectId}
+      and ${projects.userId} = (select auth.uid())
+    )`;
+
+    return [
+      primaryKey({ columns: [table.projectId, table.tech] }),
+      index("project_tech_stack_tech_idx").on(table.tech),
+      pgPolicy("project_tech_stack select own", {
+        for: "select",
+        to: authenticatedRole,
+        using: ownsProject,
+      }),
+      pgPolicy("project_tech_stack insert own", {
+        for: "insert",
+        to: authenticatedRole,
+        withCheck: ownsProject,
+      }),
+      pgPolicy("project_tech_stack delete own", {
+        for: "delete",
+        to: authenticatedRole,
+        using: ownsProject,
+      }),
+    ];
+  },
 );

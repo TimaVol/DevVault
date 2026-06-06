@@ -1,5 +1,5 @@
 import React from "react";
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, desc, eq, isNull } from "drizzle-orm";
 import { requireDrizzle } from "@/lib/auth/require-user";
 import { checklists, checklistItems } from "@/lib/db/schema";
 import { ChecklistsClient } from "./checklists-client";
@@ -11,6 +11,7 @@ export default async function ChecklistsPage() {
     const userChecklists = await tx
       .select()
       .from(checklists)
+      .where(isNull(checklists.deletedAt))
       .orderBy(desc(checklists.createdAt));
 
     return Promise.all(

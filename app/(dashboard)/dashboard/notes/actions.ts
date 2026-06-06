@@ -16,6 +16,7 @@ const serverFields = {
   userId: true,
   createdAt: true,
   updatedAt: true,
+  deletedAt: true,
 } as const;
 
 const insertNoteSchema = createInsertSchema(notes).omit(serverFields);
@@ -107,7 +108,11 @@ export async function deleteNote(id: string) {
 
   try {
     const [deleted] = await ctx.rls((tx) =>
-      tx.delete(notes).where(eq(notes.id, id)).returning(),
+      tx
+        .update(notes)
+        .set({ deletedAt: new Date() })
+        .where(eq(notes.id, id))
+        .returning(),
     );
 
     if (!deleted) {

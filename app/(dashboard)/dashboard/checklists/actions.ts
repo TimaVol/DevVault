@@ -17,6 +17,7 @@ const serverFields = {
   userId: true,
   createdAt: true,
   updatedAt: true,
+  deletedAt: true,
 } as const;
 
 const insertChecklistSchema = createInsertSchema(checklists)
@@ -106,7 +107,11 @@ export async function deleteChecklist(id: string) {
 
   try {
     const [deleted] = await ctx.rls((tx) =>
-      tx.delete(checklists).where(eq(checklists.id, id)).returning(),
+      tx
+        .update(checklists)
+        .set({ deletedAt: new Date() })
+        .where(eq(checklists.id, id))
+        .returning(),
     );
 
     if (!deleted) {

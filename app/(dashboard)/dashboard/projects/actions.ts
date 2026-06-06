@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
-import { projects } from "@/lib/db/schema";
+import { projects, projectTechStack } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import {
   isUnauthorized,
@@ -17,6 +17,7 @@ const serverFields = {
   userId: true,
   createdAt: true,
   updatedAt: true,
+  deletedAt: true,
 } as const;
 
 const urlField = z
@@ -63,8 +64,8 @@ export async function createProject(data: {
   }
 
   try {
-    const [newProject] = await ctx.rls((tx) =>
-      tx
+    const newProject = await ctx.rls(async (tx) => {
+      const [project] = await tx
         .insert(projects)
         .values({
           userId: ctx.user.id,
@@ -73,10 +74,18 @@ export async function createProject(data: {
           repositoryUrl: result.data.repositoryUrl ?? null,
           demoUrl: result.data.demoUrl ?? null,
           status: result.data.status ?? "active",
-          techStack: result.data.techStack ?? [],
         })
-        .returning(),
-    );
+        .returning();
+
+      const newStack = result.data.techStack ?? [];
+      if (newStack.length > 0) {
+        await tx
+          .insert(projectTechStack)
+          .values(newStack.map((tech) => ({ projectId: project.id, tech })));
+      }
+
+      return project;
+    });
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.projects);
@@ -108,16 +117,29 @@ export async function updateProject(
   }
 
   try {
-    const [updatedProject] = await ctx.rls((tx) =>
-      tx
+    const { techStack: stackValues, ...projectData } = result.data;
+
+    const updatedProject = await ctx.rls(async (tx) => {
+      const [project] = await tx
         .update(projects)
-        .set({
-          ...result.data,
-          updatedAt: new Date(),
-        })
+        .set({ ...projectData, updatedAt: new Date() })
         .where(eq(projects.id, id))
-        .returning(),
-    );
+        .returning();
+
+      if (!project) return null;
+
+      await tx
+        .delete(projectTechStack)
+        .where(eq(projectTechStack.projectId, id));
+      const newStack = stackValues ?? [];
+      if (newStack.length > 0) {
+        await tx
+          .insert(projectTechStack)
+          .values(newStack.map((tech) => ({ projectId: id, tech })));
+      }
+
+      return project;
+    });
 
     if (!updatedProject) {
       return { success: false, error: "Project not found or unauthorized" };
@@ -139,7 +161,11 @@ export async function deleteProject(id: string) {
 
   try {
     const [deleted] = await ctx.rls((tx) =>
-      tx.delete(projects).where(eq(projects.id, id)).returning(),
+      tx
+        .update(projects)
+        .set({ deletedAt: new Date() })
+        .where(eq(projects.id, id))
+        .returning(),
     );
 
     if (!deleted) {
