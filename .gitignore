@@ -44,3 +44,6 @@ next-env.d.ts
 # cursor & local design prototypes
 .cursor
 .stitch
+
+# drizzle-kit introspect output (reference only; not app schema)
+drizzle/introspected/

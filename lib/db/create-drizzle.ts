@@ -16,6 +16,12 @@ export type SupabaseToken = {
 
 const ALLOWED_ROLES = new Set(["anon", "authenticated", "service_role"]);
 
+type TransactionRestArgs = Parameters<
+  AppDatabase["transaction"]
+> extends [unknown, ...infer Rest]
+  ? Rest
+  : never[];
+
 function resolveRole(role: string | undefined): string {
   if (role && ALLOWED_ROLES.has(role)) {
     return role;
@@ -33,12 +39,7 @@ export function createDrizzle(
     admin,
     rls: async <T>(
       transaction: (tx: AppDbTransaction) => Promise<T>,
-      ...rest: Parameters<AppDatabase["transaction"]> extends [
-        infer _,
-        ...infer Rest,
-      ]
-        ? Rest
-        : never[]
+      ...rest: TransactionRestArgs
     ): Promise<T> => {
       return client.transaction(async (tx) => {
         await applyRlsSession(tx, token, role);
