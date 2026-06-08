@@ -11,13 +11,13 @@ Build a beautiful, fast, and actually useful developer tool that feels premium.
 
 ## Tech Stack (Strictly Follow This)
 
-- **Framework**: Next.js 15.2+ (App Router)
+- **Framework**: Next.js 16+ (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Backend**: Supabase (Auth + PostgreSQL + Row Level Security)
 - **ORM**: Drizzle ORM
 - **Icons**: Lucide React
-- **Forms**: React Hook Form + Zod
+- **Forms**: Controlled state in client components + Zod validation in server actions
 - **Other**: Sonner (toast notifications), date-fns
 - **Package Manager**: pnpm
 
@@ -29,18 +29,37 @@ Build a beautiful, fast, and actually useful developer tool that feels premium.
 - Fully responsive
 
 ## Project Structure
-/app
-/components
-/lib          # supabase client, utils, drizzle
-/hooks
-/types
-/utils
+
+```
+app/           # Routes only — thin pages that fetch data and render feature clients
+features/      # Domain modules (UI, server queries, server actions, types)
+components/    # Shared UI primitives (shadcn) and app shell layout
+lib/           # Infrastructure — Supabase clients, Drizzle, auth helpers
+hooks/         # Shared client hooks
+utils/         # Pure helpers (cn, errors)
+drizzle/       # Database migrations
+```
+
+### Feature module template
+
+Each domain lives under `features/<name>/`:
+
+```
+features/<name>/
+  components/       # "use client" UI
+  server/
+    queries.ts      # reads (Server Components)
+    actions.ts      # mutations (Server Actions)
+  types.ts          # derived from query return types
+  constants.ts      # optional
+```
 
 ## Important Rules
 - Use pnpm only for package management (no npm or yarn)
 - Always use App Router
 - Prefer Server Components when possible
-- Use Server Actions for mutations
+- Put reads in `features/*/server/queries.ts`, mutations in `features/*/server/actions.ts`
+- Derive feature types from query return types (avoid hand-written duplicates)
 - Implement proper Row Level Security in Supabase
 - Keep code clean, well-typed and maintainable
 

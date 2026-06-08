@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import { ROUTES } from "@/lib/routes";
 import { Separator } from "@/components/ui/separator";
 import {

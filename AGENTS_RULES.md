@@ -2,13 +2,15 @@
 
 ## Before writing any code:
 1. Always read DESIGN.md and PROJECT.md first
-2. Strictly follow the chosen tech stack (Next.js 15 + Supabase)
+2. Strictly follow the chosen tech stack (Next.js 16 + Supabase)
 3. Check current file structure
 
 ## Code Style:
 - Use TypeScript strictly
 - Prefer Server Components
-- Use Server Actions for data mutations
+- Colocate domain code under `features/<name>/`
+- Put reads in `features/<name>/server/queries.ts`, mutations in `server/actions.ts`
+- Derive feature types from query return types (`Awaited<ReturnType<typeof getX>>`)
 - Create reusable components
 - Add proper loading & error states
 - Use shadcn/ui components when possible

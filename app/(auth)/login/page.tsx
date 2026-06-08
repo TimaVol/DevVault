@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ROUTES } from "@/lib/routes";
-import { AuthForm } from "./auth-form";
+import { AuthForm } from "@/features/auth/components/auth-form";
 
 export default async function LoginPage({
   searchParams,

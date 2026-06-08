@@ -1,19 +1,15 @@
 import Link from "next/link";
-import { count, desc, isNull } from "drizzle-orm";
 import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { buttonVariants } from "@/components/ui/button";
-import { requireDrizzle } from "@/lib/auth/require-user";
-import { checklists, notes, projects, snippets } from "@/lib/db/schema";
 import { ROUTES } from "@/lib/routes";
-import { cn } from "@/lib/utils";
-import { ActiveProjectsCard } from "./active-projects-card";
-import { RecentSnippetsCard } from "./recent-snippets-card";
-import { StatsSection } from "./stats-section";
+import { cn } from "@/utils/cn";
+import { ActiveProjectsCard } from "@/features/dashboard/components/active-projects-card";
+import { RecentSnippetsCard } from "@/features/dashboard/components/recent-snippets-card";
+import { StatsSection } from "@/features/dashboard/components/stats-section";
+import { getDashboardOverview } from "@/features/dashboard/server/queries";
 
 export default async function DashboardPage() {
-  const db = await requireDrizzle();
-
   const {
     snippetsCount,
     projectsCount,
@@ -21,47 +17,7 @@ export default async function DashboardPage() {
     notesCount,
     recentSnippets,
     activeProjects,
-  } = await db.rls(async (tx) => {
-    const [snippetsCountRes] = await tx
-      .select({ value: count() })
-      .from(snippets)
-      .where(isNull(snippets.deletedAt));
-    const [projectsCountRes] = await tx
-      .select({ value: count() })
-      .from(projects)
-      .where(isNull(projects.deletedAt));
-    const [checklistsCountRes] = await tx
-      .select({ value: count() })
-      .from(checklists)
-      .where(isNull(checklists.deletedAt));
-    const [notesCountRes] = await tx
-      .select({ value: count() })
-      .from(notes)
-      .where(isNull(notes.deletedAt));
-
-    const recent = await tx
-      .select()
-      .from(snippets)
-      .where(isNull(snippets.deletedAt))
-      .orderBy(desc(snippets.createdAt))
-      .limit(3);
-
-    const active = await tx
-      .select()
-      .from(projects)
-      .where(isNull(projects.deletedAt))
-      .orderBy(desc(projects.createdAt))
-      .limit(3);
-
-    return {
-      snippetsCount: snippetsCountRes?.value ?? 0,
-      projectsCount: projectsCountRes?.value ?? 0,
-      checklistsCount: checklistsCountRes?.value ?? 0,
-      notesCount: notesCountRes?.value ?? 0,
-      recentSnippets: recent,
-      activeProjects: active,
-    };
-  });
+  } = await getDashboardOverview();
 
   return (
     <div className="flex flex-col gap-6">

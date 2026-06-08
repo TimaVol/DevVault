@@ -11,7 +11,7 @@ import {
   StickyNote,
   Wrench,
 } from "lucide-react";
-import { signOut } from "@/app/(auth)/login/actions";
+import { signOut } from "@/features/auth/server/actions";
 import { ROUTES } from "@/lib/routes";
 import {
   Sidebar,

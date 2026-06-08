@@ -1,34 +1,7 @@
-import React from "react";
-import { asc, desc, eq, isNull } from "drizzle-orm";
-import { requireDrizzle } from "@/lib/auth/require-user";
-import { checklists, checklistItems } from "@/lib/db/schema";
-import { ChecklistsClient } from "./checklists-client";
+import { ChecklistsClient } from "@/features/checklists/components/checklists-client";
+import { getChecklists } from "@/features/checklists/server/queries";
 
 export default async function ChecklistsPage() {
-  const db = await requireDrizzle();
-
-  const enrichedChecklists = await db.rls(async (tx) => {
-    const userChecklists = await tx
-      .select()
-      .from(checklists)
-      .where(isNull(checklists.deletedAt))
-      .orderBy(desc(checklists.createdAt));
-
-    return Promise.all(
-      userChecklists.map(async (checklist) => {
-        const items = await tx
-          .select()
-          .from(checklistItems)
-          .where(eq(checklistItems.checklistId, checklist.id))
-          .orderBy(asc(checklistItems.position));
-
-        return {
-          ...checklist,
-          items,
-        };
-      }),
-    );
-  });
-
-  return <ChecklistsClient initialChecklists={enrichedChecklists} />;
+  const checklists = await getChecklists();
+  return <ChecklistsClient initialChecklists={checklists} />;
 }

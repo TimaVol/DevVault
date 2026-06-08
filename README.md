@@ -94,12 +94,16 @@ Policies are defined in [`lib/db/schema.ts`](lib/db/schema.ts) via `pgPolicy` an
 ## Project structure
 
 ```
-app/           # Routes (marketing, auth, dashboard)
-components/    # UI and layout components
-lib/           # Supabase clients, Drizzle, utils
-hooks/         # Client hooks
-utils/         # Helpers (e.g. errors)
+app/           # Routes only (marketing, auth, dashboard)
+features/      # Domain modules — components, server queries/actions, types
+components/    # Shared UI primitives (shadcn) and app shell layout
+lib/           # Supabase clients, Drizzle, auth helpers
+hooks/         # Shared client hooks
+utils/         # Pure helpers (cn, errors)
+drizzle/       # Database migrations
 ```
+
+See [PROJECT.md](./PROJECT.md) for the per-feature module template.
 
 ## Design
 
