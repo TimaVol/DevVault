@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { Snippet } from "@/features/snippets/types";
+import { formatDate } from "@/utils/format-date";
 
 type SnippetCardProps = {
   snippet: Snippet;
@@ -48,7 +49,7 @@ export function SnippetCard({ snippet, copiedId, onCopy, onEdit, onDelete }: Sni
       </CardContent>
       <CardFooter className="justify-between">
         <span className="text-xs text-muted-foreground">
-          {new Date(snippet.createdAt).toLocaleDateString()}
+          {formatDate(snippet.createdAt)}
         </span>
         <div className="flex gap-1">
           <Button

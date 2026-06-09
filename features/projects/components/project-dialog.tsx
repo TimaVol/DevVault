@@ -26,6 +26,7 @@ import { useAsyncAction } from "@/hooks/use-async-action";
 import { PROJECT_STATUSES } from "@/features/projects/constants";
 import { createProject, updateProject } from "@/features/projects/server/actions";
 import type { Project } from "@/features/projects/types";
+import { parseCommaList } from "@/utils/normalize-list";
 
 type ProjectDialogProps = {
   open: boolean;
@@ -48,10 +49,7 @@ export function ProjectDialog({ open, onOpenChange, editing }: ProjectDialogProp
       toast.error("Project name is required");
       return;
     }
-    const techStack = techStackInput
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const techStack = parseCommaList(techStackInput);
 
     const payload = {
       name,

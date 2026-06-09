@@ -13,15 +13,17 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";
+import { useUrlFilters } from "@/hooks/use-url-filters";
 import { deleteProject } from "@/features/projects/server/actions";
 import type { Project } from "@/features/projects/types";
 import { ProjectCard } from "./project-card";
 import { ProjectDialog } from "./project-dialog";
 import { ProjectsFilterBar } from "./projects-filter-bar";
 
+const PROJECT_FILTER_DEFAULTS = { q: "", tab: "all" };
+
 export function ProjectsClient({ initialProjects }: { initialProjects: Project[] }) {
-  const [search, setSearch] = useState("");
-  const [tab, setTab] = useState("all");
+  const [filters, setFilter] = useUrlFilters({ defaults: PROJECT_FILTER_DEFAULTS });
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
   const { confirmDelete } = useConfirmDelete();
@@ -37,12 +39,12 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
   };
 
   const filtered = initialProjects.filter((p) => {
-    const q = search.toLowerCase();
+    const q = filters.q.toLowerCase();
     const matchesSearch =
       p.name.toLowerCase().includes(q) ||
       (p.description?.toLowerCase().includes(q) ?? false) ||
       (p.techStack?.some((t) => t.toLowerCase().includes(q)) ?? false);
-    const matchesTab = tab === "all" || p.status === tab;
+    const matchesTab = filters.tab === "all" || p.status === filters.tab;
     return matchesSearch && matchesTab;
   });
 
@@ -66,10 +68,10 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
       />
 
       <ProjectsFilterBar
-        tab={tab}
-        search={search}
-        onTabChange={setTab}
-        onSearchChange={setSearch}
+        tab={filters.tab}
+        search={filters.q}
+        onTabChange={(value) => setFilter("tab", value)}
+        onSearchChange={(value) => setFilter("q", value)}
       />
 
       {filtered.length === 0 ? (

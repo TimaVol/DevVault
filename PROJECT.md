@@ -18,7 +18,7 @@ Build a beautiful, fast, and actually useful developer tool that feels premium.
 - **ORM**: Drizzle ORM
 - **Icons**: Lucide React
 - **Forms**: Controlled state in client components + Zod validation in server actions
-- **Other**: Sonner (toast notifications), date-fns
+- **Other**: Sonner (toast notifications)
 - **Package Manager**: pnpm
 
 ## Design & UI Rules

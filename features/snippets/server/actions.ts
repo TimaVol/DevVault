@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { snippets, snippetTags } from "@/lib/db/schema";
 import { serverFields, withAuthedAction } from "@/lib/db/server-action";
 import { ROUTES } from "@/lib/routes";
+import { normalizeList } from "@/utils/normalize-list";
 
 const tagsField = z.array(z.string()).optional();
 
@@ -42,7 +43,7 @@ export async function createSnippet(data: {
         })
         .returning();
 
-      const newTags = result.data.tags ?? [];
+      const newTags = normalizeList(result.data.tags ?? []);
       if (newTags.length > 0) {
         await tx
           .insert(snippetTags)
@@ -86,7 +87,7 @@ export async function updateSnippet(
       if (!snippet) return null;
 
       await tx.delete(snippetTags).where(eq(snippetTags.snippetId, id));
-      const newTags = tagValues ?? [];
+      const newTags = normalizeList(tagValues ?? []);
       if (newTags.length > 0) {
         await tx
           .insert(snippetTags)

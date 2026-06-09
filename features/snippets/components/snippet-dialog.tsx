@@ -26,6 +26,7 @@ import { useAsyncAction } from "@/hooks/use-async-action";
 import { LANGUAGES } from "@/features/snippets/constants";
 import { createSnippet, updateSnippet } from "@/features/snippets/server/actions";
 import type { Snippet } from "@/features/snippets/types";
+import { parseCommaList } from "@/utils/normalize-list";
 
 export function SnippetDialog({
   open,
@@ -50,10 +51,7 @@ export function SnippetDialog({
       return;
     }
 
-    const tags = tagsInput
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const tags = parseCommaList(tagsInput);
 
     await run(
       () =>

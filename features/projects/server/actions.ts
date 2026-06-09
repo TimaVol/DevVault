@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { projects, projectTechStack } from "@/lib/db/schema";
 import { serverFields, withAuthedAction } from "@/lib/db/server-action";
 import { ROUTES } from "@/lib/routes";
+import { normalizeList } from "@/utils/normalize-list";
 
 const urlField = z
   .string()
@@ -60,7 +61,7 @@ export async function createProject(data: {
         })
         .returning();
 
-      const newStack = result.data.techStack ?? [];
+      const newStack = normalizeList(result.data.techStack ?? []);
       if (newStack.length > 0) {
         await tx
           .insert(projectTechStack)
@@ -107,7 +108,7 @@ export async function updateProject(
       await tx
         .delete(projectTechStack)
         .where(eq(projectTechStack.projectId, id));
-      const newStack = stackValues ?? [];
+      const newStack = normalizeList(stackValues ?? []);
       if (newStack.length > 0) {
         await tx
           .insert(projectTechStack)

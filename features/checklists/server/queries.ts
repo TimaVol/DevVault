@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, desc, eq, isNull } from "drizzle-orm";
+import { asc, desc, inArray, isNull } from "drizzle-orm";
 import { requireDrizzle } from "@/lib/auth/require-user";
 import { checklists, checklistItems } from "@/lib/db/schema";
 
@@ -14,19 +14,27 @@ export async function getChecklists() {
       .where(isNull(checklists.deletedAt))
       .orderBy(desc(checklists.createdAt));
 
-    return Promise.all(
-      userChecklists.map(async (checklist) => {
-        const items = await tx
-          .select()
-          .from(checklistItems)
-          .where(eq(checklistItems.checklistId, checklist.id))
-          .orderBy(asc(checklistItems.position));
+    if (userChecklists.length === 0) {
+      return [];
+    }
 
-        return {
-          ...checklist,
-          items,
-        };
-      }),
-    );
+    const checklistIds = userChecklists.map((checklist) => checklist.id);
+    const allItems = await tx
+      .select()
+      .from(checklistItems)
+      .where(inArray(checklistItems.checklistId, checklistIds))
+      .orderBy(asc(checklistItems.position));
+
+    const itemsByChecklistId = new Map<string, typeof allItems>();
+    for (const item of allItems) {
+      const list = itemsByChecklistId.get(item.checklistId) ?? [];
+      list.push(item);
+      itemsByChecklistId.set(item.checklistId, list);
+    }
+
+    return userChecklists.map((checklist) => ({
+      ...checklist,
+      items: itemsByChecklistId.get(checklist.id) ?? [],
+    }));
   });
 }

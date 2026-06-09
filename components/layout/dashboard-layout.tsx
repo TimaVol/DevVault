@@ -12,6 +12,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { ConfirmDeleteProvider } from "@/hooks/use-confirm-delete";
 
 export function DashboardLayout({
   userEmail,
@@ -21,6 +22,7 @@ export function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
+    <ConfirmDeleteProvider>
     <SidebarProvider>
       <AppSidebar userEmail={userEmail} />
       <SidebarInset>
@@ -40,5 +42,6 @@ export function DashboardLayout({
         <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
+    </ConfirmDeleteProvider>
   );
 }

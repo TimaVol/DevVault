@@ -14,15 +14,17 @@ import {
 } from "@/components/ui/empty";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";
+import { useUrlFilters } from "@/hooks/use-url-filters";
 import { deleteSnippet } from "@/features/snippets/server/actions";
 import type { Snippet } from "@/features/snippets/types";
 import { SnippetCard } from "./snippet-card";
 import { SnippetDialog } from "./snippet-dialog";
 import { SnippetsFilterBar } from "./snippets-filter-bar";
 
+const SNIPPET_FILTER_DEFAULTS = { q: "", lang: "all" };
+
 export function SnippetsClient({ initialSnippets }: { initialSnippets: Snippet[] }) {
-  const [search, setSearch] = useState("");
-  const [language, setLanguage] = useState("all");
+  const [filters, setFilter] = useUrlFilters({ defaults: SNIPPET_FILTER_DEFAULTS });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Snippet | null>(null);
   const { copy, copiedId } = useClipboard();
@@ -31,12 +33,12 @@ export function SnippetsClient({ initialSnippets }: { initialSnippets: Snippet[]
   const languages = Array.from(new Set(initialSnippets.map((s) => s.language)));
 
   const filtered = initialSnippets.filter((s) => {
-    const q = search.toLowerCase();
+    const q = filters.q.toLowerCase();
     const matchesSearch =
       s.title.toLowerCase().includes(q) ||
       s.content.toLowerCase().includes(q) ||
       (s.tags?.some((t) => t.toLowerCase().includes(q)) ?? false);
-    const matchesLang = language === "all" || s.language === language;
+    const matchesLang = filters.lang === "all" || s.language === filters.lang;
     return matchesSearch && matchesLang;
   });
 
@@ -65,11 +67,11 @@ export function SnippetsClient({ initialSnippets }: { initialSnippets: Snippet[]
       />
 
       <SnippetsFilterBar
-        search={search}
-        language={language}
+        search={filters.q}
+        language={filters.lang}
         languages={languages}
-        onSearchChange={setSearch}
-        onLanguageChange={setLanguage}
+        onSearchChange={(value) => setFilter("q", value)}
+        onLanguageChange={(value) => setFilter("lang", value)}
       />
 
       {filtered.length === 0 ? (

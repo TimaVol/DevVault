@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/errors";
 
@@ -10,6 +11,8 @@ type RunOptions<R> = {
   successMessage?: string;
   errorMessage?: string;
   onSuccess?: (result: R) => void;
+  /** Re-fetch server props after success. Defaults to true. */
+  refresh?: boolean;
 };
 
 /**
@@ -18,6 +21,7 @@ type RunOptions<R> = {
  * can read extra fields (e.g. the created row), or undefined when it threw.
  */
 export function useAsyncAction() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const run = useCallback(
@@ -31,6 +35,9 @@ export function useAsyncAction() {
         if (result.success) {
           if (options?.successMessage) toast.success(options.successMessage);
           options?.onSuccess?.(result);
+          if (options?.refresh !== false) {
+            router.refresh();
+          }
         } else {
           toast.error(
             result.error || options?.errorMessage || "Something went wrong",
@@ -44,7 +51,7 @@ export function useAsyncAction() {
         setIsLoading(false);
       }
     },
-    [],
+    [router],
   );
 
   return { isLoading, run };

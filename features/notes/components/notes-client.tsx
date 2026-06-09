@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { BookOpen, Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -26,11 +26,27 @@ export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
   const [activeNoteId, setActiveNoteId] = useState<string | null>(
     initialNotes.length > 0 ? initialNotes[0].id : null,
   );
+  const [pendingNote, setPendingNote] = useState<Note | null>(null);
   const { isLoading: isSaving, run } = useAsyncAction();
   const { isLoading: isDeleting, confirmDelete } = useConfirmDelete();
   const isLoading = isSaving || isDeleting;
 
-  const activeNote = initialNotes.find((n) => n.id === activeNoteId);
+  const resolvedActiveNoteId = useMemo(() => {
+    if (!activeNoteId) {
+      return initialNotes[0]?.id ?? null;
+    }
+    if (initialNotes.some((note) => note.id === activeNoteId)) {
+      return activeNoteId;
+    }
+    if (pendingNote?.id === activeNoteId) {
+      return activeNoteId;
+    }
+    return initialNotes[0]?.id ?? null;
+  }, [activeNoteId, initialNotes, pendingNote]);
+
+  const activeNote =
+    initialNotes.find((note) => note.id === resolvedActiveNoteId) ??
+    (pendingNote?.id === resolvedActiveNoteId ? pendingNote : undefined);
 
   const handleCreate = async () => {
     const res = await run(
@@ -43,32 +59,29 @@ export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
       { successMessage: "New note created", errorMessage: "Failed to create note" },
     );
     if (res && "note" in res && res.note) {
+      setPendingNote(res.note);
       setActiveNoteId(res.note.id);
     }
   };
 
   const handleSave = async (data: { title: string; content: string; isPinned: boolean }) => {
-    if (!activeNoteId) return;
+    if (!resolvedActiveNoteId) return;
     if (!data.title.trim()) {
       toast.error("Note title is required");
       return;
     }
-    await run(() => updateNote(activeNoteId, data), {
+    await run(() => updateNote(resolvedActiveNoteId, data), {
       successMessage: "Note saved",
       errorMessage: "Failed to save note",
     });
   };
 
   const handleDelete = () => {
-    if (!activeNoteId) return;
-    confirmDelete(() => deleteNote(activeNoteId), {
+    if (!resolvedActiveNoteId) return;
+    confirmDelete(() => deleteNote(resolvedActiveNoteId), {
       message: "Delete this note?",
       successMessage: "Note deleted",
       errorMessage: "Failed to delete note",
-      onSuccess: () => {
-        const remaining = initialNotes.filter((n) => n.id !== activeNoteId);
-        setActiveNoteId(remaining.length > 0 ? remaining[0].id : null);
-      },
     });
   };
 
@@ -101,14 +114,14 @@ export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
         <NotesSidebar
           notes={sortedNotes}
           searchQuery={searchQuery}
-          activeNoteId={activeNoteId}
+          activeNoteId={resolvedActiveNoteId}
           onSearchChange={setSearchQuery}
           onSelectNote={setActiveNoteId}
         />
 
-        {activeNoteId && activeNote ? (
+        {resolvedActiveNoteId && activeNote ? (
           <NoteEditor
-            key={activeNoteId}
+            key={resolvedActiveNoteId}
             initialTitle={activeNote.title}
             initialContent={activeNote.content}
             initialIsPinned={activeNote.isPinned}
