@@ -70,3 +70,14 @@ features/<name>/
 
 ## Current Status
 This is an MVP project. Focus on quality and clean architecture.
+
+## Dependencies
+
+### Drizzle ORM (beta)
+
+This project uses `drizzle-orm` and `drizzle-kit` at **exact** beta versions (`1.0.0-beta.22`) for `pgPolicy` / Supabase RLS support.
+
+- Do **not** bump drizzle packages casually — read release notes first
+- After upgrading `drizzle-kit`, run `pnpm db:up` to migrate the snapshots folder format
+- Re-run `pnpm db:migrate` after schema/policy changes
+- Wait for Drizzle 1.0 stable with RLS APIs before moving off beta

@@ -5,7 +5,13 @@ import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { snippets, snippetTags } from "@/lib/db/schema";
-import { serverFields, withAuthedAction } from "@/lib/db/server-action";
+import {
+  actionFailure,
+  actionOk,
+  actionSuccess,
+  serverFields,
+  withAuthedAction,
+} from "@/lib/db/server-action";
 import { ROUTES } from "@/lib/routes";
 import { normalizeList } from "@/utils/normalize-list";
 
@@ -27,7 +33,7 @@ export async function createSnippet(data: {
 }) {
   const result = insertSnippetSchema.safeParse(data);
   if (!result.success) {
-    return { success: false, error: result.error.issues[0].message };
+    return actionFailure(result.error.issues[0].message);
   }
 
   return withAuthedAction(async (ctx) => {
@@ -55,7 +61,7 @@ export async function createSnippet(data: {
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.snippets);
-    return { success: true, snippet: newSnippet };
+    return actionSuccess({ snippet: newSnippet });
   });
 }
 
@@ -71,7 +77,7 @@ export async function updateSnippet(
 ) {
   const result = updateSnippetSchema.safeParse(data);
   if (!result.success) {
-    return { success: false, error: result.error.issues[0].message };
+    return actionFailure(result.error.issues[0].message);
   }
 
   return withAuthedAction(async (ctx) => {
@@ -98,12 +104,12 @@ export async function updateSnippet(
     });
 
     if (!updatedSnippet) {
-      return { success: false, error: "Snippet not found or unauthorized" };
+      return actionFailure("Snippet not found or unauthorized");
     }
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.snippets);
-    return { success: true, snippet: updatedSnippet };
+    return actionSuccess({ snippet: updatedSnippet });
   });
 }
 
@@ -118,11 +124,11 @@ export async function deleteSnippet(id: string) {
     );
 
     if (!deleted) {
-      return { success: false, error: "Snippet not found or unauthorized" };
+      return actionFailure("Snippet not found or unauthorized");
     }
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.snippets);
-    return { success: true };
+    return actionOk();
   });
 }

@@ -1,17 +1,35 @@
 import "server-only";
 
-import { asc, desc, inArray, isNull } from "drizzle-orm";
+import { and, asc, desc, ilike, inArray, isNull, or } from "drizzle-orm";
 import { requireDrizzle } from "@/lib/auth/require-user";
 import { checklists, checklistItems } from "@/lib/db/schema";
+import type { ChecklistListParams } from "./params";
 
-export async function getChecklists() {
+function buildChecklistFilters(params: ChecklistListParams) {
+  const conditions = [isNull(checklists.deletedAt)];
+
+  if (params.q) {
+    const pattern = `%${params.q}%`;
+    conditions.push(
+      or(
+        ilike(checklists.title, pattern),
+        ilike(checklists.description, pattern),
+      )!,
+    );
+  }
+
+  return and(...conditions);
+}
+
+export async function getChecklists(params: ChecklistListParams = {}) {
   const db = await requireDrizzle();
+  const where = buildChecklistFilters(params);
 
   return db.rls(async (tx) => {
     const userChecklists = await tx
       .select()
       .from(checklists)
-      .where(isNull(checklists.deletedAt))
+      .where(where)
       .orderBy(desc(checklists.createdAt));
 
     if (userChecklists.length === 0) {

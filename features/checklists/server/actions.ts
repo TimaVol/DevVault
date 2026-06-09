@@ -1,18 +1,30 @@
 "use server";
 
 import { z } from "zod";
-import { createInsertSchema } from "drizzle-zod";
-import { eq } from "drizzle-orm";
+import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
+import { asc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { checklists, checklistItems } from "@/lib/db/schema";
-import { serverFields, withAuthedAction } from "@/lib/db/server-action";
+import {
+  actionFailure,
+  actionOk,
+  actionSuccess,
+  serverFields,
+  withAuthedAction,
+} from "@/lib/db/server-action";
 import { ROUTES } from "@/lib/routes";
+
+const itemsField = z
+  .array(z.string().min(1, "Item cannot be empty"))
+  .min(1, "At least one item required");
 
 const insertChecklistSchema = createInsertSchema(checklists)
   .omit(serverFields)
-  .extend({
-    items: z.array(z.string().min(1, "Item cannot be empty")).min(1, "At least one item required"),
-  });
+  .extend({ items: itemsField });
+
+const updateChecklistSchema = createUpdateSchema(checklists)
+  .omit(serverFields)
+  .extend({ items: itemsField.optional() });
 
 export async function createChecklist(data: {
   title: string;
@@ -21,7 +33,7 @@ export async function createChecklist(data: {
 }) {
   const result = insertChecklistSchema.safeParse(data);
   if (!result.success) {
-    return { success: false, error: result.error.issues[0].message };
+    return actionFailure(result.error.issues[0].message);
   }
 
   return withAuthedAction(async (ctx) => {
@@ -49,7 +61,66 @@ export async function createChecklist(data: {
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.checklists);
-    return { success: true, checklist: newChecklist };
+    return actionSuccess({ checklist: newChecklist });
+  });
+}
+
+export async function updateChecklist(
+  id: string,
+  data: {
+    title?: string;
+    description?: string;
+    items?: string[];
+  },
+) {
+  const result = updateChecklistSchema.safeParse(data);
+  if (!result.success) {
+    return actionFailure(result.error.issues[0].message);
+  }
+
+  return withAuthedAction(async (ctx) => {
+    const { items: itemValues, ...checklistData } = result.data;
+
+    const updatedChecklist = await ctx.rls(async (tx) => {
+      const [checklist] = await tx
+        .update(checklists)
+        .set({ ...checklistData, updatedAt: new Date() })
+        .where(eq(checklists.id, id))
+        .returning();
+
+      if (!checklist) return null;
+
+      if (itemValues) {
+        const existingItems = await tx
+          .select()
+          .from(checklistItems)
+          .where(eq(checklistItems.checklistId, id))
+          .orderBy(asc(checklistItems.position));
+
+        await tx.delete(checklistItems).where(eq(checklistItems.checklistId, id));
+        await tx.insert(checklistItems).values(
+          itemValues.map((content, idx) => ({
+            checklistId: id,
+            content,
+            isCompleted:
+              existingItems[idx]?.content === content
+                ? existingItems[idx].isCompleted
+                : false,
+            position: idx,
+          })),
+        );
+      }
+
+      return checklist;
+    });
+
+    if (!updatedChecklist) {
+      return actionFailure("Checklist not found or unauthorized");
+    }
+
+    revalidatePath(ROUTES.dashboard);
+    revalidatePath(ROUTES.checklists);
+    return actionSuccess({ checklist: updatedChecklist });
   });
 }
 
@@ -64,12 +135,12 @@ export async function toggleChecklistItem(id: string, isCompleted: boolean) {
     );
 
     if (!updated) {
-      return { success: false, error: "Item not found or unauthorized" };
+      return actionFailure("Item not found or unauthorized");
     }
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.checklists);
-    return { success: true, item: updated };
+    return actionSuccess({ item: updated });
   });
 }
 
@@ -84,11 +155,11 @@ export async function deleteChecklist(id: string) {
     );
 
     if (!deleted) {
-      return { success: false, error: "Checklist not found or unauthorized" };
+      return actionFailure("Checklist not found or unauthorized");
     }
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.checklists);
-    return { success: true };
+    return actionOk();
   });
 }

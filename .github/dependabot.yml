@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      drizzle:
+        patterns:
+          - drizzle-orm
+          - drizzle-kit
+          - drizzle-zod
+    open-pull-requests-limit: 5

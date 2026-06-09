@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FolderKanban, Plus } from "lucide-react";
+import { ListPagination } from "@/components/layout/list-pagination";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,9 +21,17 @@ import { ProjectCard } from "./project-card";
 import { ProjectDialog } from "./project-dialog";
 import { ProjectsFilterBar } from "./projects-filter-bar";
 
-const PROJECT_FILTER_DEFAULTS = { q: "", tab: "all" };
+const PROJECT_FILTER_DEFAULTS = { q: "", tab: "all", page: "1" };
 
-export function ProjectsClient({ initialProjects }: { initialProjects: Project[] }) {
+type ProjectsClientProps = {
+  initialProjects: Project[];
+  pagination: { total: number; page: number; pageSize: number };
+};
+
+export function ProjectsClient({
+  initialProjects,
+  pagination,
+}: ProjectsClientProps) {
   const [filters, setFilter] = useUrlFilters({ defaults: PROJECT_FILTER_DEFAULTS });
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
@@ -37,16 +46,6 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
     setEditing(p);
     setOpen(true);
   };
-
-  const filtered = initialProjects.filter((p) => {
-    const q = filters.q.toLowerCase();
-    const matchesSearch =
-      p.name.toLowerCase().includes(q) ||
-      (p.description?.toLowerCase().includes(q) ?? false) ||
-      (p.techStack?.some((t) => t.toLowerCase().includes(q)) ?? false);
-    const matchesTab = filters.tab === "all" || p.status === filters.tab;
-    return matchesSearch && matchesTab;
-  });
 
   const remove = (id: string) =>
     confirmDelete(() => deleteProject(id), {
@@ -70,11 +69,17 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
       <ProjectsFilterBar
         tab={filters.tab}
         search={filters.q}
-        onTabChange={(value) => setFilter("tab", value)}
-        onSearchChange={(value) => setFilter("q", value)}
+        onTabChange={(value) => {
+          setFilter("tab", value);
+          setFilter("page", "1");
+        }}
+        onSearchChange={(value) => {
+          setFilter("q", value);
+          setFilter("page", "1");
+        }}
       />
 
-      {filtered.length === 0 ? (
+      {initialProjects.length === 0 ? (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -91,7 +96,7 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
         </Empty>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((project) => (
+          {initialProjects.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}
@@ -101,6 +106,13 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
           ))}
         </div>
       )}
+
+      <ListPagination
+        page={pagination.page}
+        pageSize={pagination.pageSize}
+        total={pagination.total}
+        onPageChange={(page) => setFilter("page", String(page))}
+      />
 
       <ProjectDialog key={editing?.id ?? "new"} open={open} onOpenChange={setOpen} editing={editing} />
     </div>

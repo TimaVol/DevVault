@@ -18,8 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAsyncAction } from "@/hooks/use-async-action";
-
-type ActionResponse = { success: boolean; error?: string };
+import type { ActionResult } from "@/lib/action-result";
 
 type ConfirmDeleteOptions = {
   message: string;
@@ -29,14 +28,14 @@ type ConfirmDeleteOptions = {
 };
 
 type PendingDelete = {
-  action: () => Promise<ActionResponse>;
+  action: () => Promise<ActionResult>;
   options: ConfirmDeleteOptions;
 };
 
 type ConfirmDeleteContextValue = {
   isLoading: boolean;
   confirmDelete: (
-    action: () => Promise<ActionResponse>,
+    action: () => Promise<ActionResult>,
     options: ConfirmDeleteOptions,
   ) => void;
 };
@@ -50,7 +49,7 @@ export function ConfirmDeleteProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<PendingDelete | null>(null);
 
   const confirmDelete = useCallback(
-    (action: () => Promise<ActionResponse>, options: ConfirmDeleteOptions) => {
+    (action: () => Promise<ActionResult>, options: ConfirmDeleteOptions) => {
       setPending({ action, options });
     },
     [],

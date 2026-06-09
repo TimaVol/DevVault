@@ -1,19 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getSupabasePublicEnv } from "@/lib/env/public";
+import { ROUTES } from "@/lib/routes";
 
 export async function updateSession(request: NextRequest) {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
+  const supabaseEnv = getSupabasePublicEnv();
+  if (!supabaseEnv) {
     return NextResponse.next({ request });
   }
 
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseEnv.url,
+    supabaseEnv.anonKey,
     {
       cookies: {
         getAll() {
@@ -34,15 +34,14 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
-  const isLoginRoute = request.nextUrl.pathname === "/login";
+  const isDashboardRoute = request.nextUrl.pathname.startsWith(ROUTES.dashboard);
+  const isLoginRoute = request.nextUrl.pathname === ROUTES.login;
 
   if (isDashboardRoute && !user) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    // Propagate cookie changes
+    redirectUrl.pathname = ROUTES.login;
     const response = NextResponse.redirect(redirectUrl);
-    
+
     request.cookies.getAll().forEach((cookie) => {
       response.cookies.set(cookie.name, cookie.value);
     });
@@ -52,7 +51,7 @@ export async function updateSession(request: NextRequest) {
 
   if (isLoginRoute && user) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/dashboard";
+    redirectUrl.pathname = ROUTES.dashboard;
     const response = NextResponse.redirect(redirectUrl);
 
     request.cookies.getAll().forEach((cookie) => {

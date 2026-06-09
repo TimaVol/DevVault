@@ -3,9 +3,8 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import type { ActionResult } from "@/lib/action-result";
 import { getErrorMessage } from "@/utils/errors";
-
-type ActionResponse = { success: boolean; error?: string };
 
 type RunOptions<R> = {
   successMessage?: string;
@@ -25,10 +24,10 @@ export function useAsyncAction() {
   const [isLoading, setIsLoading] = useState(false);
 
   const run = useCallback(
-    async <R extends ActionResponse>(
-      action: () => Promise<R>,
-      options?: RunOptions<R>,
-    ): Promise<R | undefined> => {
+    async <T extends Record<string, unknown> | void = void>(
+      action: () => Promise<ActionResult<T>>,
+      options?: RunOptions<ActionResult<T>>,
+    ): Promise<ActionResult<T> | undefined> => {
       setIsLoading(true);
       try {
         const result = await action();

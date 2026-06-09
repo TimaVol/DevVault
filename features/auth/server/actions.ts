@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { ROUTES } from "@/lib/routes";
+import { getSiteUrl } from "@/lib/env";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -37,7 +38,7 @@ export async function authenticate(
       email: result.data.email,
       password: result.data.password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
+        emailRedirectTo: `${getSiteUrl()}/auth/callback`,
       },
     });
 
@@ -64,7 +65,7 @@ export async function authenticate(
 export async function signInWithGoogle() {
   const supabase = await createClient();
   const headersList = await headers();
-  const origin = headersList.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const origin = headersList.get("origin") ?? getSiteUrl();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",

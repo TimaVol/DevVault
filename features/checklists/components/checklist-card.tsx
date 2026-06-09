@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +11,11 @@ import type { Checklist } from "@/features/checklists/types";
 type ChecklistCardProps = {
   checklist: Checklist;
   onToggle: (itemId: string, isCompleted: boolean) => void;
+  onEdit: (checklist: Checklist) => void;
   onDelete: (id: string) => void;
 };
 
-export function ChecklistCard({ checklist, onToggle, onDelete }: ChecklistCardProps) {
+export function ChecklistCard({ checklist, onToggle, onEdit, onDelete }: ChecklistCardProps) {
   const done = checklist.items.filter((i) => i.isCompleted).length;
   const total = checklist.items.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -28,13 +29,22 @@ export function ChecklistCard({ checklist, onToggle, onDelete }: ChecklistCardPr
             <p className="text-sm text-muted-foreground">{checklist.description}</p>
           ) : null}
         </div>
-        <Button
-          size="icon-sm"
-          variant="ghost"
-          onClick={() => onDelete(checklist.id)}
-        >
-          <Trash2 />
-        </Button>
+        <div className="flex gap-1">
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => onEdit(checklist)}
+          >
+            <Edit2 />
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => onDelete(checklist.id)}
+          >
+            <Trash2 />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">

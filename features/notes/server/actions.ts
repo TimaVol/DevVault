@@ -4,7 +4,13 @@ import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { notes } from "@/lib/db/schema";
-import { serverFields, withAuthedAction } from "@/lib/db/server-action";
+import {
+  actionFailure,
+  actionOk,
+  actionSuccess,
+  serverFields,
+  withAuthedAction,
+} from "@/lib/db/server-action";
 import { ROUTES } from "@/lib/routes";
 
 const insertNoteSchema = createInsertSchema(notes).omit(serverFields);
@@ -17,7 +23,7 @@ export async function createNote(data: {
 }) {
   const result = insertNoteSchema.safeParse(data);
   if (!result.success) {
-    return { success: false, error: result.error.issues[0].message };
+    return actionFailure(result.error.issues[0].message);
   }
 
   return withAuthedAction(async (ctx) => {
@@ -35,7 +41,7 @@ export async function createNote(data: {
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.notes);
-    return { success: true, note: newNote };
+    return actionSuccess({ note: newNote });
   });
 }
 
@@ -49,7 +55,7 @@ export async function updateNote(
 ) {
   const result = updateNoteSchema.safeParse(data);
   if (!result.success) {
-    return { success: false, error: result.error.issues[0].message };
+    return actionFailure(result.error.issues[0].message);
   }
 
   return withAuthedAction(async (ctx) => {
@@ -65,12 +71,12 @@ export async function updateNote(
     );
 
     if (!updatedNote) {
-      return { success: false, error: "Note not found or unauthorized" };
+      return actionFailure("Note not found or unauthorized");
     }
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.notes);
-    return { success: true, note: updatedNote };
+    return actionSuccess({ note: updatedNote });
   });
 }
 
@@ -85,11 +91,11 @@ export async function deleteNote(id: string) {
     );
 
     if (!deleted) {
-      return { success: false, error: "Note not found or unauthorized" };
+      return actionFailure("Note not found or unauthorized");
     }
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.notes);
-    return { success: true };
+    return actionOk();
   });
 }

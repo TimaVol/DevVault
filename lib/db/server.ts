@@ -34,6 +34,8 @@ export async function createDrizzleSupabaseClient(): Promise<DrizzleSupabaseCont
     return null;
   }
 
+  // getUser() validates the session server-side. getSession() is only used
+  // afterward to read the JWT access token for RLS claims — not for auth.
   const {
     data: { session },
   } = await supabase.auth.getSession();

@@ -1,13 +1,24 @@
-import { Suspense } from "react";
-import { PageSkeleton } from "@/components/layout/page-skeleton";
 import { SnippetsClient } from "@/features/snippets/components/snippets-client";
-import { getSnippets } from "@/features/snippets/server/queries";
+import { getSnippetLanguages, getSnippets } from "@/features/snippets/server/queries";
+import { parseSnippetParams } from "@/features/snippets/server/params";
 
-export default async function SnippetsPage() {
-  const snippets = await getSnippets();
+export default async function SnippetsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const filters = parseSnippetParams(params);
+  const [{ items, total, page, pageSize }, languages] = await Promise.all([
+    getSnippets(filters),
+    getSnippetLanguages(),
+  ]);
+
   return (
-    <Suspense fallback={<PageSkeleton />}>
-      <SnippetsClient initialSnippets={snippets} />
-    </Suspense>
+    <SnippetsClient
+      initialSnippets={items}
+      languages={languages}
+      pagination={{ total, page, pageSize }}
+    />
   );
 }

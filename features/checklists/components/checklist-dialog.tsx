@@ -15,19 +15,30 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import { createChecklist } from "@/features/checklists/server/actions";
+import {
+  createChecklist,
+  updateChecklist,
+} from "@/features/checklists/server/actions";
+import type { Checklist } from "@/features/checklists/types";
 
 type ChecklistDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  checklist?: Checklist | null;
 };
 
-export function ChecklistDialog({ open, onOpenChange }: ChecklistDialogProps) {
+export function ChecklistDialog({
+  open,
+  onOpenChange,
+  checklist,
+}: ChecklistDialogProps) {
   const { isLoading, run } = useAsyncAction();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [title, setTitle] = useState(checklist?.title ?? "");
+  const [description, setDescription] = useState(checklist?.description ?? "");
   const [newItem, setNewItem] = useState("");
-  const [items, setItems] = useState<string[]>([]);
+  const [items, setItems] = useState<string[]>(
+    checklist?.items.map((item) => item.content) ?? [],
+  );
 
   const addItem = () => {
     if (!newItem.trim()) return;
@@ -55,14 +66,20 @@ export function ChecklistDialog({ open, onOpenChange }: ChecklistDialogProps) {
 
     await run(
       () =>
-        createChecklist({
-          title,
-          description: description || undefined,
-          items,
-        }),
+        checklist
+          ? updateChecklist(checklist.id, {
+              title,
+              description: description || undefined,
+              items,
+            })
+          : createChecklist({
+              title,
+              description: description || undefined,
+              items,
+            }),
       {
-        successMessage: "Checklist created",
-        errorMessage: "Create failed",
+        successMessage: checklist ? "Checklist updated" : "Checklist created",
+        errorMessage: checklist ? "Update failed" : "Create failed",
         onSuccess: () => {
           reset();
           onOpenChange(false);
@@ -81,7 +98,7 @@ export function ChecklistDialog({ open, onOpenChange }: ChecklistDialogProps) {
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New checklist</DialogTitle>
+          <DialogTitle>{checklist ? "Edit checklist" : "New checklist"}</DialogTitle>
           <DialogDescription>Add items for your launch or review flow.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit}>

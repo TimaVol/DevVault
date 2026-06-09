@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { env } from "@/lib/env";
 import * as schema from "./schema";
 
 export { createDrizzle } from "./create-drizzle";
@@ -7,13 +8,8 @@ export type { DrizzleRLSClient, SupabaseToken } from "./create-drizzle";
 export type { AppDatabase, AppDbTransaction } from "./types";
 import type { AppDatabase } from "./types";
 
-const clientUrl = process.env.DATABASE_URL;
-const adminUrl =
-  process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL;
-
-if (!clientUrl) {
-  throw new Error("DATABASE_URL is not set");
-}
+const clientUrl = env.DATABASE_URL;
+const adminUrl = env.ADMIN_DATABASE_URL ?? env.DATABASE_URL;
 
 if (!adminUrl) {
   throw new Error(

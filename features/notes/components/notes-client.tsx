@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { BookOpen, Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -16,37 +17,46 @@ import {
 } from "@/components/ui/empty";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";
+import { useUrlFilters } from "@/hooks/use-url-filters";
+import { isActionSuccess } from "@/lib/action-result";
 import { createNote, deleteNote, updateNote } from "@/features/notes/server/actions";
 import type { Note } from "@/features/notes/types";
 import { NoteEditor } from "./note-editor";
 import { NotesSidebar } from "./notes-sidebar";
 
+const NOTE_FILTER_DEFAULTS = { q: "", note: "" };
+
 export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(
-    initialNotes.length > 0 ? initialNotes[0].id : null,
-  );
+  const router = useRouter();
+  const [filters, setFilter] = useUrlFilters({ defaults: NOTE_FILTER_DEFAULTS });
   const [pendingNote, setPendingNote] = useState<Note | null>(null);
   const { isLoading: isSaving, run } = useAsyncAction();
   const { isLoading: isDeleting, confirmDelete } = useConfirmDelete();
   const isLoading = isSaving || isDeleting;
 
   const resolvedActiveNoteId = useMemo(() => {
-    if (!activeNoteId) {
-      return initialNotes[0]?.id ?? null;
+    if (filters.note) {
+      if (initialNotes.some((note) => note.id === filters.note)) {
+        return filters.note;
+      }
+      if (pendingNote?.id === filters.note) {
+        return filters.note;
+      }
     }
-    if (initialNotes.some((note) => note.id === activeNoteId)) {
-      return activeNoteId;
-    }
-    if (pendingNote?.id === activeNoteId) {
-      return activeNoteId;
-    }
-    return initialNotes[0]?.id ?? null;
-  }, [activeNoteId, initialNotes, pendingNote]);
+    return initialNotes[0]?.id ?? pendingNote?.id ?? null;
+  }, [filters.note, initialNotes, pendingNote]);
 
   const activeNote =
     initialNotes.find((note) => note.id === resolvedActiveNoteId) ??
     (pendingNote?.id === resolvedActiveNoteId ? pendingNote : undefined);
+
+  const sortedNotes = useMemo(() => {
+    return [...initialNotes].sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [initialNotes]);
 
   const handleCreate = async () => {
     const res = await run(
@@ -58,9 +68,9 @@ export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
         }),
       { successMessage: "New note created", errorMessage: "Failed to create note" },
     );
-    if (res && "note" in res && res.note) {
+    if (isActionSuccess(res) && res.note) {
       setPendingNote(res.note);
-      setActiveNoteId(res.note.id);
+      setFilter("note", res.note.id);
     }
   };
 
@@ -76,26 +86,30 @@ export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
     });
   };
 
+  const handleAutoSave = async (data: {
+    title: string;
+    content: string;
+    isPinned: boolean;
+  }) => {
+    if (!resolvedActiveNoteId || !data.title.trim()) return;
+    await run(() => updateNote(resolvedActiveNoteId, data), {
+      refresh: false,
+      errorMessage: "Autosave failed",
+    });
+  };
+
   const handleDelete = () => {
     if (!resolvedActiveNoteId) return;
     confirmDelete(() => deleteNote(resolvedActiveNoteId), {
       message: "Delete this note?",
       successMessage: "Note deleted",
       errorMessage: "Failed to delete note",
+      onSuccess: () => {
+        setFilter("note", "");
+        router.refresh();
+      },
     });
   };
-
-  const filteredNotes = initialNotes.filter(
-    (note) =>
-      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.content.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const sortedNotes = [...filteredNotes].sort((a, b) => {
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -113,10 +127,10 @@ export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
       <div className="flex min-h-[480px] flex-col gap-4 md:flex-row">
         <NotesSidebar
           notes={sortedNotes}
-          searchQuery={searchQuery}
+          searchQuery={filters.q}
           activeNoteId={resolvedActiveNoteId}
-          onSearchChange={setSearchQuery}
-          onSelectNote={setActiveNoteId}
+          onSearchChange={(value) => setFilter("q", value)}
+          onSelectNote={(id) => setFilter("note", id)}
         />
 
         {resolvedActiveNoteId && activeNote ? (
@@ -127,6 +141,7 @@ export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
             initialIsPinned={activeNote.isPinned}
             isLoading={isLoading}
             onSave={handleSave}
+            onAutoSave={handleAutoSave}
             onDelete={handleDelete}
           />
         ) : (

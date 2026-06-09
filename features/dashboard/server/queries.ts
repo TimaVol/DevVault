@@ -1,6 +1,6 @@
 import "server-only";
 
-import { count, desc, isNull } from "drizzle-orm";
+import { desc, isNull, sql } from "drizzle-orm";
 import { requireDrizzle } from "@/lib/auth/require-user";
 import { checklists, notes, projects, snippets } from "@/lib/db/schema";
 
@@ -8,22 +8,27 @@ export async function getDashboardOverview() {
   const db = await requireDrizzle();
 
   return db.rls(async (tx) => {
-    const [snippetsCountRes] = await tx
-      .select({ value: count() })
-      .from(snippets)
-      .where(isNull(snippets.deletedAt));
-    const [projectsCountRes] = await tx
-      .select({ value: count() })
-      .from(projects)
-      .where(isNull(projects.deletedAt));
-    const [checklistsCountRes] = await tx
-      .select({ value: count() })
-      .from(checklists)
-      .where(isNull(checklists.deletedAt));
-    const [notesCountRes] = await tx
-      .select({ value: count() })
-      .from(notes)
-      .where(isNull(notes.deletedAt));
+    const [counts] = await tx
+      .select({
+        snippetsCount: sql<number>`(
+          select count(*)::int from ${snippets}
+          where ${snippets.deletedAt} is null
+        )`,
+        projectsCount: sql<number>`(
+          select count(*)::int from ${projects}
+          where ${projects.deletedAt} is null
+        )`,
+        checklistsCount: sql<number>`(
+          select count(*)::int from ${checklists}
+          where ${checklists.deletedAt} is null
+        )`,
+        notesCount: sql<number>`(
+          select count(*)::int from ${notes}
+          where ${notes.deletedAt} is null
+        )`,
+      })
+      .from(sql`(select 1) as _counts`)
+      .limit(1);
 
     const recentSnippets = await tx
       .select()
@@ -40,10 +45,10 @@ export async function getDashboardOverview() {
       .limit(3);
 
     return {
-      snippetsCount: snippetsCountRes?.value ?? 0,
-      projectsCount: projectsCountRes?.value ?? 0,
-      checklistsCount: checklistsCountRes?.value ?? 0,
-      notesCount: notesCountRes?.value ?? 0,
+      snippetsCount: counts?.snippetsCount ?? 0,
+      projectsCount: counts?.projectsCount ?? 0,
+      checklistsCount: counts?.checklistsCount ?? 0,
+      notesCount: counts?.notesCount ?? 0,
       recentSnippets,
       activeProjects,
     };

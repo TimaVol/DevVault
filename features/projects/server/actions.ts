@@ -5,7 +5,13 @@ import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { projects, projectTechStack } from "@/lib/db/schema";
-import { serverFields, withAuthedAction } from "@/lib/db/server-action";
+import {
+  actionFailure,
+  actionOk,
+  actionSuccess,
+  serverFields,
+  withAuthedAction,
+} from "@/lib/db/server-action";
 import { ROUTES } from "@/lib/routes";
 import { normalizeList } from "@/utils/normalize-list";
 
@@ -44,7 +50,7 @@ export async function createProject(data: {
 }) {
   const result = insertProjectSchema.safeParse(data);
   if (!result.success) {
-    return { success: false, error: result.error.issues[0].message };
+    return actionFailure(result.error.issues[0].message);
   }
 
   return withAuthedAction(async (ctx) => {
@@ -73,7 +79,7 @@ export async function createProject(data: {
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.projects);
-    return { success: true, project: newProject };
+    return actionSuccess({ project: newProject });
   });
 }
 
@@ -90,7 +96,7 @@ export async function updateProject(
 ) {
   const result = updateProjectSchema.safeParse(data);
   if (!result.success) {
-    return { success: false, error: result.error.issues[0].message };
+    return actionFailure(result.error.issues[0].message);
   }
 
   return withAuthedAction(async (ctx) => {
@@ -119,12 +125,12 @@ export async function updateProject(
     });
 
     if (!updatedProject) {
-      return { success: false, error: "Project not found or unauthorized" };
+      return actionFailure("Project not found or unauthorized");
     }
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.projects);
-    return { success: true, project: updatedProject };
+    return actionSuccess({ project: updatedProject });
   });
 }
 
@@ -139,11 +145,11 @@ export async function deleteProject(id: string) {
     );
 
     if (!deleted) {
-      return { success: false, error: "Project not found or unauthorized" };
+      return actionFailure("Project not found or unauthorized");
     }
 
     revalidatePath(ROUTES.dashboard);
     revalidatePath(ROUTES.projects);
-    return { success: true };
+    return actionOk();
   });
 }

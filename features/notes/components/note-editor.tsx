@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Edit, Eye, Loader2, Pin, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 type NoteEditorProps = {
   initialTitle: string;
@@ -13,6 +16,7 @@ type NoteEditorProps = {
   initialIsPinned: boolean;
   isLoading: boolean;
   onSave: (data: { title: string; content: string; isPinned: boolean }) => void;
+  onAutoSave?: (data: { title: string; content: string; isPinned: boolean }) => Promise<void>;
   onDelete: () => void;
 };
 
@@ -22,12 +26,46 @@ export function NoteEditor({
   initialIsPinned,
   isLoading,
   onSave,
+  onAutoSave,
   onDelete,
 }: NoteEditorProps) {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [isPinned, setIsPinned] = useState(initialIsPinned);
   const [isPreview, setIsPreview] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const isFirstRender = useRef(true);
+
+  const debouncedAutoSave = useDebouncedCallback(
+    async (data: { title: string; content: string; isPinned: boolean }) => {
+      if (!onAutoSave) return;
+      setSaveStatus("saving");
+      try {
+        await onAutoSave(data);
+        setSaveStatus("saved");
+      } catch {
+        setSaveStatus("error");
+      }
+    },
+    1000,
+  );
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    debouncedAutoSave({ title, content, isPinned });
+  }, [title, content, isPinned, debouncedAutoSave]);
+
+  const statusLabel =
+    saveStatus === "saving"
+      ? "Saving…"
+      : saveStatus === "saved"
+        ? "Saved"
+        : saveStatus === "error"
+          ? "Autosave failed"
+          : null;
 
   return (
     <Card className="flex min-w-0 flex-1 flex-col">
@@ -57,6 +95,9 @@ export function NoteEditor({
             />
             {isPinned ? "Pinned" : "Pin"}
           </Button>
+          {statusLabel ? (
+            <span className="text-xs text-muted-foreground">{statusLabel}</span>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -67,7 +108,11 @@ export function NoteEditor({
           >
             <Trash2 />
           </Button>
-          <Button onClick={() => onSave({ title, content, isPinned })} disabled={isLoading} size="sm">
+          <Button
+            onClick={() => onSave({ title, content, isPinned })}
+            disabled={isLoading}
+            size="sm"
+          >
             {isLoading ? <Loader2 className="animate-spin" /> : "Save"}
           </Button>
         </div>

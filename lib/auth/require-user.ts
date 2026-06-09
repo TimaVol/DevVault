@@ -3,12 +3,14 @@ import {
   createDrizzleSupabaseClient,
   type DrizzleSupabaseContext,
 } from "@/lib/db/server";
+import type { ActionFailure } from "@/lib/action-result";
+import { ROUTES } from "@/lib/routes";
 
 /** Server Components — redirects to login when unauthenticated */
 export async function requireDrizzle(): Promise<DrizzleSupabaseContext> {
   const db = await createDrizzleSupabaseClient();
   if (!db) {
-    redirect("/login");
+    redirect(ROUTES.login);
   }
   return db;
 }
@@ -19,7 +21,7 @@ export async function getDrizzleOrNull(): Promise<DrizzleSupabaseContext | null>
 }
 
 export async function requireDrizzleAction(): Promise<
-  DrizzleSupabaseContext | { success: false; error: string }
+  DrizzleSupabaseContext | ActionFailure
 > {
   const db = await createDrizzleSupabaseClient();
   if (!db) {
@@ -29,8 +31,8 @@ export async function requireDrizzleAction(): Promise<
 }
 
 export function isUnauthorized<T>(
-  result: T | { success: false; error: string },
-): result is { success: false; error: string } {
+  result: T | ActionFailure,
+): result is ActionFailure {
   return (
     typeof result === "object" &&
     result !== null &&
