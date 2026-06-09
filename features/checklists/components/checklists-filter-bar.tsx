@@ -1,21 +1,21 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
+import { DebouncedSearchInput } from "@/components/layout/debounced-search-input";
 
 type ChecklistsFilterBarProps = {
   search: string;
-  onSearchChange: (value: string) => void;
+  onDebouncedSearchChange: (value: string) => void;
 };
 
 export function ChecklistsFilterBar({
   search,
-  onSearchChange,
+  onDebouncedSearchChange,
 }: ChecklistsFilterBarProps) {
   return (
-    <Input
+    <DebouncedSearchInput
       placeholder="Search checklists…"
       value={search}
-      onChange={(e) => onSearchChange(e.target.value)}
+      onDebouncedChange={onDebouncedSearchChange}
       className="sm:max-w-xs"
     />
   );

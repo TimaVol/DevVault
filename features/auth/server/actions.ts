@@ -8,7 +8,8 @@ import { headers } from "next/headers";
 import { ROUTES } from "@/lib/routes";
 import { getSiteUrl } from "@/lib/env";
 
-const authSchema = z.object({
+const authenticateFormSchema = z.object({
+  mode: z.enum(["signin", "signup"]),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
@@ -22,18 +23,18 @@ export async function authenticate(
   prevState: AuthState,
   formData: FormData
 ): Promise<AuthState> {
-  const mode = formData.get("mode") as "signin" | "signup";
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  const result = authSchema.safeParse({ email, password });
+  const result = authenticateFormSchema.safeParse({
+    mode: formData.get("mode"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
   if (!result.success) {
     return { error: result.error.issues[0].message };
   }
 
   const supabase = await createClient();
 
-  if (mode === "signup") {
+  if (result.data.mode === "signup") {
     const { error } = await supabase.auth.signUp({
       email: result.data.email,
       password: result.data.password,
@@ -47,19 +48,19 @@ export async function authenticate(
     }
 
     return { message: "Check your email for the confirmation link!" };
-  } else {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: result.data.email,
-      password: result.data.password,
-    });
-
-    if (error) {
-      return { error: error.message };
-    }
-
-    revalidatePath("/", "layout");
-    redirect(ROUTES.dashboard);
   }
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: result.data.email,
+    password: result.data.password,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath("/", "layout");
+  redirect(ROUTES.dashboard);
 }
 
 export async function signInWithGoogle() {

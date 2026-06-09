@@ -13,6 +13,7 @@ import {
   withAuthedAction,
 } from "@/lib/db/server-action";
 import { ROUTES } from "@/lib/routes";
+import { parseActionId } from "@/lib/validation/ids";
 
 const itemsField = z
   .array(z.string().min(1, "Item cannot be empty"))
@@ -73,6 +74,11 @@ export async function updateChecklist(
     items?: string[];
   },
 ) {
+  const idResult = parseActionId(id);
+  if (!idResult.success) {
+    return actionFailure(idResult.error.issues[0].message);
+  }
+
   const result = updateChecklistSchema.safeParse(data);
   if (!result.success) {
     return actionFailure(result.error.issues[0].message);
@@ -125,6 +131,11 @@ export async function updateChecklist(
 }
 
 export async function toggleChecklistItem(id: string, isCompleted: boolean) {
+  const idResult = parseActionId(id);
+  if (!idResult.success) {
+    return actionFailure(idResult.error.issues[0].message);
+  }
+
   return withAuthedAction(async (ctx) => {
     const [updated] = await ctx.rls((tx) =>
       tx
@@ -145,6 +156,11 @@ export async function toggleChecklistItem(id: string, isCompleted: boolean) {
 }
 
 export async function deleteChecklist(id: string) {
+  const idResult = parseActionId(id);
+  if (!idResult.success) {
+    return actionFailure(idResult.error.issues[0].message);
+  }
+
   return withAuthedAction(async (ctx) => {
     const [deleted] = await ctx.rls((tx) =>
       tx

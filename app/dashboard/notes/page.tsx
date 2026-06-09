@@ -1,7 +1,5 @@
-import { Suspense } from "react";
-import { PageSkeleton } from "@/components/layout/page-skeleton";
 import { NotesClient } from "@/features/notes/components/notes-client";
-import { getNotes } from "@/features/notes/server/queries";
+import { getNoteById, getNotes } from "@/features/notes/server/queries";
 import { parseNoteParams } from "@/features/notes/server/params";
 
 export default async function NotesPage({
@@ -11,11 +9,18 @@ export default async function NotesPage({
 }) {
   const params = await searchParams;
   const filters = parseNoteParams(params);
-  const notes = await getNotes(filters);
+
+  const [{ items, total, page, pageSize }, activeNoteFallback] =
+    await Promise.all([
+      getNotes(filters),
+      filters.note ? getNoteById(filters.note) : Promise.resolve(null),
+    ]);
 
   return (
-    <Suspense fallback={<PageSkeleton />}>
-      <NotesClient initialNotes={notes} />
-    </Suspense>
+    <NotesClient
+      initialNotes={items}
+      pagination={{ total, page, pageSize }}
+      activeNoteFallback={activeNoteFallback}
+    />
   );
 }

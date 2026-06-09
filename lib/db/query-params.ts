@@ -29,3 +29,13 @@ export function parseStringParam(
 export function getOffset(page: number, pageSize: number): number {
   return (page - 1) * pageSize;
 }
+
+export function parseBaseListParams(
+  searchParams: Record<string, string | string[] | undefined>,
+) {
+  return {
+    q: parseStringParam(searchParams.q),
+    page: parsePageParam(searchParams.page),
+    pageSize: DEFAULT_PAGE_SIZE,
+  };
+}

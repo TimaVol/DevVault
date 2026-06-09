@@ -13,6 +13,7 @@ import {
   withAuthedAction,
 } from "@/lib/db/server-action";
 import { ROUTES } from "@/lib/routes";
+import { parseActionId } from "@/lib/validation/ids";
 import { normalizeList } from "@/utils/normalize-list";
 
 const urlField = z
@@ -94,6 +95,11 @@ export async function updateProject(
     techStack?: string[];
   },
 ) {
+  const idResult = parseActionId(id);
+  if (!idResult.success) {
+    return actionFailure(idResult.error.issues[0].message);
+  }
+
   const result = updateProjectSchema.safeParse(data);
   if (!result.success) {
     return actionFailure(result.error.issues[0].message);
@@ -135,6 +141,11 @@ export async function updateProject(
 }
 
 export async function deleteProject(id: string) {
+  const idResult = parseActionId(id);
+  if (!idResult.success) {
+    return actionFailure(idResult.error.issues[0].message);
+  }
+
   return withAuthedAction(async (ctx) => {
     const [deleted] = await ctx.rls((tx) =>
       tx

@@ -12,6 +12,7 @@ import {
   withAuthedAction,
 } from "@/lib/db/server-action";
 import { ROUTES } from "@/lib/routes";
+import { parseActionId } from "@/lib/validation/ids";
 
 const insertNoteSchema = createInsertSchema(notes).omit(serverFields);
 const updateNoteSchema = createUpdateSchema(notes).omit(serverFields);
@@ -53,6 +54,11 @@ export async function updateNote(
     isPinned?: boolean;
   },
 ) {
+  const idResult = parseActionId(id);
+  if (!idResult.success) {
+    return actionFailure(idResult.error.issues[0].message);
+  }
+
   const result = updateNoteSchema.safeParse(data);
   if (!result.success) {
     return actionFailure(result.error.issues[0].message);
@@ -81,6 +87,11 @@ export async function updateNote(
 }
 
 export async function deleteNote(id: string) {
+  const idResult = parseActionId(id);
+  if (!idResult.success) {
+    return actionFailure(idResult.error.issues[0].message);
+  }
+
   return withAuthedAction(async (ctx) => {
     const [deleted] = await ctx.rls((tx) =>
       tx

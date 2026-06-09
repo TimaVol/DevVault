@@ -69,7 +69,7 @@ export function SnippetsClient({
         search={filters.q}
         language={filters.lang}
         languages={languages}
-        onSearchChange={(value) => {
+        onDebouncedSearchChange={(value) => {
           setFilter("q", value);
           setFilter("page", "1");
         }}

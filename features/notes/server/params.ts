@@ -1,13 +1,20 @@
-import { parseStringParam } from "@/lib/db/query-params";
+import {
+  parseBaseListParams,
+  parseStringParam,
+} from "@/lib/db/query-params";
 
 export type NoteListParams = {
   q?: string;
+  note?: string;
+  page: number;
+  pageSize: number;
 };
 
 export function parseNoteParams(
   searchParams: Record<string, string | string[] | undefined>,
 ): NoteListParams {
   return {
-    q: parseStringParam(searchParams.q),
+    ...parseBaseListParams(searchParams),
+    note: parseStringParam(searchParams.note),
   };
 }

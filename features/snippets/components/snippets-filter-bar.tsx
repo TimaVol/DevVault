@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
+import { DebouncedSearchInput } from "@/components/layout/debounced-search-input";
 import {
   Select,
   SelectContent,
@@ -13,7 +13,7 @@ type SnippetsFilterBarProps = {
   search: string;
   language: string;
   languages: string[];
-  onSearchChange: (value: string) => void;
+  onDebouncedSearchChange: (value: string) => void;
   onLanguageChange: (value: string) => void;
 };
 
@@ -21,15 +21,15 @@ export function SnippetsFilterBar({
   search,
   language,
   languages,
-  onSearchChange,
+  onDebouncedSearchChange,
   onLanguageChange,
 }: SnippetsFilterBarProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <Input
+      <DebouncedSearchInput
         placeholder="Search title, content, tags…"
         value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
+        onDebouncedChange={onDebouncedSearchChange}
         className="flex-1"
       />
       <Select value={language} onValueChange={(v) => v && onLanguageChange(v)}>

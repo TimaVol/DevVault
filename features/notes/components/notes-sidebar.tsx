@@ -1,8 +1,9 @@
 "use client";
 
 import { Pin, Search } from "lucide-react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { DebouncedSearchInput } from "@/components/layout/debounced-search-input";
+import { ListPagination } from "@/components/layout/list-pagination";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/utils/cn";
 import type { Note } from "@/features/notes/types";
@@ -11,26 +12,30 @@ type NotesSidebarProps = {
   notes: Note[];
   searchQuery: string;
   activeNoteId: string | null;
-  onSearchChange: (value: string) => void;
+  pagination: { total: number; page: number; pageSize: number };
+  onDebouncedSearchChange: (value: string) => void;
   onSelectNote: (id: string) => void;
+  onPageChange: (page: number) => void;
 };
 
 export function NotesSidebar({
   notes,
   searchQuery,
   activeNoteId,
-  onSearchChange,
+  pagination,
+  onDebouncedSearchChange,
   onSelectNote,
+  onPageChange,
 }: NotesSidebarProps) {
   return (
     <Card className="flex w-full shrink-0 flex-col md:w-72">
       <CardHeader className="pb-3">
         <div className="relative">
-          <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <Search className="absolute top-1/2 left-2.5 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
+          <DebouncedSearchInput
             placeholder="Search notes…"
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onDebouncedChange={onDebouncedSearchChange}
             className="pl-8"
           />
         </div>
@@ -72,6 +77,14 @@ export function NotesSidebar({
           )}
         </ScrollArea>
       </CardContent>
+      <CardFooter className="border-t pt-4">
+        <ListPagination
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
+          onPageChange={onPageChange}
+        />
+      </CardFooter>
     </Card>
   );
 }

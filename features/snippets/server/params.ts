@@ -1,6 +1,5 @@
 import {
-  DEFAULT_PAGE_SIZE,
-  parsePageParam,
+  parseBaseListParams,
   parseStringParam,
 } from "@/lib/db/query-params";
 
@@ -15,9 +14,7 @@ export function parseSnippetParams(
   searchParams: Record<string, string | string[] | undefined>,
 ): SnippetListParams {
   return {
-    q: parseStringParam(searchParams.q),
+    ...parseBaseListParams(searchParams),
     lang: parseStringParam(searchParams.lang) ?? "all",
-    page: parsePageParam(searchParams.page),
-    pageSize: DEFAULT_PAGE_SIZE,
   };
 }

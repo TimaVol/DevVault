@@ -13,6 +13,7 @@ import {
   withAuthedAction,
 } from "@/lib/db/server-action";
 import { ROUTES } from "@/lib/routes";
+import { parseActionId } from "@/lib/validation/ids";
 import { normalizeList } from "@/utils/normalize-list";
 
 const tagsField = z.array(z.string()).optional();
@@ -75,6 +76,11 @@ export async function updateSnippet(
     isPinned?: boolean;
   },
 ) {
+  const idResult = parseActionId(id);
+  if (!idResult.success) {
+    return actionFailure(idResult.error.issues[0].message);
+  }
+
   const result = updateSnippetSchema.safeParse(data);
   if (!result.success) {
     return actionFailure(result.error.issues[0].message);
@@ -114,6 +120,11 @@ export async function updateSnippet(
 }
 
 export async function deleteSnippet(id: string) {
+  const idResult = parseActionId(id);
+  if (!idResult.success) {
+    return actionFailure(idResult.error.issues[0].message);
+  }
+
   return withAuthedAction(async (ctx) => {
     const [deleted] = await ctx.rls((tx) =>
       tx

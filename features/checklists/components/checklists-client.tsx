@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckSquare, Plus } from "lucide-react";
+import { ListPagination } from "@/components/layout/list-pagination";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,13 +22,17 @@ import { ChecklistCard } from "./checklist-card";
 import { ChecklistDialog } from "./checklist-dialog";
 import { ChecklistsFilterBar } from "./checklists-filter-bar";
 
-const CHECKLIST_FILTER_DEFAULTS = { q: "" };
+const CHECKLIST_FILTER_DEFAULTS = { q: "", page: "1" };
+
+type ChecklistsClientProps = {
+  initialChecklists: Checklist[];
+  pagination: { total: number; page: number; pageSize: number };
+};
 
 export function ChecklistsClient({
   initialChecklists,
-}: {
-  initialChecklists: Checklist[];
-}) {
+  pagination,
+}: ChecklistsClientProps) {
   const [filters, setFilter] = useUrlFilters({ defaults: CHECKLIST_FILTER_DEFAULTS });
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Checklist | null>(null);
@@ -70,7 +75,10 @@ export function ChecklistsClient({
 
       <ChecklistsFilterBar
         search={filters.q}
-        onSearchChange={(value) => setFilter("q", value)}
+        onDebouncedSearchChange={(value) => {
+          setFilter("q", value);
+          setFilter("page", "1");
+        }}
       />
 
       {initialChecklists.length === 0 ? (
@@ -101,6 +109,13 @@ export function ChecklistsClient({
           ))}
         </div>
       )}
+
+      <ListPagination
+        page={pagination.page}
+        pageSize={pagination.pageSize}
+        total={pagination.total}
+        onPageChange={(page) => setFilter("page", String(page))}
+      />
 
       <ChecklistDialog
         key={editing?.id ?? "new"}

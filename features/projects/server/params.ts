@@ -1,6 +1,5 @@
 import {
-  DEFAULT_PAGE_SIZE,
-  parsePageParam,
+  parseBaseListParams,
   parseStringParam,
 } from "@/lib/db/query-params";
 
@@ -15,9 +14,7 @@ export function parseProjectParams(
   searchParams: Record<string, string | string[] | undefined>,
 ): ProjectListParams {
   return {
-    q: parseStringParam(searchParams.q),
+    ...parseBaseListParams(searchParams),
     tab: parseStringParam(searchParams.tab) ?? "all",
-    page: parsePageParam(searchParams.page),
-    pageSize: DEFAULT_PAGE_SIZE,
   };
 }

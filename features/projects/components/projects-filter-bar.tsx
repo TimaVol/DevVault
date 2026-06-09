@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
+import { DebouncedSearchInput } from "@/components/layout/debounced-search-input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PROJECT_FILTER_TABS } from "@/features/projects/constants";
 
@@ -8,14 +8,14 @@ type ProjectsFilterBarProps = {
   tab: string;
   search: string;
   onTabChange: (value: string) => void;
-  onSearchChange: (value: string) => void;
+  onDebouncedSearchChange: (value: string) => void;
 };
 
 export function ProjectsFilterBar({
   tab,
   search,
   onTabChange,
-  onSearchChange,
+  onDebouncedSearchChange,
 }: ProjectsFilterBarProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -28,10 +28,10 @@ export function ProjectsFilterBar({
           ))}
         </TabsList>
       </Tabs>
-      <Input
+      <DebouncedSearchInput
         placeholder="Search projects…"
         value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
+        onDebouncedChange={onDebouncedSearchChange}
         className="sm:max-w-xs"
       />
     </div>

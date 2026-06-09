@@ -24,9 +24,19 @@ import type { Note } from "@/features/notes/types";
 import { NoteEditor } from "./note-editor";
 import { NotesSidebar } from "./notes-sidebar";
 
-const NOTE_FILTER_DEFAULTS = { q: "", note: "" };
+const NOTE_FILTER_DEFAULTS = { q: "", note: "", page: "1" };
 
-export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
+type NotesClientProps = {
+  initialNotes: Note[];
+  pagination: { total: number; page: number; pageSize: number };
+  activeNoteFallback?: Note | null;
+};
+
+export function NotesClient({
+  initialNotes,
+  pagination,
+  activeNoteFallback = null,
+}: NotesClientProps) {
   const router = useRouter();
   const [filters, setFilter] = useUrlFilters({ defaults: NOTE_FILTER_DEFAULTS });
   const [pendingNote, setPendingNote] = useState<Note | null>(null);
@@ -39,24 +49,20 @@ export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
       if (initialNotes.some((note) => note.id === filters.note)) {
         return filters.note;
       }
+      if (activeNoteFallback?.id === filters.note) {
+        return filters.note;
+      }
       if (pendingNote?.id === filters.note) {
         return filters.note;
       }
     }
     return initialNotes[0]?.id ?? pendingNote?.id ?? null;
-  }, [filters.note, initialNotes, pendingNote]);
+  }, [filters.note, initialNotes, activeNoteFallback, pendingNote]);
 
   const activeNote =
     initialNotes.find((note) => note.id === resolvedActiveNoteId) ??
+    (activeNoteFallback?.id === resolvedActiveNoteId ? activeNoteFallback : undefined) ??
     (pendingNote?.id === resolvedActiveNoteId ? pendingNote : undefined);
-
-  const sortedNotes = useMemo(() => {
-    return [...initialNotes].sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-  }, [initialNotes]);
 
   const handleCreate = async () => {
     const res = await run(
@@ -126,11 +132,16 @@ export function NotesClient({ initialNotes }: { initialNotes: Note[] }) {
 
       <div className="flex min-h-[480px] flex-col gap-4 md:flex-row">
         <NotesSidebar
-          notes={sortedNotes}
+          notes={initialNotes}
           searchQuery={filters.q}
           activeNoteId={resolvedActiveNoteId}
-          onSearchChange={(value) => setFilter("q", value)}
+          pagination={pagination}
+          onDebouncedSearchChange={(value) => {
+            setFilter("q", value);
+            setFilter("page", "1");
+          }}
           onSelectNote={(id) => setFilter("note", id)}
+          onPageChange={(page) => setFilter("page", String(page))}
         />
 
         {resolvedActiveNoteId && activeNote ? (

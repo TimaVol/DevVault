@@ -73,7 +73,7 @@ export function ProjectsClient({
           setFilter("tab", value);
           setFilter("page", "1");
         }}
-        onSearchChange={(value) => {
+        onDebouncedSearchChange={(value) => {
           setFilter("q", value);
           setFilter("page", "1");
         }}
