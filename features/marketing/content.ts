@@ -1,29 +1,47 @@
 export const hero = {
-  badge: "MVP in development",
-  title: "Your personal",
-  titleHighlight: "developer workspace",
+  badge: "v1.0 — Advanced Snippets",
+  title: "The intelligence layer for your",
+  titleHighlight: "codebase",
   description:
-    "Snippets, projects, tools, and checklists in one fast, focused environment.",
+    "DevVault centralizes your technical ecosystem. Manage snippets, orchestrate projects, and automate tasks in a high-density environment designed for power users.",
 } as const;
 
 export const features = [
   {
     title: "Snippets",
     description:
-      "Organize and search reusable code with tags and syntax highlighting.",
+      "Reusable, version-controlled fragments of logic. Searchable in milliseconds with smart metadata.",
+    slug: "snippets",
   },
   {
     title: "Projects",
     description:
-      "Track active work, repos, and context in one developer-first view.",
+      "Context-aware workspaces that bundle tasks, repos, and documentation.",
+    slug: "projects",
   },
   {
     title: "Tools",
     description:
-      "Built-in utilities for everyday tasks without leaving your vault.",
+      "A curated collection of converters, linters, and formatters directly in your browser.",
+    slug: "tools",
+  },
+  {
+    title: "Notes",
+    description:
+      "Rich-text technical documentation with markdown support.",
+    slug: "notes",
   },
   {
     title: "Checklists",
-    description: "Ship faster with repeatable launch and review checklists.",
+    description:
+      "Standardized PR reviews and deployment checklists for flawless releases.",
+    slug: "checklists",
   },
 ] as const;
+
+export const cta = {
+  title: "Ready to optimize your workflow?",
+  description: "Join developers shipping faster with DevVault.",
+  button: "Get Started for Free",
+  footnote: "No credit card required.",
+} as const;

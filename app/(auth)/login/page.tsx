@@ -13,13 +13,18 @@ export default async function LoginPage({
 
   return (
     <AuthShell>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2 font-display font-semibold">
-            <span className="flex size-7 items-center justify-center rounded-md bg-primary text-[10px] font-bold text-primary-foreground">
+      <Card className="tonal-card border-border shadow-none">
+        <CardHeader className="border-b border-border pb-4">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <span className="flex size-10 items-center justify-center rounded-md border border-border bg-card text-sm font-bold text-primary">
               DV
             </span>
-            DevVault
+            <div>
+              <p className="font-display text-lg font-semibold">DevVault</p>
+              <p className="text-label-mono text-muted-foreground uppercase">
+                Developer Workspace
+              </p>
+            </div>
           </div>
         </CardHeader>
         <AuthForm callbackError={error} />

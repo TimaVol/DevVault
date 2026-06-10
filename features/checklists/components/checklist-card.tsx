@@ -21,44 +21,39 @@ export function ChecklistCard({ checklist, onToggle, onEdit, onDelete }: Checkli
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-2">
+    <Card className="tonal-card">
+      <CardHeader className="flex flex-row items-start justify-between gap-2 border-b border-border pb-4">
         <div>
-          <CardTitle>{checklist.title}</CardTitle>
+          <CardTitle className="text-headline-md">{checklist.title}</CardTitle>
           {checklist.description ? (
-            <p className="text-sm text-muted-foreground">{checklist.description}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{checklist.description}</p>
           ) : null}
         </div>
         <div className="flex gap-1">
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => onEdit(checklist)}
-          >
+          <Button size="icon-sm" variant="ghost" onClick={() => onEdit(checklist)}>
             <Edit2 />
           </Button>
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => onDelete(checklist.id)}
-          >
+          <Button size="icon-sm" variant="ghost" onClick={() => onDelete(checklist.id)}>
             <Trash2 />
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-4">
         <div className="space-y-2">
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-label-mono text-muted-foreground">
             <span>
-              {done}/{total} done
+              {done}/{total} complete
             </span>
-            <Badge variant="secondary">{pct}%</Badge>
+            <Badge variant={pct === 100 ? "status" : "outline"}>{pct}%</Badge>
           </div>
-          <Progress value={pct} />
+          <Progress value={pct} className="h-1.5" />
         </div>
         <ul className="space-y-2">
           {checklist.items.map((item) => (
-            <li key={item.id} className="flex items-center gap-2 text-sm">
+            <li
+              key={item.id}
+              className="flex items-center gap-3 rounded-md border border-transparent px-2 py-1.5 text-sm transition-colors hover:border-border hover:bg-muted/30"
+            >
               <Checkbox
                 checked={item.isCompleted}
                 onCheckedChange={() => onToggle(item.id, item.isCompleted)}

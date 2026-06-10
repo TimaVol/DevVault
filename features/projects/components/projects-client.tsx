@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FolderKanban, Plus } from "lucide-react";
+import { useAppShell } from "@/components/layout/app-shell-context";
 import { ListPagination } from "@/components/layout/list-pagination";
-import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -42,6 +42,18 @@ export function ProjectsClient({
     setOpen(true);
   };
 
+  const shellActions = useMemo(
+    () => (
+      <Button onClick={openCreate} size="sm">
+        <Plus data-icon="inline-start" />
+        New Project
+      </Button>
+    ),
+    [],
+  );
+
+  useAppShell({ title: "Projects", actions: shellActions });
+
   const openEdit = (p: Project) => {
     setEditing(p);
     setOpen(true);
@@ -55,17 +67,6 @@ export function ProjectsClient({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Projects"
-        description="Track repos, demos, and delivery status."
-        actions={
-          <Button onClick={openCreate}>
-            <Plus data-icon="inline-start" />
-            Add project
-          </Button>
-        }
-      />
-
       <ProjectsFilterBar
         tab={filters.tab}
         search={filters.q}
@@ -85,12 +86,15 @@ export function ProjectsClient({
             <EmptyMedia variant="icon">
               <FolderKanban />
             </EmptyMedia>
-            <EmptyTitle>No projects</EmptyTitle>
-            <EmptyDescription>Create a project to track your work.</EmptyDescription>
+            <EmptyTitle>No active projects</EmptyTitle>
+            <EmptyDescription>
+              Start tracking a new repository or local project.
+            </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button variant="outline" onClick={openCreate}>
-              Add project
+            <Button onClick={openCreate}>
+              <Plus data-icon="inline-start" />
+              Initialize Project
             </Button>
           </EmptyContent>
         </Empty>

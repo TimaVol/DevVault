@@ -4,9 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { BookOpen, Plus } from "lucide-react";
-import { PageHeader } from "@/components/layout/page-header";
+import { useAppShell } from "@/components/layout/app-shell-context";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyContent,
@@ -117,65 +116,62 @@ export function NotesClient({
     });
   };
 
+  const shellActions = useMemo(
+    () => (
+      <Button onClick={handleCreate} disabled={isLoading} size="sm">
+        <Plus data-icon="inline-start" />
+        New Note
+      </Button>
+    ),
+    [isLoading],
+  );
+
+  useAppShell({ title: "Notes", actions: shellActions });
+
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Dev notes"
-        description="Daily logs, design drafts, and pinned reminders."
-        actions={
-          <Button onClick={handleCreate} disabled={isLoading}>
-            <Plus data-icon="inline-start" />
-            New note
-          </Button>
-        }
+    <div className="-mx-4 -my-6 flex min-h-[calc(100dvh-4rem)] flex-col overflow-hidden md:-mx-10 md:-my-8 md:flex-row">
+      <NotesSidebar
+        notes={initialNotes}
+        searchQuery={filters.q}
+        activeNoteId={resolvedActiveNoteId}
+        pagination={pagination}
+        onDebouncedSearchChange={(value) => {
+          setFilter("q", value);
+          setFilter("page", "1");
+        }}
+        onSelectNote={(id) => setFilter("note", id)}
+        onPageChange={(page) => setFilter("page", String(page))}
       />
 
-      <div className="flex min-h-[480px] flex-col gap-4 md:flex-row">
-        <NotesSidebar
-          notes={initialNotes}
-          searchQuery={filters.q}
-          activeNoteId={resolvedActiveNoteId}
-          pagination={pagination}
-          onDebouncedSearchChange={(value) => {
-            setFilter("q", value);
-            setFilter("page", "1");
-          }}
-          onSelectNote={(id) => setFilter("note", id)}
-          onPageChange={(page) => setFilter("page", String(page))}
+      {resolvedActiveNoteId && activeNote ? (
+        <NoteEditor
+          key={resolvedActiveNoteId}
+          initialTitle={activeNote.title}
+          initialContent={activeNote.content}
+          initialIsPinned={activeNote.isPinned}
+          isLoading={isLoading}
+          onSave={handleSave}
+          onAutoSave={handleAutoSave}
+          onDelete={handleDelete}
         />
-
-        {resolvedActiveNoteId && activeNote ? (
-          <NoteEditor
-            key={resolvedActiveNoteId}
-            initialTitle={activeNote.title}
-            initialContent={activeNote.content}
-            initialIsPinned={activeNote.isPinned}
-            isLoading={isLoading}
-            onSave={handleSave}
-            onAutoSave={handleAutoSave}
-            onDelete={handleDelete}
-          />
-        ) : (
-          <Card className="flex min-w-0 flex-1 flex-col">
-            <CardContent className="flex flex-1 flex-col items-center justify-center py-16">
-              <Empty>
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <BookOpen />
-                  </EmptyMedia>
-                  <EmptyTitle>No note selected</EmptyTitle>
-                  <EmptyDescription>
-                    Pick a note from the list or create a new one.
-                  </EmptyDescription>
-                </EmptyHeader>
-                <EmptyContent>
-                  <Button onClick={handleCreate}>Create note</Button>
-                </EmptyContent>
-              </Empty>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      ) : (
+        <div className="flex min-w-0 flex-1 items-center justify-center border-l border-border bg-background p-8">
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <BookOpen />
+              </EmptyMedia>
+              <EmptyTitle>No note selected</EmptyTitle>
+              <EmptyDescription>
+                Pick a note from the list or create a new one.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={handleCreate}>Create note</Button>
+            </EmptyContent>
+          </Empty>
+        </div>
+      )}
     </div>
   );
 }

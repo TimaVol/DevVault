@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CheckSquare, Plus } from "lucide-react";
+import { useAppShell } from "@/components/layout/app-shell-context";
 import { ListPagination } from "@/components/layout/list-pagination";
-import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -44,6 +44,18 @@ export function ChecklistsClient({
     setOpen(true);
   };
 
+  const shellActions = useMemo(
+    () => (
+      <Button onClick={openCreate} size="sm">
+        <Plus data-icon="inline-start" />
+        New Checklist
+      </Button>
+    ),
+    [],
+  );
+
+  useAppShell({ title: "Checklists", actions: shellActions });
+
   const openEdit = (checklist: Checklist) => {
     setEditing(checklist);
     setOpen(true);
@@ -62,17 +74,6 @@ export function ChecklistsClient({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Checklists"
-        description="Launch templates and repeatable QA flows."
-        actions={
-          <Button onClick={openCreate}>
-            <Plus data-icon="inline-start" />
-            New checklist
-          </Button>
-        }
-      />
-
       <ChecklistsFilterBar
         search={filters.q}
         onDebouncedSearchChange={(value) => {
@@ -91,7 +92,8 @@ export function ChecklistsClient({
             <EmptyDescription>Create your first launch checklist.</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button variant="outline" onClick={openCreate}>
+            <Button onClick={openCreate}>
+              <Plus data-icon="inline-start" />
               Create checklist
             </Button>
           </EmptyContent>

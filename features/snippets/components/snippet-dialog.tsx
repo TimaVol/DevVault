@@ -73,7 +73,7 @@ export function SnippetDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl border-border bg-popover backdrop-blur-sm">
         <DialogHeader>
           <DialogTitle>{snippet ? "Edit snippet" : "New snippet"}</DialogTitle>
           <DialogDescription>

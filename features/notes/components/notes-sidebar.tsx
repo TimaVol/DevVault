@@ -3,7 +3,6 @@
 import { Pin, Search } from "lucide-react";
 import { DebouncedSearchInput } from "@/components/layout/debounced-search-input";
 import { ListPagination } from "@/components/layout/list-pagination";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/utils/cn";
 import type { Note } from "@/features/notes/types";
@@ -28,32 +27,33 @@ export function NotesSidebar({
   onPageChange,
 }: NotesSidebarProps) {
   return (
-    <Card className="flex w-full shrink-0 flex-col md:w-72">
-      <CardHeader className="pb-3">
+    <aside className="flex w-full shrink-0 flex-col border-r border-border bg-[#0e0e0e] md:w-80">
+      <div className="border-b border-border p-3">
+        <p className="text-label-caps mb-2 pl-1 text-muted-foreground">All Notes</p>
         <div className="relative">
-          <Search className="absolute top-1/2 left-2.5 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
           <DebouncedSearchInput
             placeholder="Search notes…"
             value={searchQuery}
             onDebouncedChange={onDebouncedSearchChange}
-            className="pl-8"
+            className="rounded-full pl-9"
           />
         </div>
-      </CardHeader>
-      <CardContent className="flex-1 pt-0">
-        <ScrollArea className="h-[420px] pr-2">
+      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-2">
           {notes.length > 0 ? (
-            <ul className="space-y-1">
+            <ul className="space-y-0.5">
               {notes.map((note) => (
                 <li key={note.id}>
                   <button
                     type="button"
                     onClick={() => onSelectNote(note.id)}
                     className={cn(
-                      "w-full rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
+                      "w-full rounded-md px-3 py-2.5 text-left text-sm transition-colors",
                       activeNoteId === note.id
-                        ? "border-border bg-muted"
-                        : "border-transparent hover:bg-muted/60",
+                        ? "border-l-2 border-l-primary bg-muted text-primary"
+                        : "text-muted-foreground hover:bg-muted/30 hover:text-foreground",
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -62,7 +62,7 @@ export function NotesSidebar({
                         <Pin className="size-3.5 shrink-0 fill-primary text-primary" />
                       ) : null}
                     </div>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    <p className="mt-0.5 truncate text-xs opacity-70">
                       {note.content.slice(0, 48)}
                       {note.content.length > 48 ? "…" : ""}
                     </p>
@@ -75,16 +75,16 @@ export function NotesSidebar({
               No notes match your search.
             </p>
           )}
-        </ScrollArea>
-      </CardContent>
-      <CardFooter className="border-t pt-4">
+        </div>
+      </ScrollArea>
+      <div className="border-t border-border p-3">
         <ListPagination
           page={pagination.page}
           pageSize={pagination.pageSize}
           total={pagination.total}
           onPageChange={onPageChange}
         />
-      </CardFooter>
-    </Card>
+      </div>
+    </aside>
   );
 }

@@ -40,15 +40,17 @@ export function AuthForm({ callbackError }: { callbackError?: string }) {
 
   return (
     <>
-      <CardHeader>
-        <CardTitle>{mode === "signup" ? "Create workspace" : "Welcome back"}</CardTitle>
+      <CardHeader className="pt-2">
+        <CardTitle className="text-headline-md">
+          {mode === "signup" ? "Create workspace" : "Welcome back"}
+        </CardTitle>
         <CardDescription>
           {mode === "signup"
             ? "Sign up for your personal developer vault"
             : "Sign in to manage snippets, projects, and notes"}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-6 pb-6">
         <form action={formAction}>
           <input type="hidden" name="mode" value={mode} />
           <FieldGroup>
@@ -96,7 +98,7 @@ export function AuthForm({ callbackError }: { callbackError?: string }) {
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          {mode === "signup" ? "Already have an account? " : "New here? "}
+          {mode === "signup" ? "Already have an account? " : "Don't have an account? "}
           <button
             type="button"
             onClick={() => setIsSignUp(mode === "signin")}
@@ -105,6 +107,15 @@ export function AuthForm({ callbackError }: { callbackError?: string }) {
             {mode === "signup" ? "Sign in" : "Create account"}
           </button>
         </p>
+
+        <div className="flex justify-center gap-4 pt-2">
+          <a href="#" className="text-label-mono text-muted-foreground hover:text-foreground">
+            Privacy Policy
+          </a>
+          <a href="#" className="text-label-mono text-muted-foreground hover:text-foreground">
+            Terms of Service
+          </a>
+        </div>
       </CardContent>
     </>
   );

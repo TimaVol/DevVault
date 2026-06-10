@@ -1,17 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { Plus } from "lucide-react";
-import { AppSidebar } from "@/components/layout/app-sidebar";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/utils/cn";
-import { ROUTES } from "@/lib/routes";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { AppSideNav } from "@/components/layout/app-sidebar";
+import { AppShellProvider } from "@/components/layout/app-shell-context";
+import { AppTopNav } from "@/components/layout/app-top-nav";
 import { ConfirmDeleteProvider } from "@/hooks/use-confirm-delete";
 
 export function DashboardLayout({
@@ -23,25 +14,17 @@ export function DashboardLayout({
 }) {
   return (
     <ConfirmDeleteProvider>
-    <SidebarProvider>
-      <AppSidebar userEmail={userEmail} />
-      <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <div className="flex flex-1 items-center justify-end gap-2">
-            <Link
-              href={ROUTES.snippets}
-              className={cn(buttonVariants({ size: "sm" }))}
-            >
-              <Plus data-icon="inline-start" />
-              New snippet
-            </Link>
+      <AppShellProvider>
+        <div className="flex h-screen overflow-hidden bg-background">
+          <AppSideNav userEmail={userEmail} />
+          <div className="flex min-w-0 flex-1 flex-col md:ml-60">
+            <AppTopNav userEmail={userEmail} />
+            <main className="flex-1 overflow-y-auto px-4 py-6 md:px-10 md:py-8">
+              {children}
+            </main>
           </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">{children}</div>
-      </SidebarInset>
-    </SidebarProvider>
+        </div>
+      </AppShellProvider>
     </ConfirmDeleteProvider>
   );
 }

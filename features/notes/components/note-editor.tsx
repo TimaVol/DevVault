@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Edit, Eye, Loader2, Pin, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
@@ -68,8 +67,8 @@ export function NoteEditor({
           : null;
 
   return (
-    <Card className="flex min-w-0 flex-1 flex-col">
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 border-b pb-4">
+    <div className="flex min-w-0 flex-1 flex-col bg-background">
+      <div className="flex flex-row flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 md:px-6">
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={() => setIsPreview((v) => !v)}>
             {isPreview ? (
@@ -116,17 +115,17 @@ export function NoteEditor({
             {isLoading ? <Loader2 className="animate-spin" /> : "Save"}
           </Button>
         </div>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-3 pt-4">
+      </div>
+      <div className="flex flex-1 flex-col gap-3 px-4 py-4 md:px-6">
         <Input
           placeholder="Note title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           readOnly={isPreview}
-          className="border-0 px-0 text-lg font-semibold shadow-none focus-visible:ring-0"
+          className="border-0 bg-transparent px-0 text-headline-md shadow-none focus-visible:ring-0"
         />
         {isPreview ? (
-          <div className="min-h-[320px] flex-1 rounded-lg border bg-muted/30 p-4 text-sm leading-relaxed whitespace-pre-wrap">
+          <div className="min-h-[320px] flex-1 rounded-lg border border-border bg-muted/20 p-4 text-sm leading-relaxed whitespace-pre-wrap">
             {content || (
               <span className="text-muted-foreground italic">Empty note</span>
             )}
@@ -136,10 +135,10 @@ export function NoteEditor({
             placeholder="Markdown or plain text…"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[320px] flex-1 resize-none font-mono text-sm"
+            className="min-h-[320px] flex-1 resize-none border-border bg-input font-mono text-sm"
           />
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

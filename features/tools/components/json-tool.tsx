@@ -6,13 +6,6 @@ import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FieldLabel } from "@/components/ui/field";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -54,13 +47,13 @@ export function JsonTool() {
   };
 
   return (
-    <Card className="flex h-full flex-col">
-      <CardHeader className="flex flex-row items-start justify-between">
+    <div className="tonal-card flex h-full flex-col">
+      <div className="flex flex-row items-start justify-between border-b border-border px-6 py-4">
         <div>
-          <CardTitle>JSON Formatter & Validator</CardTitle>
-          <CardDescription className="text-xs">
-            Format, minify, and validate JSON payloads instantly
-          </CardDescription>
+          <h2 className="text-headline-md font-display">JSON Formatter</h2>
+          <p className="text-label-caps text-muted-foreground">
+            Format, minify, and validate JSON payloads
+          </p>
         </div>
         <Select
           value={String(jsonIndent)}
@@ -74,24 +67,24 @@ export function JsonTool() {
             <SelectItem value="4">4 spaces</SelectItem>
           </SelectContent>
         </Select>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col space-y-4 min-h-[480px]">
-        <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
+      </div>
+      <div className="flex min-h-[480px] flex-1 flex-col space-y-4 px-6 py-6">
+        <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Input Payload
+            <FieldLabel className="text-label-mono uppercase text-muted-foreground">
+              Input
             </FieldLabel>
             <Textarea
               placeholder='{ "key": "value" }'
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
-              className="min-h-[220px] flex-1 font-mono text-xs"
+              className="min-h-[280px] flex-1 border-border bg-input font-mono text-xs"
             />
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Formatted Output
+              <FieldLabel className="text-label-mono uppercase text-muted-foreground">
+                Output
               </FieldLabel>
               {jsonOutput && (
                 <Button
@@ -115,19 +108,19 @@ export function JsonTool() {
               readOnly
               placeholder="// Output will appear here"
               value={jsonOutput}
-              className="min-h-[220px] flex-1 font-mono text-xs"
+              className="min-h-[280px] flex-1 border-border bg-muted/20 font-mono text-xs"
             />
           </div>
         </div>
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="flex justify-end gap-2 border-t border-border pt-4">
           <Button onClick={minifyJson} variant="outline" size="sm">
-            Minify JSON
+            Minify
           </Button>
           <Button onClick={formatJson} size="sm">
-            Format JSON
+            Beautify
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

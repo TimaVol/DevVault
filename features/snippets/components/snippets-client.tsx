@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Code2, Plus } from "lucide-react";
+import { useAppShell } from "@/components/layout/app-shell-context";
 import { ListPagination } from "@/components/layout/list-pagination";
-import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -18,7 +18,7 @@ import { useConfirmDelete } from "@/hooks/use-confirm-delete";
 import { useUrlFilters } from "@/hooks/use-url-filters";
 import { deleteSnippet } from "@/features/snippets/server/actions";
 import type { Snippet } from "@/features/snippets/types";
-import { SnippetCard } from "./snippet-card";
+import { SnippetMobileCard, SnippetTableRow, SnippetsTable } from "./snippet-card";
 import { SnippetDialog } from "./snippet-dialog";
 import { SnippetsFilterBar } from "./snippets-filter-bar";
 
@@ -41,6 +41,23 @@ export function SnippetsClient({
   const { copy, copiedId } = useClipboard();
   const { confirmDelete } = useConfirmDelete();
 
+  const openCreate = () => {
+    setEditing(null);
+    setDialogOpen(true);
+  };
+
+  const shellActions = useMemo(
+    () => (
+      <Button onClick={openCreate} size="sm">
+        <Plus data-icon="inline-start" />
+        New Snippet
+      </Button>
+    ),
+    [],
+  );
+
+  useAppShell({ title: "Snippets", actions: shellActions });
+
   const remove = (id: string) =>
     confirmDelete(() => deleteSnippet(id), {
       message: "Delete this snippet?",
@@ -49,21 +66,12 @@ export function SnippetsClient({
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Snippets"
-        description="Search and manage reusable code fragments."
-        actions={
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus data-icon="inline-start" />
-            Add snippet
-          </Button>
-        }
-      />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-headline-md font-display">
+          Stored Snippets{" "}
+          <span className="text-muted-foreground">({pagination.total})</span>
+        </h2>
+      </div>
 
       <SnippetsFilterBar
         search={filters.q}
@@ -85,39 +93,51 @@ export function SnippetsClient({
             <EmptyMedia variant="icon">
               <Code2 />
             </EmptyMedia>
-            <EmptyTitle>No snippets</EmptyTitle>
+            <EmptyTitle>No snippets yet</EmptyTitle>
             <EmptyDescription>
-              Adjust filters or create your first snippet.
+              Save reusable code blocks, CLI commands, or configuration templates.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEditing(null);
-                setDialogOpen(true);
-              }}
-            >
-              Create snippet
+            <Button onClick={openCreate}>
+              <Plus data-icon="inline-start" />
+              Create New Snippet
             </Button>
           </EmptyContent>
         </Empty>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {initialSnippets.map((snippet) => (
-            <SnippetCard
-              key={snippet.id}
-              snippet={snippet}
-              copiedId={copiedId}
-              onCopy={(id, content) => copy(content, id)}
-              onEdit={(s) => {
-                setEditing(s);
-                setDialogOpen(true);
-              }}
-              onDelete={remove}
-            />
-          ))}
-        </div>
+        <>
+          <div className="flex flex-col gap-3 md:hidden">
+            {initialSnippets.map((snippet) => (
+              <SnippetMobileCard
+                key={snippet.id}
+                snippet={snippet}
+                copiedId={copiedId}
+                onCopy={(id, content) => copy(content, id)}
+                onEdit={(s) => {
+                  setEditing(s);
+                  setDialogOpen(true);
+                }}
+                onDelete={remove}
+              />
+            ))}
+          </div>
+          <SnippetsTable>
+            {initialSnippets.map((snippet) => (
+              <SnippetTableRow
+                key={snippet.id}
+                snippet={snippet}
+                copiedId={copiedId}
+                onCopy={(id, content) => copy(content, id)}
+                onEdit={(s) => {
+                  setEditing(s);
+                  setDialogOpen(true);
+                }}
+                onDelete={remove}
+              />
+            ))}
+          </SnippetsTable>
+        </>
       )}
 
       <ListPagination

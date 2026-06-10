@@ -21,11 +21,9 @@ export function PageHeader({
       )}
     >
       <div className="space-y-1">
-        <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-          {title}
-        </h1>
+        <h1 className="text-headline-lg font-display">{title}</h1>
         {description ? (
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-sm text-muted-foreground md:text-base">{description}</p>
         ) : null}
       </div>
       {actions ? (

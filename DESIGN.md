@@ -1,7 +1,5 @@
 ---
 name: DevVault Design System
-
-> **Implementation:** Runtime tokens live in `app/globals.css` (shadcn CSS variables). This file is the design reference; use `bg-background`, `text-muted-foreground`, `border-border`, etc. in UI — not legacy names like `border-subtle` or `surface-card`.
 colors:
   surface: '#131313'
   surface-dim: '#131313'
@@ -114,13 +112,15 @@ spacing:
   container-max: 1200px
 ---
 
+> **Implementation:** Runtime tokens live in `app/globals.css` (shadcn CSS variables). This file is the design reference; use `bg-background`, `text-muted-foreground`, `border-border`, etc. in UI — not legacy names like `border-subtle` or `surface-card`.
+
 ## Brand & Style
 The design system is engineered for a high-performance, personal developer environment. It draws heavily from the "Linear-esque" aesthetic—prioritizing extreme focus, technical precision, and a "pro-tool" atmosphere. The style is **Modern / Tech-Minimalism**, characterized by a deep, monochromatic foundation punctuated by high-vibrancy accents that signify activity and status.
 
 The emotional response should be one of "calm control." By utilizing expansive whitespace (macro-level) and dense, information-rich components (micro-level), the system balances the need for a clean interface with the functional requirements of a developer's daily workflow. Subtle gradients, micro-interactions, and thin, high-contrast borders replace heavy shadows to create a sense of digital craftsmanship.
 
 ## Colors
-The palette is rooted in a "True Dark" philosophy. The primary background uses `#131313` (`background` / `surface` tokens) to minimize eye strain while keeping depth readable. Deepest inset areas may use `#0e0e0e` (`surface-container-lowest`). Layering is achieved through varying shades of charcoal rather than transparency alone.
+The palette is rooted in a "True Dark" philosophy. The primary background uses `#0A0A0A` to ensure perfect contrast on OLED displays and minimize eye strain. Layering is achieved through varying shades of charcoal and navy rather than transparency alone.
 
 - **Primary & Secondary:** Electric Blue and Purple are used strictly for actionable items, primary progress indicators, and brand moments. They should frequently be used as subtle 1px gradients or glows.
 - **Surface Tiers:** Use `#111111` for elevated surfaces (cards, modals) and `#1F1F1F` for borders. 
@@ -145,9 +145,9 @@ This design system utilizes a **Fixed Grid** approach for main content areas to 
 ## Elevation & Depth
 Depth is conveyed through **Tonal Layering** and **Low-Contrast Outlines** rather than traditional shadows. 
 
-1. **Floor (Level 0):** `#131313` (`background` / `surface`) — base app background.
-2. **Surface (Level 1):** `#111111` (`surface-card`) — cards and secondary panels.
-3. **Overlay (Level 2):** `#1c1b1b` (`surface-container-low`) — modals, dropdowns, and tooltips.
+1. **Floor (Level 0):** `#0A0A0A` - The base background.
+2. **Surface (Level 1):** `#111111` - Used for cards and secondary panels.
+3. **Overlay (Level 2):** `#1A1A1A` - Used for modals, dropdowns, and tooltips.
 
 **Borders:** Use 1px solid `#1F1F1F` for all container boundaries. For active states or "hover" effects, the border can transition to the Primary Blue or a subtle white at 10% opacity.
 **Inner Glow:** For primary buttons, use a very subtle top-inner-white border (0.5px) to simulate a tactile edge.
