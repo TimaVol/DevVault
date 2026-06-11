@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublicEnv } from "@/lib/env/public";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/shared/routes";
 
 export async function updateSession(request: NextRequest) {
   const supabaseEnv = getSupabasePublicEnv();

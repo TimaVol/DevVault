@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/shared/routes";
 
 const navLinks = [
   { href: "#features", label: "Features" },

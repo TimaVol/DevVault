@@ -3,7 +3,7 @@ import { ArrowRight, Bolt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/shared/routes";
 import { hero } from "@/features/marketing/content";
 
 export function HeroSection() {

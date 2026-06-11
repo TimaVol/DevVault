@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import type { ActionResult } from "@/lib/action-result";
+import type { ActionResult } from "@/shared/action-result";
 import { getErrorMessage } from "@/utils/errors";
 
 type RunOptions<R> = {

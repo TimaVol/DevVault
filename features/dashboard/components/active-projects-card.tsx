@@ -10,7 +10,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import type { DashboardOverview } from "@/features/dashboard/types";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/shared/routes";
 import { cn } from "@/utils/cn";
 
 const statusVariant = (status: string) => {

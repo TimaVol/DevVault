@@ -10,9 +10,9 @@ import {
   actionSuccess,
   serverFields,
   withAuthedAction,
-} from "@/lib/db/server-action";
-import { ROUTES } from "@/lib/routes";
-import { parseActionId } from "@/lib/validation/ids";
+} from "@/server/actions";
+import { ROUTES } from "@/shared/routes";
+import { parseActionId } from "@/server/validation/ids";
 
 const insertNoteSchema = createInsertSchema(notes).omit(serverFields);
 const updateNoteSchema = createUpdateSchema(notes).omit(serverFields);

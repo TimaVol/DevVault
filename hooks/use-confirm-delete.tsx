@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAsyncAction } from "@/hooks/use-async-action";
-import type { ActionResult } from "@/lib/action-result";
+import type { ActionResult } from "@/shared/action-result";
 
 type ConfirmDeleteOptions = {
   message: string;

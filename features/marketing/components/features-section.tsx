@@ -9,7 +9,7 @@ import { features, cta } from '@/features/marketing/content'
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
-import { ROUTES } from '@/lib/routes'
+import { ROUTES } from '@/shared/routes'
 
 export function FeaturesSection() {
   const snippets = features.find((f) => f.slug === 'snippets')!

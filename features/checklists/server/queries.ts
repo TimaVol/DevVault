@@ -10,9 +10,9 @@ import {
   isNull,
   or,
 } from "drizzle-orm";
-import { requireDrizzle } from "@/lib/auth/require-user";
-import type { PaginatedResult } from "@/lib/pagination";
-import { getOffset } from "@/lib/pagination";
+import { requireDrizzle } from "@/server/auth/require-user";
+import type { PaginatedResult } from "@/server/pagination";
+import { getOffset } from "@/server/pagination";
 import { checklists, checklistItems } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
 import type { ChecklistListParams } from "./params";

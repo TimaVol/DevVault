@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/shared/routes";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { signOut } from "@/features/auth/server/actions";
 import { useAppShellContext } from "@/components/layout/app-shell-context";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/shared/routes";
 import { cn } from "@/utils/cn";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";

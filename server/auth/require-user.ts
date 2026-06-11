@@ -3,8 +3,8 @@ import {
   createDrizzleSupabaseClient,
   type DrizzleSupabaseContext,
 } from "@/lib/db/server";
-import type { ActionFailure } from "@/lib/action-result";
-import { ROUTES } from "@/lib/routes";
+import type { ActionFailure } from "@/shared/action-result";
+import { ROUTES } from "@/shared/routes";
 
 /** Server Components — redirects to login when unauthenticated */
 export async function requireDrizzle(): Promise<DrizzleSupabaseContext> {

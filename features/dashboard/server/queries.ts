@@ -1,7 +1,7 @@
 import "server-only";
 
 import { desc, isNull, sql } from "drizzle-orm";
-import { requireDrizzle } from "@/lib/auth/require-user";
+import { requireDrizzle } from "@/server/auth/require-user";
 import { checklists, notes, projects, snippets } from "@/lib/db/schema";
 
 export async function getDashboardOverview() {

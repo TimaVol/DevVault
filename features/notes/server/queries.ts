@@ -1,9 +1,9 @@
 import "server-only";
 
 import { and, count, desc, eq, ilike, isNull, or } from "drizzle-orm";
-import { requireDrizzle } from "@/lib/auth/require-user";
-import type { PaginatedResult } from "@/lib/pagination";
-import { getOffset } from "@/lib/pagination";
+import { requireDrizzle } from "@/server/auth/require-user";
+import type { PaginatedResult } from "@/server/pagination";
+import { getOffset } from "@/server/pagination";
 import { notes } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
 import type { NoteListParams } from "./params";

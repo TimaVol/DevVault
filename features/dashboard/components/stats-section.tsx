@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CheckSquare, Code2, FolderKanban, StickyNote } from "lucide-react";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/shared/routes";
 
 type StatItem = {
   label: string;

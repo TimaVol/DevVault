@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card, CardHeader } from "@/components/ui/card";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/shared/routes";
 import { AuthForm } from "@/features/auth/components/auth-form";
 
 export default async function LoginPage({

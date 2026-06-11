@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/empty";
 import type { DashboardOverview } from "@/features/dashboard/types";
 import { useClipboard } from "@/hooks/use-clipboard";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/shared/routes";
 import { cn } from "@/utils/cn";
 
 function SnippetPreview({

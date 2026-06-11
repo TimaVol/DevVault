@@ -1,13 +1,13 @@
 import {
   isUnauthorized,
   requireDrizzleAction,
-} from "@/lib/auth/require-user";
-import type { ActionFailure, ActionResult } from "@/lib/action-result";
+} from "@/server/auth/require-user";
+import type { ActionFailure, ActionResult } from "@/shared/action-result";
 import {
   actionFailure,
   actionOk,
   actionSuccess,
-} from "@/lib/action-result.server";
+} from "@/server/actions/result.server";
 import type { DrizzleSupabaseContext } from "@/lib/db/server";
 import { getErrorMessage } from "@/utils/errors";
 
@@ -15,11 +15,11 @@ export type {
   ActionFailure,
   ActionResult,
   ActionSuccess,
-} from "@/lib/action-result";
+} from "@/shared/action-result";
 export {
   isActionFailure,
   isActionSuccess,
-} from "@/lib/action-result";
+} from "@/shared/action-result";
 
 /** @deprecated Use ActionFailure */
 export type ActionError = ActionFailure;

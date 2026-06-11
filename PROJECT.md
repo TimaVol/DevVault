@@ -33,12 +33,22 @@ Build a beautiful, fast, and actually useful developer tool that feels premium.
 ```
 app/           # Routes only — thin pages that fetch data and render feature clients
 features/      # Domain modules (UI, server queries, server actions, types)
+shared/        # Client-safe contracts (ActionResult types, ROUTES)
+server/        # Shared server patterns (actions, auth, pagination, validation)
 components/    # Shared UI primitives (shadcn) and app shell layout
-lib/           # Infrastructure — Supabase clients, Drizzle, auth helpers
+lib/           # Infrastructure — Supabase clients, Drizzle, env
 hooks/         # Shared client hooks
 utils/         # Pure helpers (cn, errors)
 drizzle/       # Database migrations
 ```
+
+### Import rules
+
+- Client components and hooks → `@/shared/*` (types, constants)
+- Feature mutations → `@/server/actions` (+ `@/server/validation/*` as needed)
+- Feature reads → `@/server/auth/require-user` + `@/lib/db`
+- List pagination → `@/server/pagination`
+- DB / Supabase wiring → `@/lib/db`, `@/lib/supabase`, `@/lib/env`
 
 ### Feature module template
 

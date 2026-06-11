@@ -1,4 +1,4 @@
-import type { ActionFailure, ActionSuccess } from "@/lib/action-result";
+import type { ActionFailure, ActionSuccess } from "@/shared/action-result";
 
 export function actionFailure(error: string): ActionFailure {
   return { success: false, error };

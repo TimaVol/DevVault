@@ -5,7 +5,7 @@ import { Menu } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAppShellContext, useAppShellStore } from "@/components/layout/app-shell-context";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "@/shared/routes";
 
 const ROUTE_TITLES: Record<string, string> = {
   [ROUTES.dashboard]: "Dashboard",

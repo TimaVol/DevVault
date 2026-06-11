@@ -17,7 +17,7 @@ import {
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";
 import { useUrlFilters } from "@/hooks/use-url-filters";
-import { isActionSuccess } from "@/lib/action-result";
+import { isActionSuccess } from "@/shared/action-result";
 import { createNote, deleteNote, updateNote } from "@/features/notes/server/actions";
 import type { Note } from "@/features/notes/types";
 import { NoteEditor } from "./note-editor";

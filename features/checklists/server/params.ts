@@ -1,4 +1,4 @@
-import { parseBaseListParams } from "@/lib/pagination";
+import { parseBaseListParams } from "@/server/pagination";
 
 export type ChecklistListParams = {
   q?: string;

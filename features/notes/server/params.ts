@@ -1,7 +1,7 @@
 import {
   parseBaseListParams,
   parseStringParam,
-} from "@/lib/pagination";
+} from "@/server/pagination";
 
 export type NoteListParams = {
   q?: string;
