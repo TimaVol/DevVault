@@ -41,7 +41,7 @@ export function ProjectsClient({
     [openCreate],
   );
 
-  useAppShell({ title: "Projects", actions: shellActions });
+  useAppShell({ actions: shellActions });
 
   const remove = (id: string) =>
     confirmDelete(() => deleteProject(id), {

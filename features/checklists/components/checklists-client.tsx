@@ -44,7 +44,7 @@ export function ChecklistsClient({
     [openCreate],
   );
 
-  useAppShell({ title: "Checklists", actions: shellActions });
+  useAppShell({ actions: shellActions });
 
   const toggle = (itemId: string, done: boolean) =>
     run(() => toggleChecklistItem(itemId, !done), {

@@ -2,11 +2,11 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-  useSyncExternalStore,
   type ReactNode,
 } from "react";
 
@@ -15,57 +15,42 @@ type AppShellConfig = {
   actions?: ReactNode;
 };
 
-type ShellSnapshot = {
-  title?: string;
-  actions?: ReactNode;
-  version: number;
-};
-
-let shellSnapshot: ShellSnapshot = { version: 0 };
-const shellListeners = new Set<() => void>();
-
-function subscribeShell(listener: () => void) {
-  shellListeners.add(listener);
-  return () => shellListeners.delete(listener);
-}
-
-function getShellSnapshot() {
-  return shellSnapshot;
-}
-
-function emitShellChange() {
-  shellListeners.forEach((listener) => listener());
-}
-
-function patchShell(patch: Partial<AppShellConfig>) {
-  const nextTitle = "title" in patch ? patch.title : shellSnapshot.title;
-  const nextActions = "actions" in patch ? patch.actions : shellSnapshot.actions;
-
-  if (shellSnapshot.title === nextTitle && shellSnapshot.actions === nextActions) {
-    return;
-  }
-
-  shellSnapshot = {
-    title: nextTitle,
-    actions: nextActions,
-    version: shellSnapshot.version + 1,
-  };
-  emitShellChange();
-}
-
 type AppShellContextValue = {
   mobileNavOpen: boolean;
   setMobileNavOpen: (open: boolean) => void;
+  title?: string;
+  actions?: ReactNode;
+  setShell: (config: Partial<AppShellConfig>) => void;
 };
 
 const AppShellContext = createContext<AppShellContextValue | null>(null);
 
 export function AppShellProvider({ children }: { children: ReactNode }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [shell, setShellState] = useState<AppShellConfig>({});
+
+  const setShell = useCallback((patch: Partial<AppShellConfig>) => {
+    setShellState((prev) => {
+      const next = {
+        title: "title" in patch ? patch.title : prev.title,
+        actions: "actions" in patch ? patch.actions : prev.actions,
+      };
+      if (prev.title === next.title && prev.actions === next.actions) {
+        return prev;
+      }
+      return next;
+    });
+  }, []);
 
   const value = useMemo(
-    () => ({ mobileNavOpen, setMobileNavOpen }),
-    [mobileNavOpen],
+    () => ({
+      mobileNavOpen,
+      setMobileNavOpen,
+      title: shell.title,
+      actions: shell.actions,
+      setShell,
+    }),
+    [mobileNavOpen, shell.title, shell.actions, setShell],
   );
 
   return (
@@ -81,13 +66,12 @@ export function useAppShellContext() {
   return ctx;
 }
 
-export function useAppShellStore() {
-  return useSyncExternalStore(subscribeShell, getShellSnapshot, getShellSnapshot);
-}
+export function useAppShell({ title, actions }: AppShellConfig = {}) {
+  const { setShell } = useAppShellContext();
 
-export function useAppShell({ title, actions }: AppShellConfig) {
   useEffect(() => {
-    patchShell({ title, actions });
-    return () => patchShell({ title: undefined, actions: undefined });
-  }, [title, actions]);
+    if (title === undefined && actions === undefined) return;
+    setShell({ title, actions });
+    return () => setShell({ title: undefined, actions: undefined });
+  }, [title, actions, setShell]);
 }

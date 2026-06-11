@@ -1,12 +1,10 @@
 import Link from "next/link";
+import { Zap } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
 import { ROUTES } from "@/shared/routes";
 
-const navLinks = [
-  { href: "#features", label: "Features" },
-  { href: ROUTES.login, label: "Sign in" },
-] as const;
+const navLinks = [{ href: "#features", label: "Features" }] as const;
 
 export function SiteHeader() {
   return (
@@ -16,8 +14,8 @@ export function SiteHeader() {
           href={ROUTES.home}
           className="flex items-center gap-2 font-display font-semibold"
         >
-          <span className="flex size-8 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-            DV
+          <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <Zap className="size-4" />
           </span>
           DevVault
         </Link>

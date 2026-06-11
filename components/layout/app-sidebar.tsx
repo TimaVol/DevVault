@@ -3,19 +3,11 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  CheckSquare,
-  Code2,
-  FolderKanban,
-  LayoutDashboard,
-  LogOut,
-  StickyNote,
-  Wrench,
-  Zap,
-} from "lucide-react";
+import { LogOut, Zap } from "lucide-react";
 import { signOut } from "@/features/auth/server/actions";
 import { useAppShellContext } from "@/components/layout/app-shell-context";
-import { ROUTES } from "@/shared/routes";
+import { DASHBOARD_NAV, isNavActive } from "@/shared/dashboard-nav";
+import { getUserDisplayName, getUserInitial } from "@/shared/user-display";
 import { cn } from "@/utils/cn";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -26,25 +18,14 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-const navItems = [
-  { href: ROUTES.dashboard, label: "Dashboard", icon: LayoutDashboard },
-  { href: ROUTES.snippets, label: "Snippets", icon: Code2 },
-  { href: ROUTES.projects, label: "Projects", icon: FolderKanban },
-  { href: ROUTES.tools, label: "Tools", icon: Wrench },
-  { href: ROUTES.checklists, label: "Checklists", icon: CheckSquare },
-  { href: ROUTES.notes, label: "Notes", icon: StickyNote },
-] as const;
-
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
     <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2">
-      {navItems.map((item) => {
+      {DASHBOARD_NAV.map((item) => {
         const Icon = item.icon;
-        const isActive =
-          pathname === item.href ||
-          (item.href !== ROUTES.dashboard && pathname.startsWith(item.href));
+        const active = isNavActive(pathname, item.href);
 
         return (
           <Link
@@ -53,12 +34,12 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             onClick={onNavigate}
             className={cn(
               "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-              isActive
+              active
                 ? "border-l-2 border-primary bg-sidebar-accent font-medium text-primary"
                 : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
             )}
           >
-            <Icon className={cn("size-4", isActive && "text-primary")} />
+            <Icon className={cn("size-4", active && "text-primary")} />
             <span>{item.label}</span>
           </Link>
         );
@@ -68,9 +49,6 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function SideNavFooter({ userEmail }: { userEmail: string | null }) {
-  const displayName = userEmail?.split("@")[0] ?? "User";
-  const initial = userEmail?.charAt(0).toUpperCase() ?? "U";
-
   if (!userEmail) return null;
 
   return (
@@ -78,11 +56,13 @@ function SideNavFooter({ userEmail }: { userEmail: string | null }) {
       <div className="flex items-center gap-3 px-3 py-2">
         <Avatar className="size-8 rounded-md">
           <AvatarFallback className="rounded-md bg-muted text-xs">
-            {initial}
+            {getUserInitial(userEmail)}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium capitalize">{displayName}</p>
+          <p className="truncate text-sm font-medium capitalize">
+            {getUserDisplayName(userEmail)}
+          </p>
           <p className="truncate text-xs text-muted-foreground">{userEmail}</p>
         </div>
       </div>
@@ -140,6 +120,15 @@ function SideNavPanel({
 export function AppSideNav({ userEmail }: { userEmail: string | null }) {
   const pathname = usePathname();
   const { mobileNavOpen, setMobileNavOpen } = useAppShellContext();
+  const isFirstRoute = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRoute.current) {
+      isFirstRoute.current = false;
+      return;
+    }
+    setMobileNavOpen(false);
+  }, [pathname, setMobileNavOpen]);
 
   return (
     <>
@@ -159,24 +148,6 @@ export function AppSideNav({ userEmail }: { userEmail: string | null }) {
           />
         </SheetContent>
       </Sheet>
-
-      {/* Close drawer on route change */}
-      <RouteChangeCloser pathname={pathname} />
     </>
   );
-}
-
-function RouteChangeCloser({ pathname }: { pathname: string }) {
-  const { setMobileNavOpen } = useAppShellContext();
-  const isFirst = useRef(true);
-
-  useEffect(() => {
-    if (isFirst.current) {
-      isFirst.current = false;
-      return;
-    }
-    setMobileNavOpen(false);
-  }, [pathname, setMobileNavOpen]);
-
-  return null;
 }

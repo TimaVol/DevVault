@@ -119,7 +119,7 @@ export function NotesClient({
     [handleCreate, isLoading],
   );
 
-  useAppShell({ title: "Notes", actions: shellActions });
+  useAppShell({ actions: shellActions });
 
   return (
     <div className="-mx-4 -my-6 flex min-h-[calc(100dvh-4rem)] flex-col overflow-hidden md:-mx-10 md:-my-8 md:flex-row">

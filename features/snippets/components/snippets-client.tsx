@@ -45,7 +45,7 @@ export function SnippetsClient({
     [openCreate],
   );
 
-  useAppShell({ title: "Snippets", actions: shellActions });
+  useAppShell({ actions: shellActions });
 
   const remove = (id: string) =>
     confirmDelete(() => deleteSnippet(id), {

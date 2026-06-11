@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Braces, Code, Hash, Key, Link2 } from "lucide-react";
-import { useAppShell } from "@/components/layout/app-shell-context";
 import { cn } from "@/utils/cn";
 import { Base64Tool } from "./base64-tool";
 import { JsonTool } from "./json-tool";
@@ -22,8 +21,6 @@ const menuItems: { id: ActiveTool; label: string; icon: React.ElementType }[] = 
 
 export function ToolsClient() {
   const [activeTool, setActiveTool] = useState<ActiveTool>("json");
-
-  useAppShell({ title: "Tools" });
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-0">
