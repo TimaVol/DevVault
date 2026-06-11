@@ -22,17 +22,26 @@ import { parseCommaList } from "@/utils/normalize-list";
 type ProjectDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editing: Project | null;
+  entity: Project | null;
 };
 
-export function ProjectDialog({ open, onOpenChange, editing }: ProjectDialogProps) {
+export function ProjectDialog({ open, onOpenChange, entity }: ProjectDialogProps) {
   const { isLoading, run } = useAsyncAction();
-  const [name, setName] = useState(editing?.name ?? "");
-  const [description, setDescription] = useState(editing?.description ?? "");
-  const [repoUrl, setRepoUrl] = useState(editing?.repositoryUrl ?? "");
-  const [demoUrl, setDemoUrl] = useState(editing?.demoUrl ?? "");
-  const [status, setStatus] = useState(editing?.status ?? "active");
-  const [techStackInput, setTechStackInput] = useState(editing?.techStack?.join(", ") ?? "");
+  const [name, setName] = useState(entity?.name ?? "");
+  const [description, setDescription] = useState(entity?.description ?? "");
+  const [repoUrl, setRepoUrl] = useState(entity?.repositoryUrl ?? "");
+  const [demoUrl, setDemoUrl] = useState(entity?.demoUrl ?? "");
+  const [status, setStatus] = useState(entity?.status ?? "active");
+  const [techStackInput, setTechStackInput] = useState(entity?.techStack?.join(", ") ?? "");
+
+  const reset = () => {
+    setName("");
+    setDescription("");
+    setRepoUrl("");
+    setDemoUrl("");
+    setStatus("active");
+    setTechStackInput("");
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,14 +61,14 @@ export function ProjectDialog({ open, onOpenChange, editing }: ProjectDialogProp
     };
 
     await run(
-      () =>
-        editing
-          ? updateProject(editing.id, payload)
-          : createProject(payload),
+      () => (entity ? updateProject(entity.id, payload) : createProject(payload)),
       {
-        successMessage: editing ? "Project updated" : "Project created",
+        successMessage: entity ? "Project updated" : "Project created",
         errorMessage: "Save failed",
-        onSuccess: () => onOpenChange(false),
+        onSuccess: () => {
+          reset();
+          onOpenChange(false);
+        },
       },
     );
   };
@@ -68,10 +77,11 @@ export function ProjectDialog({ open, onOpenChange, editing }: ProjectDialogProp
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={editing ? "Edit project" : "New project"}
+      title={entity ? "Edit project" : "New project"}
       description="Track scope, links, and stack."
       onSubmit={submit}
       isLoading={isLoading}
+      onBeforeClose={reset}
     >
       <Field>
         <FieldLabel htmlFor="name">Name</FieldLabel>

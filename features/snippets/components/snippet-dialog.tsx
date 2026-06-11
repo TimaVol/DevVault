@@ -21,21 +21,27 @@ import { createSnippet, updateSnippet } from "@/features/snippets/server/actions
 import type { Snippet } from "@/features/snippets/types";
 import { parseCommaList } from "@/utils/normalize-list";
 
-export function SnippetDialog({
-  open,
-  onOpenChange,
-  snippet,
-}: {
+type SnippetDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  snippet?: Snippet | null;
-}) {
-  const [title, setTitle] = useState(snippet?.title ?? "");
-  const [content, setContent] = useState(snippet?.content ?? "");
-  const [language, setLanguage] = useState(snippet?.language ?? "javascript");
-  const [tagsInput, setTagsInput] = useState(snippet?.tags?.join(", ") ?? "");
-  const [isPinned, setIsPinned] = useState(snippet?.isPinned ?? false);
+  entity: Snippet | null;
+};
+
+export function SnippetDialog({ open, onOpenChange, entity }: SnippetDialogProps) {
+  const [title, setTitle] = useState(entity?.title ?? "");
+  const [content, setContent] = useState(entity?.content ?? "");
+  const [language, setLanguage] = useState(entity?.language ?? "javascript");
+  const [tagsInput, setTagsInput] = useState(entity?.tags?.join(", ") ?? "");
+  const [isPinned, setIsPinned] = useState(entity?.isPinned ?? false);
   const { isLoading, run } = useAsyncAction();
+
+  const reset = () => {
+    setTitle("");
+    setContent("");
+    setLanguage("javascript");
+    setTagsInput("");
+    setIsPinned(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,18 +54,15 @@ export function SnippetDialog({
 
     await run(
       () =>
-        snippet
-          ? updateSnippet(snippet.id, {
-              title,
-              content,
-              language,
-              tags,
-              isPinned,
-            })
+        entity
+          ? updateSnippet(entity.id, { title, content, language, tags, isPinned })
           : createSnippet({ title, content, language, tags, isPinned }),
       {
-        successMessage: snippet ? "Snippet updated" : "Snippet created",
-        onSuccess: () => onOpenChange(false),
+        successMessage: entity ? "Snippet updated" : "Snippet created",
+        onSuccess: () => {
+          reset();
+          onOpenChange(false);
+        },
       },
     );
   };
@@ -68,10 +71,11 @@ export function SnippetDialog({
     <FormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={snippet ? "Edit snippet" : "New snippet"}
+      title={entity ? "Edit snippet" : "New snippet"}
       description="Store reusable code with language and tags."
       onSubmit={handleSubmit}
       isLoading={isLoading}
+      onBeforeClose={reset}
       contentClassName="max-w-2xl border-border bg-popover backdrop-blur-sm"
     >
       <Field>

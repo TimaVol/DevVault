@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";
 import { useUrlFilters } from "@/hooks/use-url-filters";
+import type { PaginationMeta } from "@/server/pagination";
 import { isActionSuccess } from "@/shared/action-result";
+import { useActiveNote } from "@/features/notes/hooks/use-active-note";
 import { createNote, deleteNote, updateNote } from "@/features/notes/server/actions";
 import type { Note } from "@/features/notes/types";
 import { NoteEditor } from "./note-editor";
@@ -20,7 +22,7 @@ const NOTE_FILTER_DEFAULTS = { q: "", note: "", page: "1" };
 
 type NotesClientProps = {
   initialNotes: Note[];
-  pagination: { total: number; page: number; pageSize: number };
+  pagination: PaginationMeta;
   activeNoteFallback?: Note | null;
 };
 
@@ -36,25 +38,12 @@ export function NotesClient({
   const { isLoading: isDeleting, confirmDelete } = useConfirmDelete();
   const isLoading = isSaving || isDeleting;
 
-  const resolvedActiveNoteId = useMemo(() => {
-    if (filters.note) {
-      if (initialNotes.some((note) => note.id === filters.note)) {
-        return filters.note;
-      }
-      if (activeNoteFallback?.id === filters.note) {
-        return filters.note;
-      }
-      if (pendingNote?.id === filters.note) {
-        return filters.note;
-      }
-    }
-    return initialNotes[0]?.id ?? pendingNote?.id ?? null;
-  }, [filters.note, initialNotes, activeNoteFallback, pendingNote]);
-
-  const activeNote =
-    initialNotes.find((note) => note.id === resolvedActiveNoteId) ??
-    (activeNoteFallback?.id === resolvedActiveNoteId ? activeNoteFallback : undefined) ??
-    (pendingNote?.id === resolvedActiveNoteId ? pendingNote : undefined);
+  const { resolvedActiveNoteId, activeNote } = useActiveNote({
+    noteIdFromUrl: filters.note,
+    notes: initialNotes,
+    activeNoteFallback,
+    pendingNote,
+  });
 
   const handleCreate = useCallback(async () => {
     const res = await run(

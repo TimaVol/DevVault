@@ -2,7 +2,6 @@
 
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { notes } from "@/lib/db/schema";
 import {
   actionFailure,
@@ -11,7 +10,7 @@ import {
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
-import { ROUTES } from "@/shared/routes";
+import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseActionId } from "@/server/validation/ids";
 
 const insertNoteSchema = createInsertSchema(notes).omit(serverFields);
@@ -40,8 +39,7 @@ export async function createNote(data: {
         .returning(),
     );
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.notes);
+    revalidateEntityPaths("dashboard", "notes");
     return actionSuccess({ note: newNote });
   });
 }
@@ -80,8 +78,7 @@ export async function updateNote(
       return actionFailure("Note not found or unauthorized");
     }
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.notes);
+    revalidateEntityPaths("dashboard", "notes");
     return actionSuccess({ note: updatedNote });
   });
 }
@@ -105,8 +102,7 @@ export async function deleteNote(id: string) {
       return actionFailure("Note not found or unauthorized");
     }
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.notes);
+    revalidateEntityPaths("dashboard", "notes");
     return actionOk();
   });
 }

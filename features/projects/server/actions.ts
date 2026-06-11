@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { projects, projectTechStack } from "@/lib/db/schema";
 import {
   actionFailure,
@@ -12,7 +11,8 @@ import {
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
-import { ROUTES } from "@/shared/routes";
+import { syncChildStrings } from "@/server/db/sync-child-strings";
+import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseActionId } from "@/server/validation/ids";
 import { normalizeList } from "@/utils/normalize-list";
 
@@ -78,8 +78,7 @@ export async function createProject(data: {
       return project;
     });
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.projects);
+    revalidateEntityPaths("dashboard", "projects");
     return actionSuccess({ project: newProject });
   });
 }
@@ -117,15 +116,15 @@ export async function updateProject(
 
       if (!project) return null;
 
-      await tx
-        .delete(projectTechStack)
-        .where(eq(projectTechStack.projectId, id));
-      const newStack = normalizeList(stackValues ?? []);
-      if (newStack.length > 0) {
-        await tx
-          .insert(projectTechStack)
-          .values(newStack.map((tech) => ({ projectId: id, tech })));
-      }
+      await syncChildStrings({
+        values: stackValues,
+        delete: () =>
+          tx.delete(projectTechStack).where(eq(projectTechStack.projectId, id)),
+        insert: (stack) =>
+          tx
+            .insert(projectTechStack)
+            .values(stack.map((tech) => ({ projectId: id, tech }))),
+      });
 
       return project;
     });
@@ -134,8 +133,7 @@ export async function updateProject(
       return actionFailure("Project not found or unauthorized");
     }
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.projects);
+    revalidateEntityPaths("dashboard", "projects");
     return actionSuccess({ project: updatedProject });
   });
 }
@@ -159,8 +157,7 @@ export async function deleteProject(id: string) {
       return actionFailure("Project not found or unauthorized");
     }
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.projects);
+    revalidateEntityPaths("dashboard", "projects");
     return actionOk();
   });
 }

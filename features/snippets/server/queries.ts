@@ -13,8 +13,7 @@ import {
 } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
 import type { AppDbTransaction } from "@/lib/db/types";
-import type { PaginatedResult } from "@/server/pagination";
-import { getOffset } from "@/server/pagination";
+import { paginatedQuery } from "@/server/queries/paginated";
 import { snippets, snippetTags } from "@/lib/db/schema";
 import type { SnippetListParams } from "./params";
 
@@ -68,27 +67,26 @@ async function fetchSnippetRows(
 
 export async function getSnippets(
   params: SnippetListParams = { lang: "all", page: 1, pageSize: 50 },
-): Promise<PaginatedResult<Awaited<ReturnType<typeof fetchSnippetRows>>[number]>> {
+) {
   const db = await requireDrizzle();
   const where = buildSnippetFilters(params);
-  const offset = getOffset(params.page, params.pageSize);
 
-  return db.rls(async (tx) => {
-    const [countResult] = await tx
-      .select({ value: count(sql`distinct ${snippets.id}`) })
-      .from(snippets)
-      .leftJoin(snippetTags, eq(snippets.id, snippetTags.snippetId))
-      .where(where);
-
-    const items = await fetchSnippetRows(tx, where, params.pageSize, offset);
-
-    return {
-      items,
-      total: countResult?.value ?? 0,
+  return db.rls((tx) =>
+    paginatedQuery({
+      tx,
       page: params.page,
       pageSize: params.pageSize,
-    };
-  });
+      getTotal: async () => {
+        const [countResult] = await tx
+          .select({ value: count(sql`distinct ${snippets.id}`) })
+          .from(snippets)
+          .leftJoin(snippetTags, eq(snippets.id, snippetTags.snippetId))
+          .where(where);
+        return countResult?.value ?? 0;
+      },
+      getItems: (offset, limit) => fetchSnippetRows(tx, where, limit, offset),
+    }),
+  );
 }
 
 export async function getSnippetLanguages(): Promise<string[]> {

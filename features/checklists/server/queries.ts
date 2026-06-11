@@ -11,11 +11,15 @@ import {
   or,
 } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
-import type { PaginatedResult } from "@/server/pagination";
-import { getOffset } from "@/server/pagination";
+import type { ListParams } from "@/server/pagination";
+import { paginatedQuery } from "@/server/queries/paginated";
 import { checklists, checklistItems } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
-import type { ChecklistListParams } from "./params";
+
+export type ChecklistListParams = ListParams & {
+  page: number;
+  pageSize: number;
+};
 
 function buildChecklistFilters(params: ChecklistListParams) {
   const conditions = [isNull(checklists.deletedAt)];
@@ -35,34 +39,34 @@ function buildChecklistFilters(params: ChecklistListParams) {
 
 export async function getChecklists(
   params: ChecklistListParams = { page: 1, pageSize: 50 },
-): Promise<PaginatedResult<Awaited<ReturnType<typeof attachChecklistItems>>[number]>> {
+) {
   const db = await requireDrizzle();
   const where = buildChecklistFilters(params);
-  const offset = getOffset(params.page, params.pageSize);
 
-  return db.rls(async (tx) => {
-    const [countResult] = await tx
-      .select({ value: count() })
-      .from(checklists)
-      .where(where);
-
-    const userChecklists = await tx
-      .select()
-      .from(checklists)
-      .where(where)
-      .orderBy(desc(checklists.createdAt))
-      .limit(params.pageSize)
-      .offset(offset);
-
-    const items = await attachChecklistItems(tx, userChecklists);
-
-    return {
-      items,
-      total: countResult?.value ?? 0,
+  return db.rls((tx) =>
+    paginatedQuery({
+      tx,
       page: params.page,
       pageSize: params.pageSize,
-    };
-  });
+      getTotal: async () => {
+        const [countResult] = await tx
+          .select({ value: count() })
+          .from(checklists)
+          .where(where);
+        return countResult?.value ?? 0;
+      },
+      getItems: async (offset, limit) => {
+        const userChecklists = await tx
+          .select()
+          .from(checklists)
+          .where(where)
+          .orderBy(desc(checklists.createdAt))
+          .limit(limit)
+          .offset(offset);
+        return attachChecklistItems(tx, userChecklists);
+      },
+    }),
+  );
 }
 
 async function attachChecklistItems(

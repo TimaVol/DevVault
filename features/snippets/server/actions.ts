@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { snippets, snippetTags } from "@/lib/db/schema";
 import {
   actionFailure,
@@ -12,7 +11,8 @@ import {
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
-import { ROUTES } from "@/shared/routes";
+import { syncChildStrings } from "@/server/db/sync-child-strings";
+import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseActionId } from "@/server/validation/ids";
 import { normalizeList } from "@/utils/normalize-list";
 
@@ -60,8 +60,7 @@ export async function createSnippet(data: {
       return snippet;
     });
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.snippets);
+    revalidateEntityPaths("dashboard", "snippets");
     return actionSuccess({ snippet: newSnippet });
   });
 }
@@ -98,13 +97,12 @@ export async function updateSnippet(
 
       if (!snippet) return null;
 
-      await tx.delete(snippetTags).where(eq(snippetTags.snippetId, id));
-      const newTags = normalizeList(tagValues ?? []);
-      if (newTags.length > 0) {
-        await tx
-          .insert(snippetTags)
-          .values(newTags.map((tag) => ({ snippetId: id, tag })));
-      }
+      await syncChildStrings({
+        values: tagValues,
+        delete: () => tx.delete(snippetTags).where(eq(snippetTags.snippetId, id)),
+        insert: (tags) =>
+          tx.insert(snippetTags).values(tags.map((tag) => ({ snippetId: id, tag }))),
+      });
 
       return snippet;
     });
@@ -113,8 +111,7 @@ export async function updateSnippet(
       return actionFailure("Snippet not found or unauthorized");
     }
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.snippets);
+    revalidateEntityPaths("dashboard", "snippets");
     return actionSuccess({ snippet: updatedSnippet });
   });
 }
@@ -138,8 +135,7 @@ export async function deleteSnippet(id: string) {
       return actionFailure("Snippet not found or unauthorized");
     }
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.snippets);
+    revalidateEntityPaths("dashboard", "snippets");
     return actionOk();
   });
 }

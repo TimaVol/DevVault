@@ -12,9 +12,9 @@ import {
   sql,
 } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
-import type { PaginatedResult } from "@/server/pagination";
-import { getOffset } from "@/server/pagination";
+import { paginatedQuery } from "@/server/queries/paginated";
 import { projects, projectTechStack } from "@/lib/db/schema";
+import type { AppDbTransaction } from "@/lib/db/types";
 import type { ProjectListParams } from "./params";
 
 function buildProjectFilters(params: ProjectListParams) {
@@ -44,41 +44,49 @@ function buildProjectFilters(params: ProjectListParams) {
   return and(...conditions);
 }
 
+async function fetchProjectRows(
+  tx: AppDbTransaction,
+  where: ReturnType<typeof buildProjectFilters>,
+  limit: number,
+  offset: number,
+) {
+  return tx
+    .select({
+      ...getTableColumns(projects),
+      techStack: sql<string[]>`coalesce(
+        array_agg(${projectTechStack.tech}) filter (where ${projectTechStack.tech} is not null),
+        array[]::text[]
+      )`,
+    })
+    .from(projects)
+    .leftJoin(projectTechStack, eq(projects.id, projectTechStack.projectId))
+    .where(where)
+    .groupBy(projects.id)
+    .orderBy(desc(projects.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
 export async function getProjects(
   params: ProjectListParams = { tab: "all", page: 1, pageSize: 50 },
 ) {
   const db = await requireDrizzle();
   const where = buildProjectFilters(params);
-  const offset = getOffset(params.page, params.pageSize);
 
-  return db.rls(async (tx) => {
-    const [countResult] = await tx
-      .select({ value: count(sql`distinct ${projects.id}`) })
-      .from(projects)
-      .leftJoin(projectTechStack, eq(projects.id, projectTechStack.projectId))
-      .where(where);
-
-    const items = await tx
-      .select({
-        ...getTableColumns(projects),
-        techStack: sql<string[]>`coalesce(
-          array_agg(${projectTechStack.tech}) filter (where ${projectTechStack.tech} is not null),
-          array[]::text[]
-        )`,
-      })
-      .from(projects)
-      .leftJoin(projectTechStack, eq(projects.id, projectTechStack.projectId))
-      .where(where)
-      .groupBy(projects.id)
-      .orderBy(desc(projects.createdAt))
-      .limit(params.pageSize)
-      .offset(offset);
-
-    return {
-      items,
-      total: countResult?.value ?? 0,
+  return db.rls((tx) =>
+    paginatedQuery({
+      tx,
       page: params.page,
       pageSize: params.pageSize,
-    } satisfies PaginatedResult<(typeof items)[number]>;
-  });
+      getTotal: async () => {
+        const [countResult] = await tx
+          .select({ value: count(sql`distinct ${projects.id}`) })
+          .from(projects)
+          .leftJoin(projectTechStack, eq(projects.id, projectTechStack.projectId))
+          .where(where);
+        return countResult?.value ?? 0;
+      },
+      getItems: (offset, limit) => fetchProjectRows(tx, where, limit, offset),
+    }),
+  );
 }

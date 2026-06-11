@@ -4,11 +4,14 @@ export type ListParams = {
   pageSize?: number
 }
 
-export type PaginatedResult<T> = {
-  items: T[]
+export type PaginationMeta = {
   total: number
   page: number
   pageSize: number
+}
+
+export type PaginatedResult<T> = PaginationMeta & {
+  items: T[]
 }
 
 export const DEFAULT_PAGE_SIZE = 50

@@ -11,22 +11,28 @@ import { UrlTool } from "./url-tool";
 
 type ActiveTool = "json" | "base64" | "jwt" | "url" | "regex";
 
-const menuItems: { id: ActiveTool; label: string; icon: React.ElementType }[] = [
-  { id: "json", label: "JSON Formatter", icon: Braces },
-  { id: "base64", label: "Base64 Encoder", icon: Hash },
-  { id: "jwt", label: "JWT Decoder", icon: Key },
-  { id: "url", label: "URL Encoder", icon: Link2 },
-  { id: "regex", label: "Regex Tester", icon: Code },
+const TOOLS: {
+  id: ActiveTool;
+  label: string;
+  icon: React.ElementType;
+  component: React.ComponentType;
+}[] = [
+  { id: "json", label: "JSON Formatter", icon: Braces, component: JsonTool },
+  { id: "base64", label: "Base64 Encoder", icon: Hash, component: Base64Tool },
+  { id: "jwt", label: "JWT Decoder", icon: Key, component: JwtTool },
+  { id: "url", label: "URL Encoder", icon: Link2, component: UrlTool },
+  { id: "regex", label: "Regex Tester", icon: Code, component: RegexTool },
 ];
 
 export function ToolsClient() {
   const [activeTool, setActiveTool] = useState<ActiveTool>("json");
+  const ActiveComponent = TOOLS.find((tool) => tool.id === activeTool)?.component ?? JsonTool;
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-0">
       <aside className="w-full shrink-0 border-border lg:w-56 lg:border-r lg:pr-4">
         <nav className="flex flex-row gap-1 overflow-x-auto lg:flex-col">
-          {menuItems.map((item) => {
+          {TOOLS.map((item) => {
             const Icon = item.icon;
             const isActive = activeTool === item.id;
             return (
@@ -50,11 +56,7 @@ export function ToolsClient() {
       </aside>
 
       <div className="min-w-0 flex-1 lg:pl-6">
-        {activeTool === "json" && <JsonTool />}
-        {activeTool === "base64" && <Base64Tool />}
-        {activeTool === "jwt" && <JwtTool />}
-        {activeTool === "url" && <UrlTool />}
-        {activeTool === "regex" && <RegexTool />}
+        <ActiveComponent />
       </div>
     </div>
   );

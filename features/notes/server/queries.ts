@@ -2,8 +2,7 @@ import "server-only";
 
 import { and, count, desc, eq, ilike, isNull, or } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
-import type { PaginatedResult } from "@/server/pagination";
-import { getOffset } from "@/server/pagination";
+import { paginatedQuery } from "@/server/queries/paginated";
 import { notes } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
 import type { NoteListParams } from "./params";
@@ -23,26 +22,25 @@ function buildNoteFilters(params: NoteListParams) {
 
 export async function getNotes(
   params: NoteListParams = { page: 1, pageSize: 50 },
-): Promise<PaginatedResult<Awaited<ReturnType<typeof fetchNoteRows>>[number]>> {
+) {
   const db = await requireDrizzle();
   const where = buildNoteFilters(params);
-  const offset = getOffset(params.page, params.pageSize);
 
-  return db.rls(async (tx) => {
-    const [countResult] = await tx
-      .select({ value: count() })
-      .from(notes)
-      .where(where);
-
-    const items = await fetchNoteRows(tx, where, params.pageSize, offset);
-
-    return {
-      items,
-      total: countResult?.value ?? 0,
+  return db.rls((tx) =>
+    paginatedQuery({
+      tx,
       page: params.page,
       pageSize: params.pageSize,
-    };
-  });
+      getTotal: async () => {
+        const [countResult] = await tx
+          .select({ value: count() })
+          .from(notes)
+          .where(where);
+        return countResult?.value ?? 0;
+      },
+      getItems: (offset, limit) => fetchNoteRows(tx, where, limit, offset),
+    }),
+  );
 }
 
 async function fetchNoteRows(

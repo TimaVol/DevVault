@@ -10,13 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { projectStatusVariant } from "@/features/projects/constants";
 import type { Project } from "@/features/projects/types";
-
-const statusVariant = (status: string) => {
-  if (status === "active") return "status" as const;
-  if (status === "completed") return "secondary" as const;
-  return "outline" as const;
-};
 
 type ProjectCardProps = {
   project: Project;
@@ -30,7 +25,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="line-clamp-1 text-base">{project.name}</CardTitle>
-          <Badge variant={statusVariant(project.status)} className="capitalize">
+          <Badge variant={projectStatusVariant(project.status)} className="capitalize">
             {project.status}
           </Badge>
         </div>

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { desc, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
 import { checklists, notes, projects, snippets } from "@/lib/db/schema";
 
@@ -40,7 +40,7 @@ export async function getDashboardOverview() {
     const activeProjects = await tx
       .select()
       .from(projects)
-      .where(isNull(projects.deletedAt))
+      .where(and(isNull(projects.deletedAt), eq(projects.status, "active")))
       .orderBy(desc(projects.createdAt))
       .limit(3);
 

@@ -17,13 +17,13 @@ import type { Checklist } from "@/features/checklists/types";
 type ChecklistDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  checklist?: Checklist | null;
+  entity: Checklist | null;
 };
 
 export function ChecklistDialog({
   open,
   onOpenChange,
-  checklist,
+  entity: checklist,
 }: ChecklistDialogProps) {
   const { isLoading, run } = useAsyncAction();
   const [title, setTitle] = useState(checklist?.title ?? "");

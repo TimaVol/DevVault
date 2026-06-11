@@ -4,14 +4,9 @@ import { ListEmptyState } from "@/components/shared/list-empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { DashboardOverview } from "@/features/dashboard/types";
+import { projectStatusVariant } from "@/features/projects/constants";
 import { ROUTES } from "@/shared/routes";
 import { cn } from "@/utils/cn";
-
-const statusVariant = (status: string) => {
-  if (status === "active") return "status" as const;
-  if (status === "completed") return "secondary" as const;
-  return "outline" as const;
-};
 
 export function ActiveProjectsCard({
   projects,
@@ -47,7 +42,7 @@ export function ActiveProjectsCard({
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-start justify-between gap-2">
                   <p className="truncate text-sm font-semibold">{project.name}</p>
-                  <Badge variant={statusVariant(project.status)} className="shrink-0">
+                  <Badge variant={projectStatusVariant(project.status)} className="shrink-0">
                     {project.status}
                   </Badge>
                 </div>

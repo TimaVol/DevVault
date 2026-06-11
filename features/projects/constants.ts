@@ -4,6 +4,14 @@ export const PROJECT_STATUSES = [
   { value: "completed", label: "Completed" },
 ] as const;
 
+export function projectStatusVariant(
+  status: string,
+): "status" | "secondary" | "outline" {
+  if (status === "active") return "status";
+  if (status === "completed") return "secondary";
+  return "outline";
+}
+
 /** Filter tabs include an "all" pseudo-status in addition to the real statuses. */
 export const PROJECT_FILTER_TABS = [
   "all",

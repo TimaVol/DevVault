@@ -5,13 +5,14 @@ import { DebouncedSearchInput } from "@/components/shared/debounced-search-input
 import { ListPagination } from "@/components/shared/list-pagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/utils/cn";
+import type { PaginationMeta } from "@/server/pagination";
 import type { Note } from "@/features/notes/types";
 
 type NotesSidebarProps = {
   notes: Note[];
   searchQuery: string;
   activeNoteId: string | null;
-  pagination: { total: number; page: number; pageSize: number };
+  pagination: PaginationMeta;
   onDebouncedSearchChange: (value: string) => void;
   onSelectNote: (id: string) => void;
   onPageChange: (page: number) => void;

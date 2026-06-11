@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { asc, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { checklists, checklistItems } from "@/lib/db/schema";
 import {
   actionFailure,
@@ -12,7 +11,7 @@ import {
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
-import { ROUTES } from "@/shared/routes";
+import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseActionId } from "@/server/validation/ids";
 
 const itemsField = z
@@ -60,8 +59,7 @@ export async function createChecklist(data: {
       return checklist;
     });
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.checklists);
+    revalidateEntityPaths("dashboard", "checklists");
     return actionSuccess({ checklist: newChecklist });
   });
 }
@@ -124,8 +122,7 @@ export async function updateChecklist(
       return actionFailure("Checklist not found or unauthorized");
     }
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.checklists);
+    revalidateEntityPaths("dashboard", "checklists");
     return actionSuccess({ checklist: updatedChecklist });
   });
 }
@@ -149,8 +146,7 @@ export async function toggleChecklistItem(id: string, isCompleted: boolean) {
       return actionFailure("Item not found or unauthorized");
     }
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.checklists);
+    revalidateEntityPaths("dashboard", "checklists");
     return actionSuccess({ item: updated });
   });
 }
@@ -174,8 +170,7 @@ export async function deleteChecklist(id: string) {
       return actionFailure("Checklist not found or unauthorized");
     }
 
-    revalidatePath(ROUTES.dashboard);
-    revalidatePath(ROUTES.checklists);
+    revalidateEntityPaths("dashboard", "checklists");
     return actionOk();
   });
 }
