@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import {
   createDrizzleSupabaseClient,
   type DrizzleSupabaseContext,
-} from "@/lib/db/server";
+} from "@/lib/db/create-drizzle-supabase-client";
 import type { ActionFailure } from "@/shared/action-result";
 import { ROUTES } from "@/shared/routes";
 

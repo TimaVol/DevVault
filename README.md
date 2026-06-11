@@ -27,7 +27,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `DATABASE_URL` | Drizzle `client` pool | App queries inside `db.rls()` — must use a role subject to RLS (e.g. `rls_client` with `GRANT anon, authenticated`) |
 | `ADMIN_DATABASE_URL` | Drizzle `admin` pool, `pnpm db:*` | Migrations and trusted bypass; typically the `postgres` user |
 
-Server data access uses `createDrizzleSupabaseClient()` from [`lib/db/server.ts`](lib/db/server.ts): Supabase validates the session, then each transaction sets JWT claims and `SET LOCAL ROLE` so Postgres RLS applies. See [Drizzle RLS + Supabase](https://orm.drizzle.team/docs/rls#using-with-supabase).
+Server data access uses `createDrizzleSupabaseClient()` from [`lib/db/create-drizzle-supabase-client.ts`](lib/db/create-drizzle-supabase-client.ts): Supabase validates the session, then each transaction sets JWT claims and `SET LOCAL ROLE` so Postgres RLS applies. See [Drizzle RLS + Supabase](https://orm.drizzle.team/docs/rls#using-with-supabase).
 
 ### RLS database user (`rls_client`)
 

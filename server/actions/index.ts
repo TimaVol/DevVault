@@ -8,7 +8,7 @@ import {
   actionOk,
   actionSuccess,
 } from "@/server/actions/result.server";
-import type { DrizzleSupabaseContext } from "@/lib/db/server";
+import type { DrizzleSupabaseContext } from "@/lib/db/create-drizzle-supabase-client";
 import { getErrorMessage } from "@/utils/errors";
 
 export type {
