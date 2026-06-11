@@ -5,15 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { BookOpen, Plus } from "lucide-react";
 import { useAppShell } from "@/components/layout/app-shell-context";
+import { ListEmptyState } from "@/components/layout/list-empty-state";
 import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";
 import { useUrlFilters } from "@/hooks/use-url-filters";
@@ -156,20 +149,14 @@ export function NotesClient({
         />
       ) : (
         <div className="flex min-w-0 flex-1 items-center justify-center border-l border-border bg-background p-8">
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <BookOpen />
-              </EmptyMedia>
-              <EmptyTitle>No note selected</EmptyTitle>
-              <EmptyDescription>
-                Pick a note from the list or create a new one.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button onClick={handleCreate}>Create note</Button>
-            </EmptyContent>
-          </Empty>
+          <ListEmptyState
+            icon={BookOpen}
+            title="No note selected"
+            description="Pick a note from the list or create a new one."
+            actionLabel="Create note"
+            onAction={handleCreate}
+            showActionIcon={false}
+          />
         </div>
       )}
     </div>

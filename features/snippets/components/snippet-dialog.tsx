@@ -2,17 +2,10 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Pin } from "lucide-react";
+import { Pin } from "lucide-react";
+import { FormDialog } from "@/components/layout/form-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -72,83 +65,71 @@ export function SnippetDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl border-border bg-popover backdrop-blur-sm">
-        <DialogHeader>
-          <DialogTitle>{snippet ? "Edit snippet" : "New snippet"}</DialogTitle>
-          <DialogDescription>
-            Store reusable code with language and tags.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <FieldGroup className="py-2">
-            <Field>
-              <FieldLabel htmlFor="snippet-title">Title</FieldLabel>
-              <Input
-                id="snippet-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel>Language</FieldLabel>
-                <Select value={language} onValueChange={(v) => v && setLanguage(v)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LANGUAGES.map((lang) => (
-                      <SelectItem key={lang.value} value={lang.value}>
-                        {lang.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel>Pinned</FieldLabel>
-                <Button
-                  type="button"
-                  variant={isPinned ? "default" : "outline"}
-                  className="w-full"
-                  onClick={() => setIsPinned(!isPinned)}
-                >
-                  <Pin className={isPinned ? "fill-current" : undefined} />
-                  {isPinned ? "Pinned" : "Not pinned"}
-                </Button>
-              </Field>
-            </div>
-            <Field>
-              <FieldLabel htmlFor="snippet-tags">Tags (comma-separated)</FieldLabel>
-              <Input
-                id="snippet-tags"
-                value={tagsInput}
-                onChange={(e) => setTagsInput(e.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="snippet-content">Code</FieldLabel>
-              <Textarea
-                id="snippet-content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="min-h-[200px] font-mono text-xs"
-                required
-              />
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : "Save"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={snippet ? "Edit snippet" : "New snippet"}
+      description="Store reusable code with language and tags."
+      onSubmit={handleSubmit}
+      isLoading={isLoading}
+      contentClassName="max-w-2xl border-border bg-popover backdrop-blur-sm"
+    >
+      <Field>
+        <FieldLabel htmlFor="snippet-title">Title</FieldLabel>
+        <Input
+          id="snippet-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field>
+          <FieldLabel>Language</FieldLabel>
+          <Select value={language} onValueChange={(v) => v && setLanguage(v)}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LANGUAGES.map((lang) => (
+                <SelectItem key={lang.value} value={lang.value}>
+                  {lang.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field>
+          <FieldLabel>Pinned</FieldLabel>
+          <Button
+            type="button"
+            variant={isPinned ? "default" : "outline"}
+            className="w-full"
+            onClick={() => setIsPinned(!isPinned)}
+          >
+            <Pin className={isPinned ? "fill-current" : undefined} />
+            {isPinned ? "Pinned" : "Not pinned"}
+          </Button>
+        </Field>
+      </div>
+      <Field>
+        <FieldLabel htmlFor="snippet-tags">Tags (comma-separated)</FieldLabel>
+        <Input
+          id="snippet-tags"
+          value={tagsInput}
+          onChange={(e) => setTagsInput(e.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="snippet-content">Code</FieldLabel>
+        <Textarea
+          id="snippet-content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          className="min-h-[200px] font-mono text-xs"
+          required
+        />
+      </Field>
+    </FormDialog>
   );
 }

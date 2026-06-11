@@ -1,20 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Code2, Plus } from "lucide-react";
 import { useAppShell } from "@/components/layout/app-shell-context";
+import { ListEmptyState } from "@/components/layout/list-empty-state";
 import { ListPagination } from "@/components/layout/list-pagination";
 import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";
+import { useEntityDialog } from "@/hooks/use-entity-dialog";
 import { useUrlFilters } from "@/hooks/use-url-filters";
 import { deleteSnippet } from "@/features/snippets/server/actions";
 import type { Snippet } from "@/features/snippets/types";
@@ -36,15 +30,10 @@ export function SnippetsClient({
   pagination,
 }: SnippetsClientProps) {
   const [filters, setFilter] = useUrlFilters({ defaults: SNIPPET_FILTER_DEFAULTS });
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Snippet | null>(null);
+  const { open, setOpen, entity: editing, openCreate, openEdit, dialogKey } =
+    useEntityDialog<Snippet>();
   const { copy, copiedId } = useClipboard();
   const { confirmDelete } = useConfirmDelete();
-
-  const openCreate = () => {
-    setEditing(null);
-    setDialogOpen(true);
-  };
 
   const shellActions = useMemo(
     () => (
@@ -53,7 +42,7 @@ export function SnippetsClient({
         New Snippet
       </Button>
     ),
-    [],
+    [openCreate],
   );
 
   useAppShell({ title: "Snippets", actions: shellActions });
@@ -88,23 +77,13 @@ export function SnippetsClient({
       />
 
       {initialSnippets.length === 0 ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Code2 />
-            </EmptyMedia>
-            <EmptyTitle>No snippets yet</EmptyTitle>
-            <EmptyDescription>
-              Save reusable code blocks, CLI commands, or configuration templates.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button onClick={openCreate}>
-              <Plus data-icon="inline-start" />
-              Create New Snippet
-            </Button>
-          </EmptyContent>
-        </Empty>
+        <ListEmptyState
+          icon={Code2}
+          title="No snippets yet"
+          description="Save reusable code blocks, CLI commands, or configuration templates."
+          actionLabel="Create New Snippet"
+          onAction={openCreate}
+        />
       ) : (
         <>
           <div className="flex flex-col gap-3 md:hidden">
@@ -114,10 +93,7 @@ export function SnippetsClient({
                 snippet={snippet}
                 copiedId={copiedId}
                 onCopy={(id, content) => copy(content, id)}
-                onEdit={(s) => {
-                  setEditing(s);
-                  setDialogOpen(true);
-                }}
+                onEdit={openEdit}
                 onDelete={remove}
               />
             ))}
@@ -129,10 +105,7 @@ export function SnippetsClient({
                 snippet={snippet}
                 copiedId={copiedId}
                 onCopy={(id, content) => copy(content, id)}
-                onEdit={(s) => {
-                  setEditing(s);
-                  setDialogOpen(true);
-                }}
+                onEdit={openEdit}
                 onDelete={remove}
               />
             ))}
@@ -148,9 +121,9 @@ export function SnippetsClient({
       />
 
       <SnippetDialog
-        key={editing?.id ?? "new"}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        key={dialogKey}
+        open={open}
+        onOpenChange={setOpen}
         snippet={editing}
       />
     </div>

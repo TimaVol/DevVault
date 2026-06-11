@@ -1,14 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight, FolderKanban, Layers, Sparkles } from "lucide-react";
+import { ListEmptyState } from "@/components/layout/list-empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import type { DashboardOverview } from "@/features/dashboard/types";
 import { ROUTES } from "@/shared/routes";
 import { cn } from "@/utils/cn";
@@ -65,20 +59,18 @@ export function ActiveProjectsCard({
           ))}
         </ul>
       ) : (
-        <Empty>
-          <EmptyHeader>
-            <EmptyTitle>No projects</EmptyTitle>
-            <EmptyDescription>Track repos and release context here.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
+        <ListEmptyState
+          title="No projects"
+          description="Track repos and release context here."
+          action={
             <Link
               href={ROUTES.projects}
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               Add project
             </Link>
-          </EmptyContent>
-        </Empty>
+          }
+        />
       )}
 
       <div className="relative mt-auto overflow-hidden rounded-lg border border-dashed border-border bg-muted/20 p-6">

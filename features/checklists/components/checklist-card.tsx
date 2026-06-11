@@ -1,8 +1,7 @@
 "use client";
 
-import { Edit2, Trash2 } from "lucide-react";
+import { CardEditDeleteActions } from "@/components/layout/card-edit-delete-actions";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -29,14 +28,10 @@ export function ChecklistCard({ checklist, onToggle, onEdit, onDelete }: Checkli
             <p className="mt-1 text-sm text-muted-foreground">{checklist.description}</p>
           ) : null}
         </div>
-        <div className="flex gap-1">
-          <Button size="icon-sm" variant="ghost" onClick={() => onEdit(checklist)}>
-            <Edit2 />
-          </Button>
-          <Button size="icon-sm" variant="ghost" onClick={() => onDelete(checklist.id)}>
-            <Trash2 />
-          </Button>
-        </div>
+        <CardEditDeleteActions
+          onEdit={() => onEdit(checklist)}
+          onDelete={() => onDelete(checklist.id)}
+        />
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         <div className="space-y-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import { DebouncedSearchInput } from "@/components/layout/debounced-search-input";
+import { ListFilterBar } from "@/components/layout/list-filter-bar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PROJECT_FILTER_TABS } from "@/features/projects/constants";
 
@@ -18,7 +19,7 @@ export function ProjectsFilterBar({
   onDebouncedSearchChange,
 }: ProjectsFilterBarProps) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <ListFilterBar>
       <Tabs value={tab} onValueChange={onTabChange}>
         <TabsList>
           {PROJECT_FILTER_TABS.map((t) => (
@@ -34,6 +35,6 @@ export function ProjectsFilterBar({
         onDebouncedChange={onDebouncedSearchChange}
         className="sm:max-w-xs"
       />
-    </div>
+    </ListFilterBar>
   );
 }

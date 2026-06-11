@@ -1,6 +1,7 @@
 "use client";
 
 import { DebouncedSearchInput } from "@/components/layout/debounced-search-input";
+import { ListFilterBar } from "@/components/layout/list-filter-bar";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ export function SnippetsFilterBar({
   onLanguageChange,
 }: SnippetsFilterBarProps) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
+    <ListFilterBar className="sm:justify-start">
       <DebouncedSearchInput
         placeholder="Search title, content, tags…"
         value={search}
@@ -45,6 +46,6 @@ export function SnippetsFilterBar({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </ListFilterBar>
   );
 }

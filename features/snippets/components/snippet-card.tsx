@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Copy, Edit2, Pin, Trash2 } from "lucide-react";
+import { Check, Copy, Pin } from "lucide-react";
+import { CardEditDeleteActions } from "@/components/layout/card-edit-delete-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,12 +59,10 @@ export function SnippetMobileCard({
           >
             {copiedId === snippet.id ? <Check /> : <Copy />}
           </Button>
-          <Button size="icon-sm" variant="ghost" onClick={() => onEdit(snippet)}>
-            <Edit2 />
-          </Button>
-          <Button size="icon-sm" variant="ghost" onClick={() => onDelete(snippet.id)}>
-            <Trash2 />
-          </Button>
+          <CardEditDeleteActions
+            onEdit={() => onEdit(snippet)}
+            onDelete={() => onDelete(snippet.id)}
+          />
         </div>
       </div>
     </div>
@@ -111,12 +110,10 @@ export function SnippetTableRow({
           >
             {copiedId === snippet.id ? <Check /> : <Copy />}
           </Button>
-          <Button size="icon-sm" variant="ghost" onClick={() => onEdit(snippet)}>
-            <Edit2 />
-          </Button>
-          <Button size="icon-sm" variant="ghost" onClick={() => onDelete(snippet.id)}>
-            <Trash2 />
-          </Button>
+          <CardEditDeleteActions
+            onEdit={() => onEdit(snippet)}
+            onDelete={() => onDelete(snippet.id)}
+          />
         </div>
       </TableCell>
     </TableRow>

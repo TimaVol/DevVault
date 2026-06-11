@@ -1,8 +1,8 @@
 "use client";
 
-import { Edit2, ExternalLink, Github, Trash2 } from "lucide-react";
+import { ExternalLink, Github } from "lucide-react";
+import { CardEditDeleteActions } from "@/components/layout/card-edit-delete-actions";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -74,14 +74,10 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
             </a>
           ) : null}
         </div>
-        <div className="flex gap-1">
-          <Button size="icon-sm" variant="ghost" onClick={() => onEdit(project)}>
-            <Edit2 />
-          </Button>
-          <Button size="icon-sm" variant="ghost" onClick={() => onDelete(project.id)}>
-            <Trash2 />
-          </Button>
-        </div>
+        <CardEditDeleteActions
+          onEdit={() => onEdit(project)}
+          onDelete={() => onDelete(project.id)}
+        />
       </CardFooter>
     </Card>
   );

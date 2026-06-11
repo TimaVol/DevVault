@@ -2,15 +2,9 @@
 
 import Link from "next/link";
 import { ArrowUpRight, Check, Clock3, Copy } from "lucide-react";
+import { ListEmptyState } from "@/components/layout/list-empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import type { DashboardOverview } from "@/features/dashboard/types";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { ROUTES } from "@/shared/routes";
@@ -92,20 +86,18 @@ export function RecentSnippetsCard({
           ))}
         </div>
       ) : (
-        <Empty>
-          <EmptyHeader>
-            <EmptyTitle>No snippets yet</EmptyTitle>
-            <EmptyDescription>Save your first reusable fragment.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
+        <ListEmptyState
+          title="No snippets yet"
+          description="Save your first reusable fragment."
+          action={
             <Link
               href={ROUTES.snippets}
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               Create snippet
             </Link>
-          </EmptyContent>
-        </Empty>
+          }
+        />
       )}
     </div>
   );

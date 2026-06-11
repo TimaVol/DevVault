@@ -1,19 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { FolderKanban, Plus } from "lucide-react";
 import { useAppShell } from "@/components/layout/app-shell-context";
+import { ListEmptyState } from "@/components/layout/list-empty-state";
 import { ListPagination } from "@/components/layout/list-pagination";
 import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";
+import { useEntityDialog } from "@/hooks/use-entity-dialog";
 import { useUrlFilters } from "@/hooks/use-url-filters";
 import { deleteProject } from "@/features/projects/server/actions";
 import type { Project } from "@/features/projects/types";
@@ -33,14 +27,9 @@ export function ProjectsClient({
   pagination,
 }: ProjectsClientProps) {
   const [filters, setFilter] = useUrlFilters({ defaults: PROJECT_FILTER_DEFAULTS });
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Project | null>(null);
+  const { open, setOpen, entity: editing, openCreate, openEdit, dialogKey } =
+    useEntityDialog<Project>();
   const { confirmDelete } = useConfirmDelete();
-
-  const openCreate = () => {
-    setEditing(null);
-    setOpen(true);
-  };
 
   const shellActions = useMemo(
     () => (
@@ -49,15 +38,10 @@ export function ProjectsClient({
         New Project
       </Button>
     ),
-    [],
+    [openCreate],
   );
 
   useAppShell({ title: "Projects", actions: shellActions });
-
-  const openEdit = (p: Project) => {
-    setEditing(p);
-    setOpen(true);
-  };
 
   const remove = (id: string) =>
     confirmDelete(() => deleteProject(id), {
@@ -81,23 +65,13 @@ export function ProjectsClient({
       />
 
       {initialProjects.length === 0 ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <FolderKanban />
-            </EmptyMedia>
-            <EmptyTitle>No active projects</EmptyTitle>
-            <EmptyDescription>
-              Start tracking a new repository or local project.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button onClick={openCreate}>
-              <Plus data-icon="inline-start" />
-              Initialize Project
-            </Button>
-          </EmptyContent>
-        </Empty>
+        <ListEmptyState
+          icon={FolderKanban}
+          title="No active projects"
+          description="Start tracking a new repository or local project."
+          actionLabel="Initialize Project"
+          onAction={openCreate}
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {initialProjects.map((project) => (
@@ -118,7 +92,12 @@ export function ProjectsClient({
         onPageChange={(page) => setFilter("page", String(page))}
       />
 
-      <ProjectDialog key={editing?.id ?? "new"} open={open} onOpenChange={setOpen} editing={editing} />
+      <ProjectDialog
+        key={dialogKey}
+        open={open}
+        onOpenChange={setOpen}
+        editing={editing}
+      />
     </div>
   );
 }
