@@ -1,7 +1,7 @@
 import {
   parseBaseListParams,
   parseStringParam,
-} from "@/lib/db/query-params";
+} from "@/lib/pagination";
 
 export type SnippetListParams = {
   q?: string;

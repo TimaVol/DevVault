@@ -13,8 +13,8 @@ import {
 } from "drizzle-orm";
 import { requireDrizzle } from "@/lib/auth/require-user";
 import type { AppDbTransaction } from "@/lib/db/types";
-import type { PaginatedResult } from "@/lib/db/query-params";
-import { getOffset } from "@/lib/db/query-params";
+import type { PaginatedResult } from "@/lib/pagination";
+import { getOffset } from "@/lib/pagination";
 import { snippets, snippetTags } from "@/lib/db/schema";
 import type { SnippetListParams } from "./params";
 

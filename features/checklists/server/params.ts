@@ -1,4 +1,4 @@
-import { parseBaseListParams } from "@/lib/db/query-params";
+import { parseBaseListParams } from "@/lib/pagination";
 
 export type ChecklistListParams = {
   q?: string;

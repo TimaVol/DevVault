@@ -12,8 +12,8 @@ import {
   sql,
 } from "drizzle-orm";
 import { requireDrizzle } from "@/lib/auth/require-user";
-import type { PaginatedResult } from "@/lib/db/query-params";
-import { getOffset } from "@/lib/db/query-params";
+import type { PaginatedResult } from "@/lib/pagination";
+import { getOffset } from "@/lib/pagination";
 import { projects, projectTechStack } from "@/lib/db/schema";
 import type { ProjectListParams } from "./params";
 

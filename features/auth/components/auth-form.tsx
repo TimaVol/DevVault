@@ -14,6 +14,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { authenticate, signInWithGoogle } from "@/features/auth/server/actions";
+import { GoogleIcon } from "@/components/icons/google-icon";
 import { SubmitButton } from "./submit-button";
 
 export function AuthForm({ callbackError }: { callbackError?: string }) {
@@ -92,20 +93,22 @@ export function AuthForm({ callbackError }: { callbackError?: string }) {
         </div>
 
         <form action={signInWithGoogle}>
-          <Button type="submit" variant="outline" className="w-full">
+          <Button type="submit" variant="secondary" className="w-full">
+            <GoogleIcon data-icon="inline-start" />
             Continue with Google
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
           {mode === "signup" ? "Already have an account? " : "Don't have an account? "}
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="sm"
             onClick={() => setIsSignUp(mode === "signin")}
             className="font-medium text-primary hover:underline"
           >
             {mode === "signup" ? "Sign in" : "Create account"}
-          </button>
+          </Button>
         </p>
 
         <div className="flex justify-center gap-4 pt-2">

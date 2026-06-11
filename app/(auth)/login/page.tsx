@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AuthShell } from "@/components/layout/auth-shell";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ROUTES } from "@/lib/routes";
 import { AuthForm } from "@/features/auth/components/auth-form";
@@ -12,7 +11,7 @@ export default async function LoginPage({
   const { error } = await searchParams;
 
   return (
-    <AuthShell>
+    <>
       <Card className="tonal-card border-border shadow-none">
         <CardHeader className="border-b border-border pb-4">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -34,6 +33,6 @@ export default async function LoginPage({
           ← Back to home
         </Link>
       </p>
-    </AuthShell>
+    </>
   );
 }

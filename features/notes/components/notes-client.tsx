@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { BookOpen, Plus } from "lucide-react";
@@ -63,7 +63,7 @@ export function NotesClient({
     (activeNoteFallback?.id === resolvedActiveNoteId ? activeNoteFallback : undefined) ??
     (pendingNote?.id === resolvedActiveNoteId ? pendingNote : undefined);
 
-  const handleCreate = async () => {
+  const handleCreate = useCallback(async () => {
     const res = await run(
       () =>
         createNote({
@@ -77,7 +77,7 @@ export function NotesClient({
       setPendingNote(res.note);
       setFilter("note", res.note.id);
     }
-  };
+  }, [run, setFilter]);
 
   const handleSave = async (data: { title: string; content: string; isPinned: boolean }) => {
     if (!resolvedActiveNoteId) return;
@@ -123,7 +123,7 @@ export function NotesClient({
         New Note
       </Button>
     ),
-    [isLoading],
+    [handleCreate, isLoading],
   );
 
   useAppShell({ title: "Notes", actions: shellActions });

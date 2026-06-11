@@ -121,6 +121,6 @@ pnpm dlx shadcn@latest add <component> -y -o
 |------|------|
 | Primitives | `components/ui/*` |
 | App shell | `DashboardLayout`, `AppSidebar` in `components/layout/` |
-| Page chrome | `PageHeader`, `AuthShell`, `SiteHeader` |
+| Page chrome | `PageHeader`, `SiteHeader` |
 
 Dashboard routes use `SidebarProvider` + `SidebarInset`; page content is `flex flex-col gap-6` with shadcn `Card`, `Empty`, `Dialog`, etc. Links styled as buttons use `buttonVariants` + `Link` (not `Button` + `render={<Link />}` — Base UI expects a real `<button>` unless `nativeButton={false}`).
