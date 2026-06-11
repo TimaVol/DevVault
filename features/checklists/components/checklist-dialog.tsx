@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { X } from "lucide-react";
-import { FormDialog } from "@/components/layout/form-dialog";
+import { FormDialog } from "@/components/shared/form-dialog";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";

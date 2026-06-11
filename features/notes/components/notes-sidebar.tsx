@@ -1,8 +1,8 @@
 "use client";
 
 import { Pin, Search } from "lucide-react";
-import { DebouncedSearchInput } from "@/components/layout/debounced-search-input";
-import { ListPagination } from "@/components/layout/list-pagination";
+import { DebouncedSearchInput } from "@/components/shared/debounced-search-input";
+import { ListPagination } from "@/components/shared/list-pagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/utils/cn";
 import type { Note } from "@/features/notes/types";

@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import { Code2, Plus } from "lucide-react";
 import { useAppShell } from "@/components/layout/app-shell-context";
-import { ListEmptyState } from "@/components/layout/list-empty-state";
-import { ListPagination } from "@/components/layout/list-pagination";
+import { ListEmptyState } from "@/components/shared/list-empty-state";
+import { ListPagination } from "@/components/shared/list-pagination";
 import { Button } from "@/components/ui/button";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";

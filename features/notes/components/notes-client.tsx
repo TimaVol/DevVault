@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { BookOpen, Plus } from "lucide-react";
 import { useAppShell } from "@/components/layout/app-shell-context";
-import { ListEmptyState } from "@/components/layout/list-empty-state";
+import { ListEmptyState } from "@/components/shared/list-empty-state";
 import { Button } from "@/components/ui/button";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";

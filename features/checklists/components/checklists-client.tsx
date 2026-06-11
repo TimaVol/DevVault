@@ -3,10 +3,10 @@
 import { useMemo } from "react";
 import { CheckSquare, Plus } from "lucide-react";
 import { useAppShell } from "@/components/layout/app-shell-context";
-import { DebouncedSearchInput } from "@/components/layout/debounced-search-input";
-import { ListEmptyState } from "@/components/layout/list-empty-state";
-import { ListFilterBar } from "@/components/layout/list-filter-bar";
-import { ListPagination } from "@/components/layout/list-pagination";
+import { DebouncedSearchInput } from "@/components/shared/debounced-search-input";
+import { ListEmptyState } from "@/components/shared/list-empty-state";
+import { ListFilterBar } from "@/components/shared/list-filter-bar";
+import { ListPagination } from "@/components/shared/list-pagination";
 import { Button } from "@/components/ui/button";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";

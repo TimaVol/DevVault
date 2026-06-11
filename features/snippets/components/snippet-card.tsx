@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Copy, Pin } from "lucide-react";
-import { CardEditDeleteActions } from "@/components/layout/card-edit-delete-actions";
+import { CardEditDeleteActions } from "@/components/shared/card-edit-delete-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowUpRight, Check, Clock3, Copy } from "lucide-react";
-import { ListEmptyState } from "@/components/layout/list-empty-state";
+import { ListEmptyState } from "@/components/shared/list-empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { DashboardOverview } from "@/features/dashboard/types";

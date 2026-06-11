@@ -1,7 +1,7 @@
 "use client";
 
-import { DebouncedSearchInput } from "@/components/layout/debounced-search-input";
-import { ListFilterBar } from "@/components/layout/list-filter-bar";
+import { DebouncedSearchInput } from "@/components/shared/debounced-search-input";
+import { ListFilterBar } from "@/components/shared/list-filter-bar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PROJECT_FILTER_TABS } from "@/features/projects/constants";
 

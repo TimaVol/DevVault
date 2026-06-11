@@ -1,6 +1,6 @@
 "use client";
 
-import { CardEditDeleteActions } from "@/components/layout/card-edit-delete-actions";
+import { CardEditDeleteActions } from "@/components/shared/card-edit-delete-actions";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
