@@ -4,6 +4,7 @@ import { Code2 } from "lucide-react";
 import { EntityListLayout } from "@/components/shared/entity-list-layout";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { useEntityListPage } from "@/hooks/use-entity-list-page";
+import { useShellCreateAction } from "@/hooks/use-shell-create-action";
 import type { PaginationMeta } from "@/server/pagination";
 import { deleteSnippet } from "@/features/snippets/server/actions";
 import type { Snippet } from "@/features/snippets/types";
@@ -27,7 +28,6 @@ export function SnippetsClient({
   const {
     filters,
     setFilter,
-    setFilterAndResetPage,
     open,
     setOpen,
     entity: editing,
@@ -37,12 +37,13 @@ export function SnippetsClient({
     remove,
   } = useEntityListPage<Snippet>({
     filterDefaults: SNIPPET_FILTER_DEFAULTS,
-    createLabel: "New Snippet",
     onDelete: deleteSnippet,
     deleteMessage: "Delete this snippet?",
     deleteSuccessMessage: "Snippet deleted",
   });
   const { copy, copiedId } = useClipboard();
+
+  useShellCreateAction("New Snippet", openCreate);
 
   return (
     <>
@@ -52,8 +53,8 @@ export function SnippetsClient({
             search={filters.q}
             language={filters.lang}
             languages={languages}
-            onDebouncedSearchChange={(value) => setFilterAndResetPage("q", value)}
-            onLanguageChange={(value) => setFilterAndResetPage("lang", value)}
+            onDebouncedSearchChange={(value) => setFilter("q", value, { resetPage: true })}
+            onLanguageChange={(value) => setFilter("lang", value, { resetPage: true })}
           />
         }
         isEmpty={initialSnippets.length === 0}

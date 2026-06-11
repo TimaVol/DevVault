@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,32 +11,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  ConfirmDeleteContext,
+  type ConfirmDeleteOptions,
+} from "@/hooks/use-confirm-delete";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import type { ActionResult } from "@/shared/action-result";
-
-type ConfirmDeleteOptions = {
-  message: string;
-  successMessage?: string;
-  errorMessage?: string;
-  onSuccess?: () => void;
-};
 
 type PendingDelete = {
   action: () => Promise<ActionResult>;
   options: ConfirmDeleteOptions;
 };
-
-type ConfirmDeleteContextValue = {
-  isLoading: boolean;
-  confirmDelete: (
-    action: () => Promise<ActionResult>,
-    options: ConfirmDeleteOptions,
-  ) => void;
-};
-
-const ConfirmDeleteContext = createContext<ConfirmDeleteContextValue | null>(
-  null,
-);
 
 export function ConfirmDeleteProvider({ children }: { children: ReactNode }) {
   const { isLoading, run } = useAsyncAction();
@@ -100,12 +79,4 @@ export function ConfirmDeleteProvider({ children }: { children: ReactNode }) {
       </AlertDialog>
     </ConfirmDeleteContext.Provider>
   );
-}
-
-export function useConfirmDelete() {
-  const context = useContext(ConfirmDeleteContext);
-  if (!context) {
-    throw new Error("useConfirmDelete must be used within ConfirmDeleteProvider");
-  }
-  return context;
 }

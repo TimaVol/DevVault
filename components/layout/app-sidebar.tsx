@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Zap } from "lucide-react";
 import { signOut } from "@/features/auth/server/actions";
-import { useAppShellContext } from "@/components/layout/app-shell-context";
+import { useAppShellContext } from "@/hooks/use-app-shell";
 import { DASHBOARD_NAV, isNavActive } from "@/shared/dashboard-nav";
 import { getUserDisplayName, getUserInitial } from "@/shared/user-display";
 import { cn } from "@/utils/cn";

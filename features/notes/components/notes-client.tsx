@@ -1,14 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { BookOpen, Plus } from "lucide-react";
-import { useAppShell } from "@/components/layout/app-shell-context";
+import { BookOpen } from "lucide-react";
 import { ListEmptyState } from "@/components/shared/list-empty-state";
-import { Button } from "@/components/ui/button";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";
+import { useShellCreateAction } from "@/hooks/use-shell-create-action";
 import { useUrlFilters } from "@/hooks/use-url-filters";
 import type { PaginationMeta } from "@/server/pagination";
 import { isActionSuccess } from "@/shared/action-result";
@@ -98,17 +97,7 @@ export function NotesClient({
     });
   };
 
-  const shellActions = useMemo(
-    () => (
-      <Button onClick={handleCreate} disabled={isLoading} size="sm">
-        <Plus data-icon="inline-start" />
-        New Note
-      </Button>
-    ),
-    [handleCreate, isLoading],
-  );
-
-  useAppShell({ actions: shellActions });
+  useShellCreateAction("New Note", handleCreate, { disabled: isLoading });
 
   return (
     <div className="-mx-4 -my-6 flex min-h-[calc(100dvh-4rem)] flex-col overflow-hidden md:-mx-10 md:-my-8 md:flex-row">
@@ -117,10 +106,7 @@ export function NotesClient({
         searchQuery={filters.q}
         activeNoteId={resolvedActiveNoteId}
         pagination={pagination}
-        onDebouncedSearchChange={(value) => {
-          setFilter("q", value);
-          setFilter("page", "1");
-        }}
+        onDebouncedSearchChange={(value) => setFilter("q", value, { resetPage: true })}
         onSelectNote={(id) => setFilter("note", id)}
         onPageChange={(page) => setFilter("page", String(page))}
       />

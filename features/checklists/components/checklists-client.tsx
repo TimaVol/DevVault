@@ -4,6 +4,7 @@ import { CheckSquare } from "lucide-react";
 import { EntityListLayout } from "@/components/shared/entity-list-layout";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { useEntityListPage } from "@/hooks/use-entity-list-page";
+import { useShellCreateAction } from "@/hooks/use-shell-create-action";
 import type { PaginationMeta } from "@/server/pagination";
 import { deleteChecklist, toggleChecklistItem } from "@/features/checklists/server/actions";
 import type { Checklist } from "@/features/checklists/types";
@@ -25,7 +26,6 @@ export function ChecklistsClient({
   const {
     filters,
     setFilter,
-    setFilterAndResetPage,
     open,
     setOpen,
     entity: editing,
@@ -35,12 +35,13 @@ export function ChecklistsClient({
     remove,
   } = useEntityListPage<Checklist>({
     filterDefaults: CHECKLIST_FILTER_DEFAULTS,
-    createLabel: "New Checklist",
     onDelete: deleteChecklist,
     deleteMessage: "Delete checklist?",
     deleteSuccessMessage: "Checklist deleted",
   });
   const { run } = useAsyncAction();
+
+  useShellCreateAction("New Checklist", openCreate);
 
   const toggle = (itemId: string, done: boolean) =>
     run(() => toggleChecklistItem(itemId, !done), {
@@ -53,7 +54,7 @@ export function ChecklistsClient({
         filterBar={
           <ChecklistsFilterBar
             search={filters.q}
-            onDebouncedSearchChange={(value) => setFilterAndResetPage("q", value)}
+            onDebouncedSearchChange={(value) => setFilter("q", value, { resetPage: true })}
           />
         }
         isEmpty={initialChecklists.length === 0}

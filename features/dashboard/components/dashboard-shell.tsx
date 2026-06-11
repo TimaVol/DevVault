@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { useAppShell } from "@/components/layout/app-shell-context";
+import { useAppShell } from "@/hooks/use-app-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { ROUTES } from "@/shared/routes";
 import { cn } from "@/utils/cn";

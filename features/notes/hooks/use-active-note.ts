@@ -16,25 +16,21 @@ export function useActiveNote({
   activeNoteFallback = null,
   pendingNote,
 }: UseActiveNoteOptions) {
-  const resolvedActiveNoteId = useMemo(() => {
-    if (noteIdFromUrl) {
-      if (notes.some((note) => note.id === noteIdFromUrl)) {
-        return noteIdFromUrl;
-      }
-      if (activeNoteFallback?.id === noteIdFromUrl) {
-        return noteIdFromUrl;
-      }
-      if (pendingNote?.id === noteIdFromUrl) {
-        return noteIdFromUrl;
-      }
-    }
-    return notes[0]?.id ?? pendingNote?.id ?? null;
+  return useMemo(() => {
+    const resolveNote = (id: string) =>
+      notes.find((note) => note.id === id) ??
+      (activeNoteFallback?.id === id ? activeNoteFallback : null) ??
+      (pendingNote?.id === id ? pendingNote : null);
+
+    const activeNote =
+      (noteIdFromUrl ? resolveNote(noteIdFromUrl) : null) ??
+      notes[0] ??
+      pendingNote ??
+      null;
+
+    return {
+      resolvedActiveNoteId: activeNote?.id ?? null,
+      activeNote,
+    };
   }, [noteIdFromUrl, notes, activeNoteFallback, pendingNote]);
-
-  const activeNote =
-    notes.find((note) => note.id === resolvedActiveNoteId) ??
-    (activeNoteFallback?.id === resolvedActiveNoteId ? activeNoteFallback : undefined) ??
-    (pendingNote?.id === resolvedActiveNoteId ? pendingNote : undefined);
-
-  return { resolvedActiveNoteId, activeNote };
 }

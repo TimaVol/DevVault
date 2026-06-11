@@ -3,6 +3,7 @@
 import { FolderKanban } from "lucide-react";
 import { EntityListLayout } from "@/components/shared/entity-list-layout";
 import { useEntityListPage } from "@/hooks/use-entity-list-page";
+import { useShellCreateAction } from "@/hooks/use-shell-create-action";
 import type { PaginationMeta } from "@/server/pagination";
 import { deleteProject } from "@/features/projects/server/actions";
 import type { Project } from "@/features/projects/types";
@@ -24,7 +25,6 @@ export function ProjectsClient({
   const {
     filters,
     setFilter,
-    setFilterAndResetPage,
     open,
     setOpen,
     entity: editing,
@@ -34,11 +34,12 @@ export function ProjectsClient({
     remove,
   } = useEntityListPage<Project>({
     filterDefaults: PROJECT_FILTER_DEFAULTS,
-    createLabel: "New Project",
     onDelete: deleteProject,
     deleteMessage: "Delete this project?",
     deleteSuccessMessage: "Project deleted",
   });
+
+  useShellCreateAction("New Project", openCreate);
 
   return (
     <>
@@ -47,8 +48,8 @@ export function ProjectsClient({
           <ProjectsFilterBar
             tab={filters.tab}
             search={filters.q}
-            onTabChange={(value) => setFilterAndResetPage("tab", value)}
-            onDebouncedSearchChange={(value) => setFilterAndResetPage("q", value)}
+            onTabChange={(value) => setFilter("tab", value, { resetPage: true })}
+            onDebouncedSearchChange={(value) => setFilter("q", value, { resetPage: true })}
           />
         }
         isEmpty={initialProjects.length === 0}

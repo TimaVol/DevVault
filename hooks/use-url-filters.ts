@@ -7,6 +7,34 @@ type UrlFilterConfig<T extends Record<string, string>> = {
   defaults: T;
 };
 
+type SetFilterOptions = {
+  resetPage?: boolean;
+};
+
+function applyFilter<T extends Record<string, string>>(
+  params: URLSearchParams,
+  defaults: T,
+  key: keyof T,
+  value: T[keyof T],
+) {
+  const defaultValue = defaults[key];
+
+  if (value === defaultValue || value === "") {
+    params.delete(String(key));
+  } else {
+    params.set(String(key), value);
+  }
+}
+
+function resetPage<T extends Record<string, string>>(
+  params: URLSearchParams,
+  defaults: T,
+) {
+  if ("page" in defaults) {
+    params.delete("page");
+  }
+}
+
 export function useUrlFilters<T extends Record<string, string>>({
   defaults,
 }: UrlFilterConfig<T>) {
@@ -25,23 +53,26 @@ export function useUrlFilters<T extends Record<string, string>>({
     return result;
   }, [defaults, searchParams]);
 
-  const setFilter = useCallback(
-    <K extends keyof T>(key: K, value: T[K]) => {
-      const params = new URLSearchParams(searchParams.toString());
-      const defaultValue = defaults[key];
-
-      if (value === defaultValue || value === "") {
-        params.delete(String(key));
-      } else {
-        params.set(String(key), value);
-      }
-
+  const replaceParams = useCallback(
+    (params: URLSearchParams) => {
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname, {
         scroll: false,
       });
     },
-    [defaults, pathname, router, searchParams],
+    [pathname, router],
+  );
+
+  const setFilter = useCallback(
+    <K extends keyof T>(key: K, value: T[K], options?: SetFilterOptions) => {
+      const params = new URLSearchParams(searchParams.toString());
+      applyFilter(params, defaults, key, value);
+      if (options?.resetPage) {
+        resetPage(params, defaults);
+      }
+      replaceParams(params);
+    },
+    [defaults, replaceParams, searchParams],
   );
 
   return [filters, setFilter] as const;

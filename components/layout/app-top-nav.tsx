@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useAppShellContext } from "@/components/layout/app-shell-context";
+import { useAppShellContext } from "@/hooks/use-app-shell";
 import { getRouteTitle } from "@/shared/dashboard-nav";
 import { getUserInitial } from "@/shared/user-display";
 

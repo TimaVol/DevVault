@@ -1,9 +1,9 @@
 "use client";
 
 import { AppSideNav } from "@/components/layout/app-sidebar";
-import { AppShellProvider } from "@/components/layout/app-shell-context";
 import { AppTopNav } from "@/components/layout/app-top-nav";
-import { ConfirmDeleteProvider } from "@/hooks/use-confirm-delete";
+import { AppShellProvider } from "@/components/providers/app-shell-provider";
+import { ConfirmDeleteProvider } from "@/components/providers/confirm-delete-provider";
 
 export function DashboardLayout({
   userEmail,
