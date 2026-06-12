@@ -11,10 +11,10 @@ import {
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
+import { softDelete } from "@/server/db/soft-delete";
 import { syncChildStrings } from "@/server/db/sync-child-strings";
 import { revalidateEntityPaths } from "@/server/revalidation";
-import { parseActionId } from "@/server/validation/ids";
-import { normalizeList } from "@/utils/normalize-list";
+import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
 const urlField = z
   .string()
@@ -49,10 +49,8 @@ export async function createProject(data: {
   status: string;
   techStack?: string[];
 }) {
-  const result = insertProjectSchema.safeParse(data);
-  if (!result.success) {
-    return actionFailure(result.error.issues[0].message);
-  }
+  const parsed = insertProjectSchema.safeParse(data);
+  if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
     const newProject = await ctx.rls(async (tx) => {
@@ -60,20 +58,23 @@ export async function createProject(data: {
         .insert(projects)
         .values({
           userId: ctx.user.id,
-          name: result.data.name,
-          description: result.data.description ?? null,
-          repositoryUrl: result.data.repositoryUrl ?? null,
-          demoUrl: result.data.demoUrl ?? null,
-          status: result.data.status ?? "active",
+          name: parsed.data.name,
+          description: parsed.data.description ?? null,
+          repositoryUrl: parsed.data.repositoryUrl ?? null,
+          demoUrl: parsed.data.demoUrl ?? null,
+          status: parsed.data.status ?? "active",
         })
         .returning();
 
-      const newStack = normalizeList(result.data.techStack ?? []);
-      if (newStack.length > 0) {
-        await tx
-          .insert(projectTechStack)
-          .values(newStack.map((tech) => ({ projectId: project.id, tech })));
-      }
+      await syncChildStrings({
+        values: parsed.data.techStack,
+        delete: () =>
+          tx.delete(projectTechStack).where(eq(projectTechStack.projectId, project.id)),
+        insert: (stack) =>
+          tx
+            .insert(projectTechStack)
+            .values(stack.map((tech) => ({ projectId: project.id, tech }))),
+      });
 
       return project;
     });
@@ -94,18 +95,14 @@ export async function updateProject(
     techStack?: string[];
   },
 ) {
-  const idResult = parseActionId(id);
-  if (!idResult.success) {
-    return actionFailure(idResult.error.issues[0].message);
-  }
+  const idError = parseIdOrFail(id);
+  if (idError) return idError;
 
-  const result = updateProjectSchema.safeParse(data);
-  if (!result.success) {
-    return actionFailure(result.error.issues[0].message);
-  }
+  const parsed = updateProjectSchema.safeParse(data);
+  if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
-    const { techStack: stackValues, ...projectData } = result.data;
+    const { techStack: stackValues, ...projectData } = parsed.data;
 
     const updatedProject = await ctx.rls(async (tx) => {
       const [project] = await tx
@@ -139,19 +136,11 @@ export async function updateProject(
 }
 
 export async function deleteProject(id: string) {
-  const idResult = parseActionId(id);
-  if (!idResult.success) {
-    return actionFailure(idResult.error.issues[0].message);
-  }
+  const idError = parseIdOrFail(id);
+  if (idError) return idError;
 
   return withAuthedAction(async (ctx) => {
-    const [deleted] = await ctx.rls((tx) =>
-      tx
-        .update(projects)
-        .set({ deletedAt: new Date() })
-        .where(eq(projects.id, id))
-        .returning(),
-    );
+    const deleted = await ctx.rls((tx) => softDelete(tx, projects, id));
 
     if (!deleted) {
       return actionFailure("Project not found or unauthorized");

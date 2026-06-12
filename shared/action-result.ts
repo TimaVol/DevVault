@@ -15,3 +15,17 @@ export function isActionSuccess<T extends Record<string, unknown> | void>(
 ): result is ActionSuccess<T> {
   return result?.success === true;
 }
+
+export function actionFailure(error: string): ActionFailure {
+  return { success: false, error };
+}
+
+export function actionSuccess<T extends Record<string, unknown>>(
+  data: T,
+): ActionSuccess<T> {
+  return { success: true, ...data } as ActionSuccess<T>;
+}
+
+export function actionOk(): ActionSuccess {
+  return { success: true };
+}

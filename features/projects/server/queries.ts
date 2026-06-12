@@ -6,19 +6,18 @@ import {
   desc,
   eq,
   getTableColumns,
-  ilike,
-  isNull,
   or,
   sql,
 } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
-import { paginatedQuery } from "@/server/queries/paginated";
+import { getOffset } from "@/server/pagination";
+import { ilikeAny, notDeleted } from "@/server/queries/filters";
 import { projects, projectTechStack } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
 import type { ProjectListParams } from "./params";
 
 function buildProjectFilters(params: ProjectListParams) {
-  const conditions = [isNull(projects.deletedAt)];
+  const conditions = [notDeleted(projects)];
 
   if (params.tab !== "all") {
     conditions.push(
@@ -30,8 +29,7 @@ function buildProjectFilters(params: ProjectListParams) {
     const pattern = `%${params.q}%`;
     conditions.push(
       or(
-        ilike(projects.name, pattern),
-        ilike(projects.description, pattern),
+        ilikeAny(pattern, projects.name, projects.description),
         sql`exists (
           select 1 from ${projectTechStack}
           where ${projectTechStack.projectId} = ${projects.id}
@@ -72,21 +70,26 @@ export async function getProjects(
 ) {
   const db = await requireDrizzle();
   const where = buildProjectFilters(params);
+  const offset = getOffset(params.page, params.pageSize);
 
-  return db.rls((tx) =>
-    paginatedQuery({
-      tx,
-      page: params.page,
-      pageSize: params.pageSize,
-      getTotal: async () => {
-        const [countResult] = await tx
-          .select({ value: count(sql`distinct ${projects.id}`) })
-          .from(projects)
-          .leftJoin(projectTechStack, eq(projects.id, projectTechStack.projectId))
-          .where(where);
-        return countResult?.value ?? 0;
-      },
-      getItems: (offset, limit) => fetchProjectRows(tx, where, limit, offset),
-    }),
-  );
+  return db.rls(async (tx) => {
+    const [total, items] = await Promise.all([
+      countDistinctProjects(tx, where),
+      fetchProjectRows(tx, where, params.pageSize, offset),
+    ]);
+
+    return { items, total, page: params.page, pageSize: params.pageSize };
+  });
+}
+
+async function countDistinctProjects(
+  tx: AppDbTransaction,
+  where: ReturnType<typeof buildProjectFilters>,
+) {
+  const [countResult] = await tx
+    .select({ value: count(sql`distinct ${projects.id}`) })
+    .from(projects)
+    .leftJoin(projectTechStack, eq(projects.id, projectTechStack.projectId))
+    .where(where);
+  return countResult?.value ?? 0;
 }

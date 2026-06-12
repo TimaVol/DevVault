@@ -15,11 +15,6 @@ export async function requireDrizzle(): Promise<DrizzleSupabaseContext> {
   return db;
 }
 
-/** Server Actions — returns null instead of redirecting */
-export async function getDrizzleOrNull(): Promise<DrizzleSupabaseContext | null> {
-  return createDrizzleSupabaseClient();
-}
-
 export async function requireDrizzleAction(): Promise<
   DrizzleSupabaseContext | ActionFailure
 > {
@@ -28,15 +23,4 @@ export async function requireDrizzleAction(): Promise<
     return { success: false, error: "Unauthorized" };
   }
   return db;
-}
-
-export function isUnauthorized<T>(
-  result: T | ActionFailure,
-): result is ActionFailure {
-  return (
-    typeof result === "object" &&
-    result !== null &&
-    "success" in result &&
-    result.success === false
-  );
 }

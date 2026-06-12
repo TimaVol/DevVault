@@ -11,10 +11,10 @@ import {
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
+import { softDelete } from "@/server/db/soft-delete";
 import { syncChildStrings } from "@/server/db/sync-child-strings";
 import { revalidateEntityPaths } from "@/server/revalidation";
-import { parseActionId } from "@/server/validation/ids";
-import { normalizeList } from "@/utils/normalize-list";
+import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
 const tagsField = z.array(z.string()).optional();
 
@@ -32,10 +32,8 @@ export async function createSnippet(data: {
   tags?: string[];
   isPinned?: boolean;
 }) {
-  const result = insertSnippetSchema.safeParse(data);
-  if (!result.success) {
-    return actionFailure(result.error.issues[0].message);
-  }
+  const parsed = insertSnippetSchema.safeParse(data);
+  if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
     const newSnippet = await ctx.rls(async (tx) => {
@@ -43,19 +41,22 @@ export async function createSnippet(data: {
         .insert(snippets)
         .values({
           userId: ctx.user.id,
-          title: result.data.title,
-          content: result.data.content,
-          language: result.data.language ?? "javascript",
-          isPinned: result.data.isPinned ?? false,
+          title: parsed.data.title,
+          content: parsed.data.content,
+          language: parsed.data.language ?? "javascript",
+          isPinned: parsed.data.isPinned ?? false,
         })
         .returning();
 
-      const newTags = normalizeList(result.data.tags ?? []);
-      if (newTags.length > 0) {
-        await tx
-          .insert(snippetTags)
-          .values(newTags.map((tag) => ({ snippetId: snippet.id, tag })));
-      }
+      await syncChildStrings({
+        values: parsed.data.tags,
+        delete: () =>
+          tx.delete(snippetTags).where(eq(snippetTags.snippetId, snippet.id)),
+        insert: (tags) =>
+          tx
+            .insert(snippetTags)
+            .values(tags.map((tag) => ({ snippetId: snippet.id, tag }))),
+      });
 
       return snippet;
     });
@@ -75,18 +76,14 @@ export async function updateSnippet(
     isPinned?: boolean;
   },
 ) {
-  const idResult = parseActionId(id);
-  if (!idResult.success) {
-    return actionFailure(idResult.error.issues[0].message);
-  }
+  const idError = parseIdOrFail(id);
+  if (idError) return idError;
 
-  const result = updateSnippetSchema.safeParse(data);
-  if (!result.success) {
-    return actionFailure(result.error.issues[0].message);
-  }
+  const parsed = updateSnippetSchema.safeParse(data);
+  if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
-    const { tags: tagValues, ...snippetData } = result.data;
+    const { tags: tagValues, ...snippetData } = parsed.data;
 
     const updatedSnippet = await ctx.rls(async (tx) => {
       const [snippet] = await tx
@@ -117,19 +114,11 @@ export async function updateSnippet(
 }
 
 export async function deleteSnippet(id: string) {
-  const idResult = parseActionId(id);
-  if (!idResult.success) {
-    return actionFailure(idResult.error.issues[0].message);
-  }
+  const idError = parseIdOrFail(id);
+  if (idError) return idError;
 
   return withAuthedAction(async (ctx) => {
-    const [deleted] = await ctx.rls((tx) =>
-      tx
-        .update(snippets)
-        .set({ deletedAt: new Date() })
-        .where(eq(snippets.id, id))
-        .returning(),
-    );
+    const deleted = await ctx.rls((tx) => softDelete(tx, snippets, id));
 
     if (!deleted) {
       return actionFailure("Snippet not found or unauthorized");

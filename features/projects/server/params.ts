@@ -1,5 +1,5 @@
 import {
-  parseBaseListParams,
+  parseListParams,
   parseStringParam,
 } from "@/server/pagination";
 
@@ -13,8 +13,7 @@ export type ProjectListParams = {
 export function parseProjectParams(
   searchParams: Record<string, string | string[] | undefined>,
 ): ProjectListParams {
-  return {
-    ...parseBaseListParams(searchParams),
-    tab: parseStringParam(searchParams.tab) ?? "all",
-  };
+  return parseListParams(searchParams, (sp) => ({
+    tab: parseStringParam(sp.tab) ?? "all",
+  }));
 }

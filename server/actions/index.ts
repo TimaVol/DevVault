@@ -1,13 +1,10 @@
-import {
-  isUnauthorized,
-  requireDrizzleAction,
-} from "@/server/auth/require-user";
+import { requireDrizzleAction } from "@/server/auth/require-user";
 import type { ActionFailure, ActionResult } from "@/shared/action-result";
 import {
   actionFailure,
   actionOk,
   actionSuccess,
-} from "@/server/actions/result.server";
+} from "@/shared/action-result";
 import type { DrizzleSupabaseContext } from "@/lib/db/create-drizzle-supabase-client";
 import { getErrorMessage } from "@/utils/errors";
 
@@ -16,10 +13,7 @@ export type {
   ActionResult,
   ActionSuccess,
 } from "@/shared/action-result";
-export {
-  isActionFailure,
-  isActionSuccess,
-} from "@/shared/action-result";
+export { isActionFailure, isActionSuccess } from "@/shared/action-result";
 
 /** @deprecated Use ActionFailure */
 export type ActionError = ActionFailure;
@@ -46,7 +40,7 @@ export async function withAuthedAction<
   fn: (ctx: DrizzleSupabaseContext) => Promise<ActionResult<T>>,
 ): Promise<ActionResult<T>> {
   const ctx = await requireDrizzleAction();
-  if (isUnauthorized(ctx)) {
+  if (!("user" in ctx)) {
     return ctx;
   }
   try {

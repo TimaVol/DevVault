@@ -5,32 +5,22 @@ import {
   asc,
   count,
   desc,
-  ilike,
   inArray,
-  isNull,
-  or,
 } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
-import type { ListParams } from "@/server/pagination";
-import { paginatedQuery } from "@/server/queries/paginated";
+import { getOffset } from "@/server/pagination";
+import { ilikeAny, notDeleted } from "@/server/queries/filters";
 import { checklists, checklistItems } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
-
-export type ChecklistListParams = ListParams & {
-  page: number;
-  pageSize: number;
-};
+import type { ChecklistListParams } from "./params";
 
 function buildChecklistFilters(params: ChecklistListParams) {
-  const conditions = [isNull(checklists.deletedAt)];
+  const conditions = [notDeleted(checklists)];
 
   if (params.q) {
     const pattern = `%${params.q}%`;
     conditions.push(
-      or(
-        ilike(checklists.title, pattern),
-        ilike(checklists.description, pattern),
-      )!,
+      ilikeAny(pattern, checklists.title, checklists.description),
     );
   }
 
@@ -42,31 +32,44 @@ export async function getChecklists(
 ) {
   const db = await requireDrizzle();
   const where = buildChecklistFilters(params);
+  const offset = getOffset(params.page, params.pageSize);
 
-  return db.rls((tx) =>
-    paginatedQuery({
-      tx,
-      page: params.page,
-      pageSize: params.pageSize,
-      getTotal: async () => {
-        const [countResult] = await tx
-          .select({ value: count() })
-          .from(checklists)
-          .where(where);
-        return countResult?.value ?? 0;
-      },
-      getItems: async (offset, limit) => {
-        const userChecklists = await tx
-          .select()
-          .from(checklists)
-          .where(where)
-          .orderBy(desc(checklists.createdAt))
-          .limit(limit)
-          .offset(offset);
-        return attachChecklistItems(tx, userChecklists);
-      },
-    }),
-  );
+  return db.rls(async (tx) => {
+    const [total, items] = await Promise.all([
+      countRows(tx, where),
+      fetchChecklistRows(tx, where, params.pageSize, offset),
+    ]);
+
+    return { items, total, page: params.page, pageSize: params.pageSize };
+  });
+}
+
+async function countRows(
+  tx: AppDbTransaction,
+  where: ReturnType<typeof buildChecklistFilters>,
+) {
+  const [countResult] = await tx
+    .select({ value: count() })
+    .from(checklists)
+    .where(where);
+  return countResult?.value ?? 0;
+}
+
+async function fetchChecklistRows(
+  tx: AppDbTransaction,
+  where: ReturnType<typeof buildChecklistFilters>,
+  limit: number,
+  offset: number,
+) {
+  const userChecklists = await tx
+    .select()
+    .from(checklists)
+    .where(where)
+    .orderBy(desc(checklists.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  return attachChecklistItems(tx, userChecklists);
 }
 
 async function attachChecklistItems(

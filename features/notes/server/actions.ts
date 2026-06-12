@@ -10,8 +10,9 @@ import {
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
+import { softDelete } from "@/server/db/soft-delete";
 import { revalidateEntityPaths } from "@/server/revalidation";
-import { parseActionId } from "@/server/validation/ids";
+import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
 const insertNoteSchema = createInsertSchema(notes).omit(serverFields);
 const updateNoteSchema = createUpdateSchema(notes).omit(serverFields);
@@ -21,10 +22,8 @@ export async function createNote(data: {
   content: string;
   isPinned?: boolean;
 }) {
-  const result = insertNoteSchema.safeParse(data);
-  if (!result.success) {
-    return actionFailure(result.error.issues[0].message);
-  }
+  const parsed = insertNoteSchema.safeParse(data);
+  if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
     const [newNote] = await ctx.rls((tx) =>
@@ -32,9 +31,9 @@ export async function createNote(data: {
         .insert(notes)
         .values({
           userId: ctx.user.id,
-          title: result.data.title,
-          content: result.data.content,
-          isPinned: result.data.isPinned ?? false,
+          title: parsed.data.title,
+          content: parsed.data.content,
+          isPinned: parsed.data.isPinned ?? false,
         })
         .returning(),
     );
@@ -52,22 +51,18 @@ export async function updateNote(
     isPinned?: boolean;
   },
 ) {
-  const idResult = parseActionId(id);
-  if (!idResult.success) {
-    return actionFailure(idResult.error.issues[0].message);
-  }
+  const idError = parseIdOrFail(id);
+  if (idError) return idError;
 
-  const result = updateNoteSchema.safeParse(data);
-  if (!result.success) {
-    return actionFailure(result.error.issues[0].message);
-  }
+  const parsed = updateNoteSchema.safeParse(data);
+  if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
     const [updatedNote] = await ctx.rls((tx) =>
       tx
         .update(notes)
         .set({
-          ...result.data,
+          ...parsed.data,
           updatedAt: new Date(),
         })
         .where(eq(notes.id, id))
@@ -84,19 +79,11 @@ export async function updateNote(
 }
 
 export async function deleteNote(id: string) {
-  const idResult = parseActionId(id);
-  if (!idResult.success) {
-    return actionFailure(idResult.error.issues[0].message);
-  }
+  const idError = parseIdOrFail(id);
+  if (idError) return idError;
 
   return withAuthedAction(async (ctx) => {
-    const [deleted] = await ctx.rls((tx) =>
-      tx
-        .update(notes)
-        .set({ deletedAt: new Date() })
-        .where(eq(notes.id, id))
-        .returning(),
-    );
+    const deleted = await ctx.rls((tx) => softDelete(tx, notes, id));
 
     if (!deleted) {
       return actionFailure("Note not found or unauthorized");

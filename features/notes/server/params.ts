@@ -1,5 +1,5 @@
 import {
-  parseBaseListParams,
+  parseListParams,
   parseStringParam,
 } from "@/server/pagination";
 
@@ -13,8 +13,7 @@ export type NoteListParams = {
 export function parseNoteParams(
   searchParams: Record<string, string | string[] | undefined>,
 ): NoteListParams {
-  return {
-    ...parseBaseListParams(searchParams),
-    note: parseStringParam(searchParams.note),
-  };
+  return parseListParams(searchParams, (sp) => ({
+    note: parseStringParam(sp.note),
+  }));
 }

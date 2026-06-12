@@ -6,19 +6,18 @@ import {
   desc,
   eq,
   getTableColumns,
-  ilike,
-  isNull,
   or,
   sql,
 } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
 import type { AppDbTransaction } from "@/lib/db/types";
-import { paginatedQuery } from "@/server/queries/paginated";
+import { getOffset } from "@/server/pagination";
+import { ilikeAny, notDeleted } from "@/server/queries/filters";
 import { snippets, snippetTags } from "@/lib/db/schema";
 import type { SnippetListParams } from "./params";
 
 function buildSnippetFilters(params: SnippetListParams) {
-  const conditions = [isNull(snippets.deletedAt)];
+  const conditions = [notDeleted(snippets)];
 
   if (params.lang !== "all") {
     conditions.push(eq(snippets.language, params.lang));
@@ -28,8 +27,7 @@ function buildSnippetFilters(params: SnippetListParams) {
     const pattern = `%${params.q}%`;
     conditions.push(
       or(
-        ilike(snippets.title, pattern),
-        ilike(snippets.content, pattern),
+        ilikeAny(pattern, snippets.title, snippets.content),
         sql`exists (
           select 1 from ${snippetTags}
           where ${snippetTags.snippetId} = ${snippets.id}
@@ -70,23 +68,28 @@ export async function getSnippets(
 ) {
   const db = await requireDrizzle();
   const where = buildSnippetFilters(params);
+  const offset = getOffset(params.page, params.pageSize);
 
-  return db.rls((tx) =>
-    paginatedQuery({
-      tx,
-      page: params.page,
-      pageSize: params.pageSize,
-      getTotal: async () => {
-        const [countResult] = await tx
-          .select({ value: count(sql`distinct ${snippets.id}`) })
-          .from(snippets)
-          .leftJoin(snippetTags, eq(snippets.id, snippetTags.snippetId))
-          .where(where);
-        return countResult?.value ?? 0;
-      },
-      getItems: (offset, limit) => fetchSnippetRows(tx, where, limit, offset),
-    }),
-  );
+  return db.rls(async (tx) => {
+    const [total, items] = await Promise.all([
+      countDistinctSnippets(tx, where),
+      fetchSnippetRows(tx, where, params.pageSize, offset),
+    ]);
+
+    return { items, total, page: params.page, pageSize: params.pageSize };
+  });
+}
+
+async function countDistinctSnippets(
+  tx: AppDbTransaction,
+  where: ReturnType<typeof buildSnippetFilters>,
+) {
+  const [countResult] = await tx
+    .select({ value: count(sql`distinct ${snippets.id}`) })
+    .from(snippets)
+    .leftJoin(snippetTags, eq(snippets.id, snippetTags.snippetId))
+    .where(where);
+  return countResult?.value ?? 0;
 }
 
 export async function getSnippetLanguages(): Promise<string[]> {
@@ -96,7 +99,7 @@ export async function getSnippetLanguages(): Promise<string[]> {
     tx
       .selectDistinct({ language: snippets.language })
       .from(snippets)
-      .where(isNull(snippets.deletedAt))
+      .where(notDeleted(snippets))
       .orderBy(snippets.language),
   );
 

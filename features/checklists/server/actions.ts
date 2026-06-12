@@ -11,8 +11,9 @@ import {
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
+import { softDelete } from "@/server/db/soft-delete";
 import { revalidateEntityPaths } from "@/server/revalidation";
-import { parseActionId } from "@/server/validation/ids";
+import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
 const itemsField = z
   .array(z.string().min(1, "Item cannot be empty"))
@@ -31,10 +32,8 @@ export async function createChecklist(data: {
   description?: string;
   items: string[];
 }) {
-  const result = insertChecklistSchema.safeParse(data);
-  if (!result.success) {
-    return actionFailure(result.error.issues[0].message);
-  }
+  const parsed = insertChecklistSchema.safeParse(data);
+  if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
     const newChecklist = await ctx.rls(async (tx) => {
@@ -42,12 +41,12 @@ export async function createChecklist(data: {
         .insert(checklists)
         .values({
           userId: ctx.user.id,
-          title: result.data.title,
-          description: result.data.description ?? null,
+          title: parsed.data.title,
+          description: parsed.data.description ?? null,
         })
         .returning();
 
-      const itemsToInsert = result.data.items.map((content, idx) => ({
+      const itemsToInsert = parsed.data.items.map((content, idx) => ({
         checklistId: checklist.id,
         content,
         isCompleted: false,
@@ -72,18 +71,14 @@ export async function updateChecklist(
     items?: string[];
   },
 ) {
-  const idResult = parseActionId(id);
-  if (!idResult.success) {
-    return actionFailure(idResult.error.issues[0].message);
-  }
+  const idError = parseIdOrFail(id);
+  if (idError) return idError;
 
-  const result = updateChecklistSchema.safeParse(data);
-  if (!result.success) {
-    return actionFailure(result.error.issues[0].message);
-  }
+  const parsed = updateChecklistSchema.safeParse(data);
+  if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
-    const { items: itemValues, ...checklistData } = result.data;
+    const { items: itemValues, ...checklistData } = parsed.data;
 
     const updatedChecklist = await ctx.rls(async (tx) => {
       const [checklist] = await tx
@@ -128,10 +123,8 @@ export async function updateChecklist(
 }
 
 export async function toggleChecklistItem(id: string, isCompleted: boolean) {
-  const idResult = parseActionId(id);
-  if (!idResult.success) {
-    return actionFailure(idResult.error.issues[0].message);
-  }
+  const idError = parseIdOrFail(id);
+  if (idError) return idError;
 
   return withAuthedAction(async (ctx) => {
     const [updated] = await ctx.rls((tx) =>
@@ -152,19 +145,11 @@ export async function toggleChecklistItem(id: string, isCompleted: boolean) {
 }
 
 export async function deleteChecklist(id: string) {
-  const idResult = parseActionId(id);
-  if (!idResult.success) {
-    return actionFailure(idResult.error.issues[0].message);
-  }
+  const idError = parseIdOrFail(id);
+  if (idError) return idError;
 
   return withAuthedAction(async (ctx) => {
-    const [deleted] = await ctx.rls((tx) =>
-      tx
-        .update(checklists)
-        .set({ deletedAt: new Date() })
-        .where(eq(checklists.id, id))
-        .returning(),
-    );
+    const deleted = await ctx.rls((tx) => softDelete(tx, checklists, id));
 
     if (!deleted) {
       return actionFailure("Checklist not found or unauthorized");

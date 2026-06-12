@@ -42,3 +42,15 @@ export function parseBaseListParams(
     pageSize: DEFAULT_PAGE_SIZE,
   }
 }
+
+export function parseListParams<T extends Record<string, unknown>>(
+  searchParams: Record<string, string | string[] | undefined>,
+  parseExtra: (
+    searchParams: Record<string, string | string[] | undefined>,
+  ) => T,
+) {
+  return {
+    ...parseBaseListParams(searchParams),
+    ...parseExtra(searchParams),
+  }
+}

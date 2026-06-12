@@ -1,5 +1,5 @@
 import {
-  parseBaseListParams,
+  parseListParams,
   parseStringParam,
 } from "@/server/pagination";
 
@@ -13,8 +13,7 @@ export type SnippetListParams = {
 export function parseSnippetParams(
   searchParams: Record<string, string | string[] | undefined>,
 ): SnippetListParams {
-  return {
-    ...parseBaseListParams(searchParams),
-    lang: parseStringParam(searchParams.lang) ?? "all",
-  };
+  return parseListParams(searchParams, (sp) => ({
+    lang: parseStringParam(sp.lang) ?? "all",
+  }));
 }

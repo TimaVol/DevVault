@@ -1,20 +1,19 @@
 import "server-only";
 
-import { and, count, desc, eq, ilike, isNull, or } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
-import { paginatedQuery } from "@/server/queries/paginated";
+import { getOffset } from "@/server/pagination";
+import { ilikeAny, notDeleted } from "@/server/queries/filters";
 import { notes } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
 import type { NoteListParams } from "./params";
 
 function buildNoteFilters(params: NoteListParams) {
-  const conditions = [isNull(notes.deletedAt)];
+  const conditions = [notDeleted(notes)];
 
   if (params.q) {
     const pattern = `%${params.q}%`;
-    conditions.push(
-      or(ilike(notes.title, pattern), ilike(notes.content, pattern))!,
-    );
+    conditions.push(ilikeAny(pattern, notes.title, notes.content));
   }
 
   return and(...conditions);
@@ -25,22 +24,27 @@ export async function getNotes(
 ) {
   const db = await requireDrizzle();
   const where = buildNoteFilters(params);
+  const offset = getOffset(params.page, params.pageSize);
 
-  return db.rls((tx) =>
-    paginatedQuery({
-      tx,
-      page: params.page,
-      pageSize: params.pageSize,
-      getTotal: async () => {
-        const [countResult] = await tx
-          .select({ value: count() })
-          .from(notes)
-          .where(where);
-        return countResult?.value ?? 0;
-      },
-      getItems: (offset, limit) => fetchNoteRows(tx, where, limit, offset),
-    }),
-  );
+  return db.rls(async (tx) => {
+    const [total, items] = await Promise.all([
+      countRows(tx, where),
+      fetchNoteRows(tx, where, params.pageSize, offset),
+    ]);
+
+    return { items, total, page: params.page, pageSize: params.pageSize };
+  });
+}
+
+async function countRows(
+  tx: AppDbTransaction,
+  where: ReturnType<typeof buildNoteFilters>,
+) {
+  const [countResult] = await tx
+    .select({ value: count() })
+    .from(notes)
+    .where(where);
+  return countResult?.value ?? 0;
 }
 
 async function fetchNoteRows(
@@ -65,7 +69,7 @@ export async function getNoteById(id: string) {
     tx
       .select()
       .from(notes)
-      .where(and(eq(notes.id, id), isNull(notes.deletedAt)))
+      .where(and(eq(notes.id, id), notDeleted(notes)))
       .limit(1),
   );
 
