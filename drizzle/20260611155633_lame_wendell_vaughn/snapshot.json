@@ -1,0 +1,1662 @@
+{
+  "version": "8",
+  "dialect": "postgres",
+  "id": "c8f75e4b-88f5-4e7d-b438-bc6470f4ac6e",
+  "prevIds": [
+    "4168d080-762b-40d7-9fe6-9ed10ceadb82"
+  ],
+  "ddl": [
+    {
+      "values": [
+        "backlog",
+        "active",
+        "completed"
+      ],
+      "name": "project_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "users",
+      "entityType": "tables",
+      "schema": "auth"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "checklist_items",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "checklists",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "notes",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "profiles",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "project_tech_stack",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "projects",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "snippet_tags",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": true,
+      "name": "snippets",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "auth",
+      "table": "users"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "checklist_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "content",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "is_completed",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "position",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "title",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "description",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "title",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "content",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "is_pinned",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "profiles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "email",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "profiles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "full_name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "profiles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "avatar_url",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "profiles"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "profiles"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "profiles"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "project_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "project_tech_stack"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "tech",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "project_tech_stack"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "description",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "repository_url",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "demo_url",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "type": "project_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'active'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "snippet_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippet_tags"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "tag",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippet_tags"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "title",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "content",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'javascript'",
+      "generated": null,
+      "identity": null,
+      "name": "language",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "is_pinned",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "deleted_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "checklist_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "checklist_items_checklist_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "checklists_user_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "checklists_created_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "notes_user_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "notes_created_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "is_pinned",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "notes_is_pinned_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "tech",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "project_tech_stack_tech_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "project_tech_stack"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "projects_user_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "projects_created_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "projects_status_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "tag",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "snippet_tags_tag_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "snippet_tags"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "snippets_user_id_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "snippets_created_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "is_pinned",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "snippets_is_pinned_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "checklist_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "checklists",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "checklist_items_checklist_id_checklists_id_fk",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "profiles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "checklists_user_id_profiles_id_fk",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "profiles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "notes_user_id_profiles_id_fk",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "id"
+      ],
+      "schemaTo": "auth",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "profiles_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "profiles"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "project_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "projects",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "project_tech_stack_project_id_projects_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "project_tech_stack"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "profiles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "projects_user_id_profiles_id_fk",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "snippet_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "snippets",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "snippet_tags_snippet_id_snippets_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "snippet_tags"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "profiles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "snippets_user_id_profiles_id_fk",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "columns": [
+        "project_id",
+        "tech"
+      ],
+      "nameExplicit": false,
+      "name": "project_tech_stack_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "project_tech_stack"
+    },
+    {
+      "columns": [
+        "snippet_id",
+        "tag"
+      ],
+      "nameExplicit": false,
+      "name": "snippet_tags_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "snippet_tags"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "users_pkey",
+      "schema": "auth",
+      "table": "users",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "checklist_items_pkey",
+      "schema": "public",
+      "table": "checklist_items",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "checklists_pkey",
+      "schema": "public",
+      "table": "checklists",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "notes_pkey",
+      "schema": "public",
+      "table": "notes",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "profiles_pkey",
+      "schema": "public",
+      "table": "profiles",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "projects_pkey",
+      "schema": "public",
+      "table": "projects",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "snippets_pkey",
+      "schema": "public",
+      "table": "snippets",
+      "entityType": "pks"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "checklist_id",
+        "position"
+      ],
+      "nullsNotDistinct": false,
+      "name": "checklist_items_checklist_id_position_unique",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "exists (\n      select 1 from \"checklists\"\n      where \"checklists\".\"id\" = \"checklist_items\".\"checklist_id\"\n      and \"checklists\".\"user_id\" = (select auth.uid())\n    )",
+      "withCheck": null,
+      "name": "checklist_items select own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null,
+      "withCheck": "exists (\n      select 1 from \"checklists\"\n      where \"checklists\".\"id\" = \"checklist_items\".\"checklist_id\"\n      and \"checklists\".\"user_id\" = (select auth.uid())\n    )",
+      "name": "checklist_items insert own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "exists (\n      select 1 from \"checklists\"\n      where \"checklists\".\"id\" = \"checklist_items\".\"checklist_id\"\n      and \"checklists\".\"user_id\" = (select auth.uid())\n    )",
+      "withCheck": "exists (\n      select 1 from \"checklists\"\n      where \"checklists\".\"id\" = \"checklist_items\".\"checklist_id\"\n      and \"checklists\".\"user_id\" = (select auth.uid())\n    )",
+      "name": "checklist_items update own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "exists (\n      select 1 from \"checklists\"\n      where \"checklists\".\"id\" = \"checklist_items\".\"checklist_id\"\n      and \"checklists\".\"user_id\" = (select auth.uid())\n    )",
+      "withCheck": null,
+      "name": "checklist_items delete own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "checklist_items"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"checklists\".\"user_id\"",
+      "withCheck": null,
+      "name": "checklists select own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null,
+      "withCheck": "(select auth.uid()) = \"checklists\".\"user_id\"",
+      "name": "checklists insert own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"checklists\".\"user_id\"",
+      "withCheck": "(select auth.uid()) = \"checklists\".\"user_id\"",
+      "name": "checklists update own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"checklists\".\"user_id\"",
+      "withCheck": null,
+      "name": "checklists delete own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "checklists"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"notes\".\"user_id\"",
+      "withCheck": null,
+      "name": "notes select own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null,
+      "withCheck": "(select auth.uid()) = \"notes\".\"user_id\"",
+      "name": "notes insert own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"notes\".\"user_id\"",
+      "withCheck": "(select auth.uid()) = \"notes\".\"user_id\"",
+      "name": "notes update own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"notes\".\"user_id\"",
+      "withCheck": null,
+      "name": "notes delete own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "notes"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"profiles\".\"id\"",
+      "withCheck": null,
+      "name": "profiles select own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "profiles"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"profiles\".\"id\"",
+      "withCheck": "(select auth.uid()) = \"profiles\".\"id\"",
+      "name": "profiles update own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "profiles"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "INSERT",
+      "roles": [
+        "supabase_auth_admin"
+      ],
+      "using": null,
+      "withCheck": "true",
+      "name": "profiles insert auth admin",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "profiles"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "exists (\n      select 1 from \"projects\"\n      where \"projects\".\"id\" = \"project_tech_stack\".\"project_id\"\n      and \"projects\".\"user_id\" = (select auth.uid())\n    )",
+      "withCheck": null,
+      "name": "project_tech_stack select own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "project_tech_stack"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null,
+      "withCheck": "exists (\n      select 1 from \"projects\"\n      where \"projects\".\"id\" = \"project_tech_stack\".\"project_id\"\n      and \"projects\".\"user_id\" = (select auth.uid())\n    )",
+      "name": "project_tech_stack insert own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "project_tech_stack"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "exists (\n      select 1 from \"projects\"\n      where \"projects\".\"id\" = \"project_tech_stack\".\"project_id\"\n      and \"projects\".\"user_id\" = (select auth.uid())\n    )",
+      "withCheck": null,
+      "name": "project_tech_stack delete own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "project_tech_stack"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"projects\".\"user_id\"",
+      "withCheck": null,
+      "name": "projects select own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null,
+      "withCheck": "(select auth.uid()) = \"projects\".\"user_id\"",
+      "name": "projects insert own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"projects\".\"user_id\"",
+      "withCheck": "(select auth.uid()) = \"projects\".\"user_id\"",
+      "name": "projects update own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"projects\".\"user_id\"",
+      "withCheck": null,
+      "name": "projects delete own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "projects"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "exists (\n      select 1 from \"snippets\"\n      where \"snippets\".\"id\" = \"snippet_tags\".\"snippet_id\"\n      and \"snippets\".\"user_id\" = (select auth.uid())\n    )",
+      "withCheck": null,
+      "name": "snippet_tags select own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "snippet_tags"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null,
+      "withCheck": "exists (\n      select 1 from \"snippets\"\n      where \"snippets\".\"id\" = \"snippet_tags\".\"snippet_id\"\n      and \"snippets\".\"user_id\" = (select auth.uid())\n    )",
+      "name": "snippet_tags insert own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "snippet_tags"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "exists (\n      select 1 from \"snippets\"\n      where \"snippets\".\"id\" = \"snippet_tags\".\"snippet_id\"\n      and \"snippets\".\"user_id\" = (select auth.uid())\n    )",
+      "withCheck": null,
+      "name": "snippet_tags delete own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "snippet_tags"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"snippets\".\"user_id\"",
+      "withCheck": null,
+      "name": "snippets select own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null,
+      "withCheck": "(select auth.uid()) = \"snippets\".\"user_id\"",
+      "name": "snippets insert own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"snippets\".\"user_id\"",
+      "withCheck": "(select auth.uid()) = \"snippets\".\"user_id\"",
+      "name": "snippets update own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "snippets"
+    },
+    {
+      "as": "PERMISSIVE",
+      "for": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(select auth.uid()) = \"snippets\".\"user_id\"",
+      "withCheck": null,
+      "name": "snippets delete own",
+      "entityType": "policies",
+      "schema": "public",
+      "table": "snippets"
+    }
+  ],
+  "renames": []
+}

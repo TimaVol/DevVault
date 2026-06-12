@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
-import type { AppDbTransaction } from "./types";
-import type { SupabaseToken } from "./create-drizzle";
+import type { AppDbTransaction, SupabaseToken } from "./types";
 
 /** Escape single quotes for safe use inside SQL string literals. */
 function escapeSqlLiteral(value: string): string {

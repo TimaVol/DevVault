@@ -48,3 +48,5 @@ next-env.d.ts
 
 # drizzle-kit introspect output (reference only; not app schema)
 drizzle/introspected/
+drizzle/relations.ts
+drizzle/schema.ts

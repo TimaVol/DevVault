@@ -4,11 +4,11 @@ import { defineConfig } from "drizzle-kit";
 dotenv.config({ path: ".env.local" });
 
 export default defineConfig({
-  schema: "./lib/db/schema.ts",
+  schema: "./lib/db/schema/index.ts",
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.ADMIN_DATABASE_URL ?? process.env.DATABASE_URL!,
+    url: process.env.ADMIN_DATABASE_URL!,
   },
   entities: {
     roles: {

@@ -3,6 +3,23 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublicEnv } from "@/lib/env/public";
 import { ROUTES } from "@/shared/routes";
 
+function copyRequestCookies(request: NextRequest, response: NextResponse) {
+  request.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie.name, cookie.value);
+  });
+}
+
+function redirectWithCookies(
+  request: NextRequest,
+  pathname: string,
+): NextResponse {
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = pathname;
+  const response = NextResponse.redirect(redirectUrl);
+  copyRequestCookies(request, response);
+  return response;
+}
+
 export async function updateSession(request: NextRequest) {
   const supabaseEnv = getSupabasePublicEnv();
   if (!supabaseEnv) {
@@ -38,27 +55,11 @@ export async function updateSession(request: NextRequest) {
   const isLoginRoute = request.nextUrl.pathname === ROUTES.login;
 
   if (isDashboardRoute && !user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = ROUTES.login;
-    const response = NextResponse.redirect(redirectUrl);
-
-    request.cookies.getAll().forEach((cookie) => {
-      response.cookies.set(cookie.name, cookie.value);
-    });
-
-    return response;
+    return redirectWithCookies(request, ROUTES.login);
   }
 
   if (isLoginRoute && user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = ROUTES.dashboard;
-    const response = NextResponse.redirect(redirectUrl);
-
-    request.cookies.getAll().forEach((cookie) => {
-      response.cookies.set(cookie.name, cookie.value);
-    });
-
-    return response;
+    return redirectWithCookies(request, ROUTES.dashboard);
   }
 
   return supabaseResponse;

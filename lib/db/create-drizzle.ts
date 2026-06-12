@@ -1,26 +1,8 @@
 import { getPgErrorMessage } from "@/utils/pg-error";
-import type { AppDatabase, AppDbTransaction } from "./types";
 import { applyRlsSession, resetRlsSession } from "./rls-session";
-
-export type SupabaseToken = {
-  iss?: string;
-  sub?: string;
-  aud?: string[] | string;
-  email?: string;
-  exp?: number;
-  nbf?: number;
-  iat?: number;
-  jti?: string;
-  role?: string;
-};
+import type { AppDatabase, AppDbTransaction, SupabaseToken } from "./types";
 
 const ALLOWED_ROLES = new Set(["anon", "authenticated", "service_role"]);
-
-type TransactionRestArgs = Parameters<
-  AppDatabase["transaction"]
-> extends [unknown, ...infer Rest]
-  ? Rest
-  : never[];
 
 function resolveRole(role: string | undefined): string {
   if (role && ALLOWED_ROLES.has(role)) {
@@ -39,7 +21,6 @@ export function createDrizzle(
     admin,
     rls: async <T>(
       transaction: (tx: AppDbTransaction) => Promise<T>,
-      ...rest: TransactionRestArgs
     ): Promise<T> => {
       return client.transaction(async (tx) => {
         await applyRlsSession(tx, token, role);
@@ -57,7 +38,7 @@ export function createDrizzle(
             // Transaction may be aborted; ROLLBACK clears LOCAL role/config.
           }
         }
-      }, ...rest);
+      });
     },
   };
 }
