@@ -18,10 +18,21 @@ export function getSupabasePublicEnv():
 }
 
 export function getSiteUrl(fallback = "http://localhost:3000"): string {
-  const url = process.env.NEXT_PUBLIC_SITE_URL;
-  if (url) {
-    return url;
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL;
   }
+
+  // Vercel injects these automatically — no manual env setup needed.
+  const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (process.env.VERCEL_ENV === "production" && productionUrl) {
+    return `https://${productionUrl}`;
+  }
+
+  const deploymentUrl = process.env.VERCEL_URL;
+  if (deploymentUrl) {
+    return `https://${deploymentUrl}`;
+  }
+
   return fallback;
 }
 
