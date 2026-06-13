@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { ROUTES } from "@/shared/routes";
-import { env, getSiteUrl } from "@/lib/env";
+import { env, getRequestSiteUrl } from "@/lib/env";
 import { checkRateLimit, getClientIp } from "@/server/auth/rate-limit";
 import {
   emailField,
@@ -95,11 +95,12 @@ export async function signUp(
   }
 
   const supabase = await createClient();
+  const siteUrl = await getRequestSiteUrl();
   const { error } = await supabase.auth.signUp({
     email: result.data.email,
     password: result.data.password,
     options: {
-      emailRedirectTo: `${getSiteUrl()}/auth/callback`,
+      emailRedirectTo: `${siteUrl}/auth/callback`,
     },
   });
 
@@ -126,9 +127,10 @@ export async function requestPasswordReset(
 
   const supabase = await createClient();
   const next = encodeURIComponent(ROUTES.resetPassword);
+  const siteUrl = await getRequestSiteUrl();
 
   const { error } = await supabase.auth.resetPasswordForEmail(result.data.email, {
-    redirectTo: `${getSiteUrl()}/auth/callback?next=${next}`,
+    redirectTo: `${siteUrl}/auth/callback?next=${next}`,
   });
 
   if (error) {
@@ -195,11 +197,12 @@ export async function signInWithGoogle() {
   }
 
   const supabase = await createClient();
+  const siteUrl = await getRequestSiteUrl();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${getSiteUrl()}/auth/callback`,
+      redirectTo: `${siteUrl}/auth/callback`,
     },
   });
 
