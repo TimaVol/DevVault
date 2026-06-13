@@ -7,7 +7,7 @@ import { FormDialog } from "@/components/shared/form-dialog";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useAsyncAction } from "@/hooks/use-async-action";
+import { useEntityFormSubmit } from "@/hooks/use-entity-form-submit";
 import {
   createChecklist,
   updateChecklist,
@@ -25,7 +25,6 @@ export function ChecklistDialog({
   onOpenChange,
   entity: checklist,
 }: ChecklistDialogProps) {
-  const { isLoading, run } = useAsyncAction();
   const [title, setTitle] = useState(checklist?.title ?? "");
   const [description, setDescription] = useState(checklist?.description ?? "");
   const [newItem, setNewItem] = useState("");
@@ -46,7 +45,18 @@ export function ChecklistDialog({
     setItems([]);
   };
 
-  const submit = async (e: React.FormEvent) => {
+  const isEditing = !!checklist;
+
+  const { isLoading, submit } = useEntityFormSubmit({
+    isEditing,
+    onOpenChange,
+    reset,
+    createMessage: "Checklist created",
+    updateMessage: "Checklist updated",
+    errorMessage: isEditing ? "Update failed" : "Create failed",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
       toast.error("Title is required");
@@ -57,27 +67,18 @@ export function ChecklistDialog({
       return;
     }
 
-    await run(
-      () =>
-        checklist
-          ? updateChecklist(checklist.id, {
-              title,
-              description: description || undefined,
-              items,
-            })
-          : createChecklist({
-              title,
-              description: description || undefined,
-              items,
-            }),
-      {
-        successMessage: checklist ? "Checklist updated" : "Checklist created",
-        errorMessage: checklist ? "Update failed" : "Create failed",
-        onSuccess: () => {
-          reset();
-          onOpenChange(false);
-        },
-      },
+    await submit(() =>
+      checklist
+        ? updateChecklist(checklist.id, {
+            title,
+            description: description || undefined,
+            items,
+          })
+        : createChecklist({
+            title,
+            description: description || undefined,
+            items,
+          }),
     );
   };
 
@@ -87,7 +88,7 @@ export function ChecklistDialog({
       onOpenChange={onOpenChange}
       title={checklist ? "Edit checklist" : "New checklist"}
       description="Add items for your launch or review flow."
-      onSubmit={submit}
+      onSubmit={handleSubmit}
       isLoading={isLoading}
       onBeforeClose={reset}
     >

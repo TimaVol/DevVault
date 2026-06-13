@@ -54,3 +54,15 @@ export function parseListParams<T extends Record<string, unknown>>(
     ...parseExtra(searchParams),
   }
 }
+
+export type BaseListParams = ReturnType<typeof parseBaseListParams>
+
+export function createListParamsParser<TExtra extends Record<string, unknown>>(
+  parseExtra: (
+    searchParams: Record<string, string | string[] | undefined>,
+  ) => TExtra,
+) {
+  return (
+    searchParams: Record<string, string | string[] | undefined>,
+  ): BaseListParams & TExtra => parseListParams(searchParams, parseExtra)
+}

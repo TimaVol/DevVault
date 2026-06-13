@@ -6,12 +6,14 @@ import { eq } from "drizzle-orm";
 import { snippets, snippetTags } from "@/lib/db/schema";
 import {
   actionFailure,
-  actionOk,
   actionSuccess,
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
-import { softDelete } from "@/server/db/soft-delete";
+import {
+  runDeleteAction,
+  updateEntityRow,
+} from "@/server/actions/entity-mutations";
 import { syncChildStrings } from "@/server/db/sync-child-strings";
 import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseIdOrFail, zodFailure } from "@/server/validation/action";
@@ -24,6 +26,8 @@ const insertSnippetSchema = createInsertSchema(snippets)
 const updateSnippetSchema = createUpdateSchema(snippets)
   .omit(serverFields)
   .extend({ tags: tagsField });
+
+const NOT_FOUND = "Snippet not found or unauthorized";
 
 export async function createSnippet(data: {
   title: string;
@@ -86,12 +90,7 @@ export async function updateSnippet(
     const { tags: tagValues, ...snippetData } = parsed.data;
 
     const updatedSnippet = await ctx.rls(async (tx) => {
-      const [snippet] = await tx
-        .update(snippets)
-        .set({ ...snippetData, updatedAt: new Date() })
-        .where(eq(snippets.id, id))
-        .returning();
-
+      const snippet = await updateEntityRow(tx, snippets, id, snippetData);
       if (!snippet) return null;
 
       await syncChildStrings({
@@ -105,7 +104,7 @@ export async function updateSnippet(
     });
 
     if (!updatedSnippet) {
-      return actionFailure("Snippet not found or unauthorized");
+      return actionFailure(NOT_FOUND);
     }
 
     revalidateEntityPaths("dashboard", "snippets");
@@ -114,17 +113,8 @@ export async function updateSnippet(
 }
 
 export async function deleteSnippet(id: string) {
-  const idError = parseIdOrFail(id);
-  if (idError) return idError;
-
-  return withAuthedAction(async (ctx) => {
-    const deleted = await ctx.rls((tx) => softDelete(tx, snippets, id));
-
-    if (!deleted) {
-      return actionFailure("Snippet not found or unauthorized");
-    }
-
-    revalidateEntityPaths("dashboard", "snippets");
-    return actionOk();
+  return runDeleteAction(id, snippets, {
+    notFoundMessage: NOT_FOUND,
+    revalidate: ["dashboard", "snippets"],
   });
 }

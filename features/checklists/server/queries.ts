@@ -7,8 +7,7 @@ import {
   desc,
   inArray,
 } from "drizzle-orm";
-import { requireDrizzle } from "@/server/auth/require-user";
-import { getOffset } from "@/server/pagination";
+import { paginatedList } from "@/server/queries/paginated-list";
 import { ilikeAny, notDeleted } from "@/server/queries/filters";
 import { checklists, checklistItems } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
@@ -25,23 +24,6 @@ function buildChecklistFilters(params: ChecklistListParams) {
   }
 
   return and(...conditions);
-}
-
-export async function getChecklists(
-  params: ChecklistListParams = { page: 1, pageSize: 50 },
-) {
-  const db = await requireDrizzle();
-  const where = buildChecklistFilters(params);
-  const offset = getOffset(params.page, params.pageSize);
-
-  return db.rls(async (tx) => {
-    const [total, items] = await Promise.all([
-      countRows(tx, where),
-      fetchChecklistRows(tx, where, params.pageSize, offset),
-    ]);
-
-    return { items, total, page: params.page, pageSize: params.pageSize };
-  });
 }
 
 async function countRows(
@@ -98,4 +80,16 @@ async function attachChecklistItems(
     ...checklist,
     items: itemsByChecklistId.get(checklist.id) ?? [],
   }));
+}
+
+export async function getChecklists(
+  params: ChecklistListParams = { q: undefined, page: 1, pageSize: 50 },
+) {
+  const where = buildChecklistFilters(params);
+
+  return paginatedList({
+    params,
+    countRows: (tx) => countRows(tx, where),
+    fetchRows: (tx, limit, offset) => fetchChecklistRows(tx, where, limit, offset),
+  });
 }

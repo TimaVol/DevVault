@@ -1,19 +1,10 @@
 import {
-  parseListParams,
+  createListParamsParser,
   parseStringParam,
 } from "@/server/pagination";
 
-export type ProjectListParams = {
-  q?: string;
-  tab: string;
-  page: number;
-  pageSize: number;
-};
+export const parseProjectParams = createListParamsParser((sp) => ({
+  tab: parseStringParam(sp.tab) ?? "all",
+}));
 
-export function parseProjectParams(
-  searchParams: Record<string, string | string[] | undefined>,
-): ProjectListParams {
-  return parseListParams(searchParams, (sp) => ({
-    tab: parseStringParam(sp.tab) ?? "all",
-  }));
-}
+export type ProjectListParams = ReturnType<typeof parseProjectParams>;

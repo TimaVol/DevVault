@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useAsyncAction } from "@/hooks/use-async-action";
+import { useEntityFormSubmit } from "@/hooks/use-entity-form-submit";
 import { LANGUAGES } from "@/features/snippets/constants";
 import { createSnippet, updateSnippet } from "@/features/snippets/server/actions";
 import type { Snippet } from "@/features/snippets/types";
@@ -33,7 +33,6 @@ export function SnippetDialog({ open, onOpenChange, entity }: SnippetDialogProps
   const [language, setLanguage] = useState(entity?.language ?? "javascript");
   const [tagsInput, setTagsInput] = useState(entity?.tags?.join(", ") ?? "");
   const [isPinned, setIsPinned] = useState(entity?.isPinned ?? false);
-  const { isLoading, run } = useAsyncAction();
 
   const reset = () => {
     setTitle("");
@@ -42,6 +41,14 @@ export function SnippetDialog({ open, onOpenChange, entity }: SnippetDialogProps
     setTagsInput("");
     setIsPinned(false);
   };
+
+  const { isLoading, submit } = useEntityFormSubmit({
+    isEditing: !!entity,
+    onOpenChange,
+    reset,
+    createMessage: "Snippet created",
+    updateMessage: "Snippet updated",
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,18 +59,10 @@ export function SnippetDialog({ open, onOpenChange, entity }: SnippetDialogProps
 
     const tags = parseCommaList(tagsInput);
 
-    await run(
-      () =>
-        entity
-          ? updateSnippet(entity.id, { title, content, language, tags, isPinned })
-          : createSnippet({ title, content, language, tags, isPinned }),
-      {
-        successMessage: entity ? "Snippet updated" : "Snippet created",
-        onSuccess: () => {
-          reset();
-          onOpenChange(false);
-        },
-      },
+    await submit(() =>
+      entity
+        ? updateSnippet(entity.id, { title, content, language, tags, isPinned })
+        : createSnippet({ title, content, language, tags, isPinned }),
     );
   };
 

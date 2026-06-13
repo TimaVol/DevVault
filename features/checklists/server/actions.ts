@@ -6,12 +6,14 @@ import { asc, eq } from "drizzle-orm";
 import { checklists, checklistItems } from "@/lib/db/schema";
 import {
   actionFailure,
-  actionOk,
   actionSuccess,
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
-import { softDelete } from "@/server/db/soft-delete";
+import {
+  runDeleteAction,
+  updateEntityRow,
+} from "@/server/actions/entity-mutations";
 import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
@@ -26,6 +28,8 @@ const insertChecklistSchema = createInsertSchema(checklists)
 const updateChecklistSchema = createUpdateSchema(checklists)
   .omit(serverFields)
   .extend({ items: itemsField.optional() });
+
+const NOT_FOUND = "Checklist not found or unauthorized";
 
 export async function createChecklist(data: {
   title: string;
@@ -81,12 +85,7 @@ export async function updateChecklist(
     const { items: itemValues, ...checklistData } = parsed.data;
 
     const updatedChecklist = await ctx.rls(async (tx) => {
-      const [checklist] = await tx
-        .update(checklists)
-        .set({ ...checklistData, updatedAt: new Date() })
-        .where(eq(checklists.id, id))
-        .returning();
-
+      const checklist = await updateEntityRow(tx, checklists, id, checklistData);
       if (!checklist) return null;
 
       if (itemValues) {
@@ -114,7 +113,7 @@ export async function updateChecklist(
     });
 
     if (!updatedChecklist) {
-      return actionFailure("Checklist not found or unauthorized");
+      return actionFailure(NOT_FOUND);
     }
 
     revalidateEntityPaths("dashboard", "checklists");
@@ -145,17 +144,8 @@ export async function toggleChecklistItem(id: string, isCompleted: boolean) {
 }
 
 export async function deleteChecklist(id: string) {
-  const idError = parseIdOrFail(id);
-  if (idError) return idError;
-
-  return withAuthedAction(async (ctx) => {
-    const deleted = await ctx.rls((tx) => softDelete(tx, checklists, id));
-
-    if (!deleted) {
-      return actionFailure("Checklist not found or unauthorized");
-    }
-
-    revalidateEntityPaths("dashboard", "checklists");
-    return actionOk();
+  return runDeleteAction(id, checklists, {
+    notFoundMessage: NOT_FOUND,
+    revalidate: ["dashboard", "checklists"],
   });
 }

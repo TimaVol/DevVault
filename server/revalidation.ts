@@ -1,9 +1,9 @@
 import { revalidatePath } from "next/cache";
 import { ROUTES } from "@/shared/routes";
 
-type RouteKey = keyof typeof ROUTES;
+export type RevalidateRouteKey = keyof typeof ROUTES;
 
-export function revalidateEntityPaths(...keys: RouteKey[]) {
+export function revalidateEntityPaths(...keys: RevalidateRouteKey[]) {
   for (const key of keys) {
     revalidatePath(ROUTES[key]);
   }

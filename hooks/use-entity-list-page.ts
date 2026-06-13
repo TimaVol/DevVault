@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useConfirmDelete } from "@/hooks/use-confirm-delete";
-import { useEntityDialog } from "@/hooks/use-entity-dialog";
 import { useUrlFilters } from "@/hooks/use-url-filters";
 import type { ActionResult } from "@/shared/action-result";
 
-type UseEntityListPageOptions<T extends { id: string }> = {
+type UseEntityListPageOptions = {
   filterDefaults: Record<string, string>;
   onDelete: (id: string) => Promise<ActionResult>;
   deleteMessage: string;
@@ -18,10 +17,21 @@ export function useEntityListPage<T extends { id: string }>({
   onDelete,
   deleteMessage,
   deleteSuccessMessage,
-}: UseEntityListPageOptions<T>) {
+}: UseEntityListPageOptions) {
   const [filters, setFilter] = useUrlFilters({ defaults: filterDefaults });
-  const dialog = useEntityDialog<T>();
+  const [open, setOpen] = useState(false);
+  const [entity, setEntity] = useState<T | null>(null);
   const { confirmDelete } = useConfirmDelete();
+
+  const openCreate = useCallback(() => {
+    setEntity(null);
+    setOpen(true);
+  }, []);
+
+  const openEdit = useCallback((item: T) => {
+    setEntity(item);
+    setOpen(true);
+  }, []);
 
   const remove = useCallback(
     (id: string) =>
@@ -35,7 +45,12 @@ export function useEntityListPage<T extends { id: string }>({
   return {
     filters,
     setFilter,
+    open,
+    setOpen,
+    entity,
+    openCreate,
+    openEdit,
+    dialogKey: entity?.id ?? "new",
     remove,
-    ...dialog,
   };
 }

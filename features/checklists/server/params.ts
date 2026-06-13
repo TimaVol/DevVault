@@ -1,13 +1,5 @@
-import { parseListParams } from "@/server/pagination";
+import { createListParamsParser } from "@/server/pagination";
 
-export type ChecklistListParams = {
-  q?: string;
-  page: number;
-  pageSize: number;
-};
+export const parseChecklistParams = createListParamsParser(() => ({}));
 
-export function parseChecklistParams(
-  searchParams: Record<string, string | string[] | undefined>,
-): ChecklistListParams {
-  return parseListParams(searchParams, () => ({}));
-}
+export type ChecklistListParams = ReturnType<typeof parseChecklistParams>;

@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Snippet } from "@/features/snippets/types";
+import { cn } from "@/utils/cn";
 import { formatDate } from "@/utils/format-date";
 
 type SnippetRowProps = {
@@ -24,6 +25,66 @@ type SnippetRowProps = {
   onDelete: (id: string) => void;
 };
 
+function SnippetTitle({ snippet }: { snippet: Snippet }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="truncate font-medium">{snippet.title}</span>
+      {snippet.isPinned ? <Pin className="size-3.5 shrink-0 text-primary" /> : null}
+    </div>
+  );
+}
+
+function SnippetTags({
+  tags,
+  maxTags,
+  emptyFallback,
+}: {
+  tags?: string[];
+  maxTags?: number;
+  emptyFallback?: React.ReactNode;
+}) {
+  const displayTags = maxTags ? tags?.slice(0, maxTags) : tags;
+
+  if (!displayTags?.length) {
+    return emptyFallback ?? null;
+  }
+
+  return (
+    <>
+      {displayTags.map((tag) => (
+        <Badge key={tag} variant="outline" className="normal-case">
+          {tag}
+        </Badge>
+      ))}
+    </>
+  );
+}
+
+function SnippetRowActions({
+  snippet,
+  copiedId,
+  onCopy,
+  onEdit,
+  onDelete,
+  className,
+}: SnippetRowProps & { className?: string }) {
+  return (
+    <div className={cn("flex gap-1", className)}>
+      <Button
+        size="icon-sm"
+        variant="ghost"
+        onClick={() => onCopy(snippet.id, snippet.content)}
+      >
+        {copiedId === snippet.id ? <Check /> : <Copy />}
+      </Button>
+      <CardEditDeleteActions
+        onEdit={() => onEdit(snippet)}
+        onDelete={() => onDelete(snippet.id)}
+      />
+    </div>
+  );
+}
+
 export function SnippetMobileCard({
   snippet,
   copiedId,
@@ -33,39 +94,26 @@ export function SnippetMobileCard({
 }: SnippetRowProps) {
   return (
     <div className="tonal-card space-y-3 p-4">
-      <div className="flex items-center gap-2">
-        <p className="truncate font-medium">{snippet.title}</p>
-        {snippet.isPinned ? <Pin className="size-3.5 shrink-0 text-primary" /> : null}
-      </div>
+      <SnippetTitle snippet={snippet} />
       <CodePreview
         content={snippet.content}
         className="max-h-16 p-2 text-[10px]"
       />
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">{snippet.language}</Badge>
-        {snippet.tags?.map((tag) => (
-          <Badge key={tag} variant="outline" className="normal-case">
-            {tag}
-          </Badge>
-        ))}
+        <SnippetTags tags={snippet.tags} />
       </div>
       <div className="flex items-center justify-between">
         <span className="text-label-mono text-muted-foreground">
           {formatDate(snippet.createdAt)}
         </span>
-        <div className="flex gap-1">
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => onCopy(snippet.id, snippet.content)}
-          >
-            {copiedId === snippet.id ? <Check /> : <Copy />}
-          </Button>
-          <CardEditDeleteActions
-            onEdit={() => onEdit(snippet)}
-            onDelete={() => onDelete(snippet.id)}
-          />
-        </div>
+        <SnippetRowActions
+          snippet={snippet}
+          copiedId={copiedId}
+          onCopy={onCopy}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       </div>
     </div>
   );
@@ -81,10 +129,7 @@ export function SnippetTableRow({
   return (
     <TableRow>
       <TableCell>
-        <div className="flex items-center gap-2">
-          <span className="truncate font-medium">{snippet.title}</span>
-          {snippet.isPinned ? <Pin className="size-3.5 shrink-0 text-primary" /> : null}
-        </div>
+        <SnippetTitle snippet={snippet} />
       </TableCell>
       <TableCell>
         <Badge variant="outline" className="normal-case">
@@ -93,30 +138,25 @@ export function SnippetTableRow({
       </TableCell>
       <TableCell>
         <div className="flex flex-wrap gap-1">
-          {snippet.tags?.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="outline" className="normal-case">
-              {tag}
-            </Badge>
-          )) ?? <span className="text-muted-foreground">—</span>}
+          <SnippetTags
+            tags={snippet.tags}
+            maxTags={3}
+            emptyFallback={<span className="text-muted-foreground">—</span>}
+          />
         </div>
       </TableCell>
       <TableCell className="text-label-mono text-muted-foreground">
         {formatDate(snippet.createdAt)}
       </TableCell>
       <TableCell className="text-right">
-        <div className="flex justify-end gap-1">
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => onCopy(snippet.id, snippet.content)}
-          >
-            {copiedId === snippet.id ? <Check /> : <Copy />}
-          </Button>
-          <CardEditDeleteActions
-            onEdit={() => onEdit(snippet)}
-            onDelete={() => onDelete(snippet.id)}
-          />
-        </div>
+        <SnippetRowActions
+          snippet={snippet}
+          copiedId={copiedId}
+          onCopy={onCopy}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          className="justify-end"
+        />
       </TableCell>
     </TableRow>
   );

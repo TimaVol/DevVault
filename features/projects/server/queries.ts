@@ -9,8 +9,7 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import { requireDrizzle } from "@/server/auth/require-user";
-import { getOffset } from "@/server/pagination";
+import { paginatedList } from "@/server/queries/paginated-list";
 import { ilikeAny, notDeleted } from "@/server/queries/filters";
 import { projects, projectTechStack } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
@@ -65,23 +64,6 @@ async function fetchProjectRows(
     .offset(offset);
 }
 
-export async function getProjects(
-  params: ProjectListParams = { tab: "all", page: 1, pageSize: 50 },
-) {
-  const db = await requireDrizzle();
-  const where = buildProjectFilters(params);
-  const offset = getOffset(params.page, params.pageSize);
-
-  return db.rls(async (tx) => {
-    const [total, items] = await Promise.all([
-      countDistinctProjects(tx, where),
-      fetchProjectRows(tx, where, params.pageSize, offset),
-    ]);
-
-    return { items, total, page: params.page, pageSize: params.pageSize };
-  });
-}
-
 async function countDistinctProjects(
   tx: AppDbTransaction,
   where: ReturnType<typeof buildProjectFilters>,
@@ -92,4 +74,16 @@ async function countDistinctProjects(
     .leftJoin(projectTechStack, eq(projects.id, projectTechStack.projectId))
     .where(where);
   return countResult?.value ?? 0;
+}
+
+export async function getProjects(
+  params: ProjectListParams = { q: undefined, tab: "all", page: 1, pageSize: 50 },
+) {
+  const where = buildProjectFilters(params);
+
+  return paginatedList({
+    params,
+    countRows: (tx) => countDistinctProjects(tx, where),
+    fetchRows: (tx, limit, offset) => fetchProjectRows(tx, where, limit, offset),
+  });
 }

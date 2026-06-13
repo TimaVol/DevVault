@@ -1,5 +1,5 @@
 import { requireDrizzleAction } from "@/server/auth/require-user";
-import type { ActionFailure, ActionResult } from "@/shared/action-result";
+import type { ActionResult } from "@/shared/action-result";
 import {
   actionFailure,
   actionOk,
@@ -14,9 +14,6 @@ export type {
   ActionSuccess,
 } from "@/shared/action-result";
 export { isActionFailure, isActionSuccess } from "@/shared/action-result";
-
-/** @deprecated Use ActionFailure */
-export type ActionError = ActionFailure;
 
 /** Columns managed by the server, omitted from drizzle-zod insert/update schemas. */
 export const serverFields = {

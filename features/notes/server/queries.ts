@@ -2,7 +2,7 @@ import "server-only";
 
 import { and, count, desc, eq } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
-import { getOffset } from "@/server/pagination";
+import { paginatedList } from "@/server/queries/paginated-list";
 import { ilikeAny, notDeleted } from "@/server/queries/filters";
 import { notes } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
@@ -17,23 +17,6 @@ function buildNoteFilters(params: NoteListParams) {
   }
 
   return and(...conditions);
-}
-
-export async function getNotes(
-  params: NoteListParams = { page: 1, pageSize: 50 },
-) {
-  const db = await requireDrizzle();
-  const where = buildNoteFilters(params);
-  const offset = getOffset(params.page, params.pageSize);
-
-  return db.rls(async (tx) => {
-    const [total, items] = await Promise.all([
-      countRows(tx, where),
-      fetchNoteRows(tx, where, params.pageSize, offset),
-    ]);
-
-    return { items, total, page: params.page, pageSize: params.pageSize };
-  });
 }
 
 async function countRows(
@@ -60,6 +43,18 @@ async function fetchNoteRows(
     .orderBy(desc(notes.isPinned), desc(notes.createdAt))
     .limit(limit)
     .offset(offset);
+}
+
+export async function getNotes(
+  params: NoteListParams = { q: undefined, note: undefined, page: 1, pageSize: 50 },
+) {
+  const where = buildNoteFilters(params);
+
+  return paginatedList({
+    params,
+    countRows: (tx) => countRows(tx, where),
+    fetchRows: (tx, limit, offset) => fetchNoteRows(tx, where, limit, offset),
+  });
 }
 
 export async function getNoteById(id: string) {

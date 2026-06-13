@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { cn } from "@/utils/cn";
@@ -22,11 +22,13 @@ export function DebouncedSearchInput({
   ...props
 }: DebouncedSearchInputProps) {
   const [localValue, setLocalValue] = useState(value);
+  const [prevValue, setPrevValue] = useState(value);
   const debouncedChange = useDebouncedCallback(onDebouncedChange, debounceMs);
 
-  useEffect(() => {
+  if (value !== prevValue) {
+    setPrevValue(value);
     setLocalValue(value);
-  }, [value]);
+  }
 
   return (
     <Input

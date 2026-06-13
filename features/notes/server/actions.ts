@@ -1,21 +1,24 @@
 "use server";
 
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
-import { eq } from "drizzle-orm";
 import { notes } from "@/lib/db/schema";
 import {
   actionFailure,
-  actionOk,
   actionSuccess,
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
-import { softDelete } from "@/server/db/soft-delete";
+import {
+  runDeleteAction,
+  updateEntityRow,
+} from "@/server/actions/entity-mutations";
 import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
 const insertNoteSchema = createInsertSchema(notes).omit(serverFields);
 const updateNoteSchema = createUpdateSchema(notes).omit(serverFields);
+
+const NOT_FOUND = "Note not found or unauthorized";
 
 export async function createNote(data: {
   title: string;
@@ -58,19 +61,12 @@ export async function updateNote(
   if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
-    const [updatedNote] = await ctx.rls((tx) =>
-      tx
-        .update(notes)
-        .set({
-          ...parsed.data,
-          updatedAt: new Date(),
-        })
-        .where(eq(notes.id, id))
-        .returning(),
+    const updatedNote = await ctx.rls((tx) =>
+      updateEntityRow(tx, notes, id, parsed.data),
     );
 
     if (!updatedNote) {
-      return actionFailure("Note not found or unauthorized");
+      return actionFailure(NOT_FOUND);
     }
 
     revalidateEntityPaths("dashboard", "notes");
@@ -79,17 +75,8 @@ export async function updateNote(
 }
 
 export async function deleteNote(id: string) {
-  const idError = parseIdOrFail(id);
-  if (idError) return idError;
-
-  return withAuthedAction(async (ctx) => {
-    const deleted = await ctx.rls((tx) => softDelete(tx, notes, id));
-
-    if (!deleted) {
-      return actionFailure("Note not found or unauthorized");
-    }
-
-    revalidateEntityPaths("dashboard", "notes");
-    return actionOk();
+  return runDeleteAction(id, notes, {
+    notFoundMessage: NOT_FOUND,
+    revalidate: ["dashboard", "notes"],
   });
 }

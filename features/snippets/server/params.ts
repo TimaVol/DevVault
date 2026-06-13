@@ -1,19 +1,10 @@
 import {
-  parseListParams,
+  createListParamsParser,
   parseStringParam,
 } from "@/server/pagination";
 
-export type SnippetListParams = {
-  q?: string;
-  lang: string;
-  page: number;
-  pageSize: number;
-};
+export const parseSnippetParams = createListParamsParser((sp) => ({
+  lang: parseStringParam(sp.lang) ?? "all",
+}));
 
-export function parseSnippetParams(
-  searchParams: Record<string, string | string[] | undefined>,
-): SnippetListParams {
-  return parseListParams(searchParams, (sp) => ({
-    lang: parseStringParam(sp.lang) ?? "all",
-  }));
-}
+export type SnippetListParams = ReturnType<typeof parseSnippetParams>;

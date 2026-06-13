@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useAsyncAction } from "@/hooks/use-async-action";
+import { useEntityFormSubmit } from "@/hooks/use-entity-form-submit";
 import { PROJECT_STATUSES } from "@/features/projects/constants";
 import { createProject, updateProject } from "@/features/projects/server/actions";
 import type { Project } from "@/features/projects/types";
@@ -26,7 +26,6 @@ type ProjectDialogProps = {
 };
 
 export function ProjectDialog({ open, onOpenChange, entity }: ProjectDialogProps) {
-  const { isLoading, run } = useAsyncAction();
   const [name, setName] = useState(entity?.name ?? "");
   const [description, setDescription] = useState(entity?.description ?? "");
   const [repoUrl, setRepoUrl] = useState(entity?.repositoryUrl ?? "");
@@ -43,13 +42,21 @@ export function ProjectDialog({ open, onOpenChange, entity }: ProjectDialogProps
     setTechStackInput("");
   };
 
-  const submit = async (e: React.FormEvent) => {
+  const { isLoading, submit } = useEntityFormSubmit({
+    isEditing: !!entity,
+    onOpenChange,
+    reset,
+    createMessage: "Project created",
+    updateMessage: "Project updated",
+    errorMessage: "Save failed",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       toast.error("Project name is required");
       return;
     }
-    const techStack = parseCommaList(techStackInput);
 
     const payload = {
       name,
@@ -57,19 +64,11 @@ export function ProjectDialog({ open, onOpenChange, entity }: ProjectDialogProps
       repositoryUrl: repoUrl || undefined,
       demoUrl: demoUrl || undefined,
       status,
-      techStack,
+      techStack: parseCommaList(techStackInput),
     };
 
-    await run(
-      () => (entity ? updateProject(entity.id, payload) : createProject(payload)),
-      {
-        successMessage: entity ? "Project updated" : "Project created",
-        errorMessage: "Save failed",
-        onSuccess: () => {
-          reset();
-          onOpenChange(false);
-        },
-      },
+    await submit(() =>
+      entity ? updateProject(entity.id, payload) : createProject(payload),
     );
   };
 
@@ -79,7 +78,7 @@ export function ProjectDialog({ open, onOpenChange, entity }: ProjectDialogProps
       onOpenChange={onOpenChange}
       title={entity ? "Edit project" : "New project"}
       description="Track scope, links, and stack."
-      onSubmit={submit}
+      onSubmit={handleSubmit}
       isLoading={isLoading}
       onBeforeClose={reset}
     >

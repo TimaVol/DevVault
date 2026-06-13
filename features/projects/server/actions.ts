@@ -6,12 +6,14 @@ import { eq } from "drizzle-orm";
 import { projects, projectTechStack } from "@/lib/db/schema";
 import {
   actionFailure,
-  actionOk,
   actionSuccess,
   serverFields,
   withAuthedAction,
 } from "@/server/actions";
-import { softDelete } from "@/server/db/soft-delete";
+import {
+  runDeleteAction,
+  updateEntityRow,
+} from "@/server/actions/entity-mutations";
 import { syncChildStrings } from "@/server/db/sync-child-strings";
 import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseIdOrFail, zodFailure } from "@/server/validation/action";
@@ -40,6 +42,8 @@ const updateProjectSchema = createUpdateSchema(projects)
     demoUrl: urlField,
     techStack: techStackField,
   });
+
+const NOT_FOUND = "Project not found or unauthorized";
 
 export async function createProject(data: {
   name: string;
@@ -105,12 +109,7 @@ export async function updateProject(
     const { techStack: stackValues, ...projectData } = parsed.data;
 
     const updatedProject = await ctx.rls(async (tx) => {
-      const [project] = await tx
-        .update(projects)
-        .set({ ...projectData, updatedAt: new Date() })
-        .where(eq(projects.id, id))
-        .returning();
-
+      const project = await updateEntityRow(tx, projects, id, projectData);
       if (!project) return null;
 
       await syncChildStrings({
@@ -127,7 +126,7 @@ export async function updateProject(
     });
 
     if (!updatedProject) {
-      return actionFailure("Project not found or unauthorized");
+      return actionFailure(NOT_FOUND);
     }
 
     revalidateEntityPaths("dashboard", "projects");
@@ -136,17 +135,8 @@ export async function updateProject(
 }
 
 export async function deleteProject(id: string) {
-  const idError = parseIdOrFail(id);
-  if (idError) return idError;
-
-  return withAuthedAction(async (ctx) => {
-    const deleted = await ctx.rls((tx) => softDelete(tx, projects, id));
-
-    if (!deleted) {
-      return actionFailure("Project not found or unauthorized");
-    }
-
-    revalidateEntityPaths("dashboard", "projects");
-    return actionOk();
+  return runDeleteAction(id, projects, {
+    notFoundMessage: NOT_FOUND,
+    revalidate: ["dashboard", "projects"],
   });
 }
