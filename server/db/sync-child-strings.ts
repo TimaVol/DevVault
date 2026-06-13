@@ -9,7 +9,7 @@ type SyncChildStringsOptions = {
   insert: (normalized: string[]) => Promise<unknown>;
 };
 
-export async function syncChildStrings({
+async function syncChildStrings({
   values,
   delete: deleteRows,
   insert,

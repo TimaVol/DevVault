@@ -51,28 +51,20 @@ const syncProjectTechStack = createChildStringSyncer({
 
 const NOT_FOUND = "Project not found or unauthorized";
 
-export async function createProject(data: {
-  name: string;
-  description?: string;
-  repositoryUrl?: string;
-  demoUrl?: string;
-  status: string;
-  techStack?: string[];
-}) {
+export async function createProject(data: z.input<typeof insertProjectSchema>) {
   const parsed = insertProjectSchema.safeParse(data);
   if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
+    const { techStack, ...projectData } = parsed.data;
+
     const newProject = await ctx.rls(async (tx) => {
       const project = await insertWithUserId(tx, projects, ctx.user.id, {
-        name: parsed.data.name,
-        description: parsed.data.description ?? null,
-        repositoryUrl: parsed.data.repositoryUrl ?? null,
-        demoUrl: parsed.data.demoUrl ?? null,
-        status: parsed.data.status ?? "active",
+        status: "active",
+        ...projectData,
       });
 
-      await syncProjectTechStack(tx, project.id, parsed.data.techStack);
+      await syncProjectTechStack(tx, project.id, techStack);
 
       return project;
     });
@@ -84,14 +76,7 @@ export async function createProject(data: {
 
 export async function updateProject(
   id: string,
-  data: {
-    name?: string;
-    description?: string;
-    repositoryUrl?: string;
-    demoUrl?: string;
-    status?: string;
-    techStack?: string[];
-  },
+  data: z.input<typeof updateProjectSchema>,
 ) {
   const idError = parseIdOrFail(id);
   if (idError) return idError;

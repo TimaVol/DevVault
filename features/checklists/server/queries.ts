@@ -3,12 +3,16 @@ import "server-only";
 import {
   and,
   asc,
-  count,
   desc,
   inArray,
 } from "drizzle-orm";
 import { paginatedList } from "@/server/queries/paginated-list";
-import { ilikeAny, notDeleted } from "@/server/queries/filters";
+import { notDeleted, textSearchCondition } from "@/server/queries/filters";
+import {
+  countTableRows,
+  fetchTableRows,
+} from "@/server/queries/simple-table-list";
+import { defaultListParams } from "@/server/pagination";
 import { checklists, checklistItems } from "@/lib/db/schema";
 import type { AppDbTransaction } from "@/lib/db/types";
 import type { ChecklistListParams } from "./params";
@@ -16,42 +20,16 @@ import type { ChecklistListParams } from "./params";
 function buildChecklistFilters(params: ChecklistListParams) {
   const conditions = [notDeleted(checklists)];
 
-  if (params.q) {
-    const pattern = `%${params.q}%`;
-    conditions.push(
-      ilikeAny(pattern, checklists.title, checklists.description),
-    );
+  const textSearch = textSearchCondition(
+    params.q,
+    checklists.title,
+    checklists.description,
+  );
+  if (textSearch) {
+    conditions.push(textSearch);
   }
 
   return and(...conditions);
-}
-
-async function countRows(
-  tx: AppDbTransaction,
-  where: ReturnType<typeof buildChecklistFilters>,
-) {
-  const [countResult] = await tx
-    .select({ value: count() })
-    .from(checklists)
-    .where(where);
-  return countResult?.value ?? 0;
-}
-
-async function fetchChecklistRows(
-  tx: AppDbTransaction,
-  where: ReturnType<typeof buildChecklistFilters>,
-  limit: number,
-  offset: number,
-) {
-  const userChecklists = await tx
-    .select()
-    .from(checklists)
-    .where(where)
-    .orderBy(desc(checklists.createdAt))
-    .limit(limit)
-    .offset(offset);
-
-  return attachChecklistItems(tx, userChecklists);
 }
 
 async function attachChecklistItems(
@@ -83,13 +61,23 @@ async function attachChecklistItems(
 }
 
 export async function getChecklists(
-  params: ChecklistListParams = { q: undefined, page: 1, pageSize: 50 },
+  params: ChecklistListParams = defaultListParams({}),
 ) {
   const where = buildChecklistFilters(params);
 
-  return paginatedList({
+  return paginatedList<
+    typeof checklists.$inferSelect & {
+      items: (typeof checklistItems.$inferSelect)[];
+    }
+  >({
     params,
-    countRows: (tx) => countRows(tx, where),
-    fetchRows: (tx, limit, offset) => fetchChecklistRows(tx, where, limit, offset),
+    countRows: (tx) => countTableRows(tx, checklists, where),
+    fetchRows: async (tx, limit, offset) => {
+      const userChecklists = await fetchTableRows<
+        typeof checklists.$inferSelect
+      >(tx, checklists, where, [desc(checklists.createdAt)], limit, offset);
+
+      return attachChecklistItems(tx, userChecklists);
+    },
   });
 }

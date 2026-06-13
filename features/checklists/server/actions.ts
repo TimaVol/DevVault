@@ -32,22 +32,24 @@ const updateChecklistSchema = createUpdateSchema(checklists)
 
 const NOT_FOUND = "Checklist not found or unauthorized";
 
-export async function createChecklist(data: {
-  title: string;
-  description?: string;
-  items: string[];
-}) {
+export async function createChecklist(
+  data: z.input<typeof insertChecklistSchema>,
+) {
   const parsed = insertChecklistSchema.safeParse(data);
   if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
-    const newChecklist = await ctx.rls(async (tx) => {
-      const checklist = await insertWithUserId(tx, checklists, ctx.user.id, {
-        title: parsed.data.title,
-        description: parsed.data.description ?? null,
-      });
+    const { items, ...checklistData } = parsed.data;
 
-      const itemsToInsert = parsed.data.items.map((content, idx) => ({
+    const newChecklist = await ctx.rls(async (tx) => {
+      const checklist = await insertWithUserId(
+        tx,
+        checklists,
+        ctx.user.id,
+        checklistData,
+      );
+
+      const itemsToInsert = items.map((content, idx) => ({
         checklistId: checklist.id,
         content,
         isCompleted: false,
@@ -66,11 +68,7 @@ export async function createChecklist(data: {
 
 export async function updateChecklist(
   id: string,
-  data: {
-    title?: string;
-    description?: string;
-    items?: string[];
-  },
+  data: z.input<typeof updateChecklistSchema>,
 ) {
   const idError = parseIdOrFail(id);
   if (idError) return idError;

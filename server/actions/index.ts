@@ -24,6 +24,8 @@ export const serverFields = {
   deletedAt: true,
 } as const;
 
+export type ServerManagedKey = keyof typeof serverFields;
+
 export { actionFailure, actionOk, actionSuccess };
 
 /**

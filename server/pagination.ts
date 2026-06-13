@@ -1,17 +1,7 @@
-export type ListParams = {
-  q?: string;
-  page?: number;
-  pageSize?: number;
-};
-
 export type PaginationMeta = {
   total: number;
   page: number;
   pageSize: number;
-};
-
-export type PaginatedResult<T> = PaginationMeta & {
-  items: T[];
 };
 
 export const DEFAULT_PAGE_SIZE = 50;
@@ -33,7 +23,7 @@ export function getOffset(page: number, pageSize: number): number {
   return (page - 1) * pageSize;
 }
 
-export function parseBaseListParams(
+function parseBaseListParams(
   searchParams: Record<string, string | string[] | undefined>,
 ) {
   return {
@@ -43,7 +33,7 @@ export function parseBaseListParams(
   };
 }
 
-export function parseListParams<T extends Record<string, unknown>>(
+function parseListParams<T extends Record<string, unknown>>(
   searchParams: Record<string, string | string[] | undefined>,
   parseExtra: (
     searchParams: Record<string, string | string[] | undefined>,
@@ -55,8 +45,6 @@ export function parseListParams<T extends Record<string, unknown>>(
   };
 }
 
-export type BaseListParams = ReturnType<typeof parseBaseListParams>;
-
 export function createListParamsParser<TExtra extends Record<string, unknown>>(
   parseExtra: (
     searchParams: Record<string, string | string[] | undefined>,
@@ -64,5 +52,16 @@ export function createListParamsParser<TExtra extends Record<string, unknown>>(
 ) {
   return (
     searchParams: Record<string, string | string[] | undefined>,
-  ): BaseListParams & TExtra => parseListParams(searchParams, parseExtra);
+  ) => parseListParams(searchParams, parseExtra);
+}
+
+export function defaultListParams<T extends Record<string, unknown>>(
+  extra: T,
+) {
+  return {
+    q: undefined,
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    ...extra,
+  };
 }

@@ -48,7 +48,6 @@ export function ProjectDialog({ open, onOpenChange, entity }: ProjectDialogProps
     reset,
     createMessage: "Project created",
     updateMessage: "Project updated",
-    errorMessage: "Save failed",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

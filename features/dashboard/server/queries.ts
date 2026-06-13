@@ -13,19 +13,19 @@ export async function getDashboardOverview() {
       .select({
         snippetsCount: sql<number>`(
           select count(*)::int from ${snippets}
-          where ${snippets.deletedAt} is null
+          where ${notDeleted(snippets)}
         )`,
         projectsCount: sql<number>`(
           select count(*)::int from ${projects}
-          where ${projects.deletedAt} is null
+          where ${notDeleted(projects)}
         )`,
         checklistsCount: sql<number>`(
           select count(*)::int from ${checklists}
-          where ${checklists.deletedAt} is null
+          where ${notDeleted(checklists)}
         )`,
         notesCount: sql<number>`(
           select count(*)::int from ${notes}
-          where ${notes.deletedAt} is null
+          where ${notDeleted(notes)}
         )`,
       })
       .from(sql`(select 1) as _counts`)

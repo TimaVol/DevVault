@@ -1,12 +1,5 @@
 import { eq } from "drizzle-orm";
-import type { AppDbTransaction } from "@/lib/db/types";
-import { checklists, notes, projects, snippets } from "@/lib/db/schema";
-
-type SoftDeletableTable =
-  | typeof notes
-  | typeof projects
-  | typeof snippets
-  | typeof checklists;
+import type { AppDbTransaction, SoftDeletableTable } from "@/lib/db/types";
 
 export async function softDelete(
   tx: AppDbTransaction,

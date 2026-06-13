@@ -1,10 +1,15 @@
 import "server-only";
 
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
 import { createChildStringsListQuery } from "@/server/queries/aggregate-child-strings";
 import { paginatedList } from "@/server/queries/paginated-list";
-import { ilikeAny, notDeleted } from "@/server/queries/filters";
+import {
+  childStringIlikeExists,
+  notDeleted,
+  textSearchCondition,
+} from "@/server/queries/filters";
+import { defaultListParams } from "@/server/pagination";
 import { snippets, snippetTags } from "@/lib/db/schema";
 import type { SnippetListParams } from "./params";
 
@@ -27,16 +32,19 @@ function buildSnippetFilters(params: SnippetListParams) {
     conditions.push(eq(snippets.language, params.lang));
   }
 
-  if (params.q) {
+  const textSearch = textSearchCondition(params.q, snippets.title, snippets.content);
+  if (textSearch) {
     const pattern = `%${params.q}%`;
     conditions.push(
       or(
-        ilikeAny(pattern, snippets.title, snippets.content),
-        sql`exists (
-          select 1 from ${snippetTags}
-          where ${snippetTags.snippetId} = ${snippets.id}
-          and ${snippetTags.tag} ilike ${pattern}
-        )`,
+        textSearch,
+        childStringIlikeExists(
+          snippetTags,
+          snippetTags.snippetId,
+          snippetTags.tag,
+          snippets.id,
+          pattern,
+        ),
       )!,
     );
   }
@@ -45,7 +53,7 @@ function buildSnippetFilters(params: SnippetListParams) {
 }
 
 export async function getSnippets(
-  params: SnippetListParams = { q: undefined, lang: "all", page: 1, pageSize: 50 },
+  params: SnippetListParams = defaultListParams({ lang: "all" }),
 ) {
   const where = buildSnippetFilters(params);
 

@@ -1,18 +1,18 @@
 import { SnippetsClient } from "@/features/snippets/components/snippets-client";
 import { getSnippetLanguages, getSnippets } from "@/features/snippets/server/queries";
 import { parseSnippetParams } from "@/features/snippets/server/params";
+import {
+  loadPaginatedPage,
+  type SearchParamsPageProps,
+} from "@/server/queries/load-list-page";
 
-export default async function SnippetsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const params = await searchParams;
-  const filters = parseSnippetParams(params);
-  const [{ items, total, page, pageSize }, languages] = await Promise.all([
-    getSnippets(filters),
-    getSnippetLanguages(),
-  ]);
+export default async function SnippetsPage({ searchParams }: SearchParamsPageProps) {
+  const { items, total, page, pageSize } = await loadPaginatedPage(
+    searchParams,
+    parseSnippetParams,
+    getSnippets,
+  );
+  const languages = await getSnippetLanguages();
 
   return (
     <SnippetsClient

@@ -53,7 +53,6 @@ export function ChecklistDialog({
     reset,
     createMessage: "Checklist created",
     updateMessage: "Checklist updated",
-    errorMessage: isEditing ? "Update failed" : "Create failed",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

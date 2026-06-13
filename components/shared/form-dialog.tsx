@@ -43,7 +43,12 @@ export function FormDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className={cn(contentClassName)}>
+      <DialogContent
+        className={cn(
+          "max-w-2xl border-border bg-popover backdrop-blur-sm",
+          contentClassName,
+        )}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : null}

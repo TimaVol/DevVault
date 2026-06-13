@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { notes } from "@/lib/db/schema";
 import {
@@ -21,20 +22,15 @@ const updateNoteSchema = createUpdateSchema(notes).omit(serverFields);
 
 const NOT_FOUND = "Note not found or unauthorized";
 
-export async function createNote(data: {
-  title: string;
-  content: string;
-  isPinned?: boolean;
-}) {
+export async function createNote(data: z.input<typeof insertNoteSchema>) {
   const parsed = insertNoteSchema.safeParse(data);
   if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
     const newNote = await ctx.rls((tx) =>
       insertWithUserId(tx, notes, ctx.user.id, {
-        title: parsed.data.title,
-        content: parsed.data.content,
-        isPinned: parsed.data.isPinned ?? false,
+        isPinned: false,
+        ...parsed.data,
       }),
     );
 
@@ -45,11 +41,7 @@ export async function createNote(data: {
 
 export async function updateNote(
   id: string,
-  data: {
-    title?: string;
-    content?: string;
-    isPinned?: boolean;
-  },
+  data: z.input<typeof updateNoteSchema>,
 ) {
   const idError = parseIdOrFail(id);
   if (idError) return idError;

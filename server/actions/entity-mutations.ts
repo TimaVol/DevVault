@@ -1,15 +1,10 @@
 import { eq, type InferInsertModel } from "drizzle-orm";
-import type { AppDbTransaction } from "@/lib/db/types";
-import {
-  checklists,
-  notes,
-  projects,
-  snippets,
-} from "@/lib/db/schema";
+import type { AppDbTransaction, SoftDeletableTable } from "@/lib/db/types";
 import type { ActionResult } from "@/shared/action-result";
 import {
   actionFailure,
   actionOk,
+  type ServerManagedKey,
   withAuthedAction,
 } from "@/server/actions";
 import { softDelete } from "@/server/db/soft-delete";
@@ -19,29 +14,16 @@ import {
 } from "@/server/revalidation";
 import { parseIdOrFail } from "@/server/validation/action";
 
-type SoftDeletableTable =
-  | typeof notes
-  | typeof projects
-  | typeof snippets
-  | typeof checklists;
-
-type UpdatableTable = SoftDeletableTable;
-
-type ServerManagedKeys =
-  | "id"
-  | "userId"
-  | "createdAt"
-  | "updatedAt"
-  | "deletedAt";
-
 type EntityRow<T extends SoftDeletableTable> = T["$inferSelect"];
 
 type EntityInsertData<T extends SoftDeletableTable> = Omit<
   InferInsertModel<T>,
-  ServerManagedKeys
+  ServerManagedKey
 >;
 
-type EntityUpdateData<T extends UpdatableTable> = Partial<EntityInsertData<T>>;
+type EntityUpdateData<T extends SoftDeletableTable> = Partial<
+  EntityInsertData<T>
+>;
 
 export async function insertWithUserId<T extends SoftDeletableTable>(
   tx: AppDbTransaction,
@@ -80,7 +62,7 @@ export async function runDeleteAction(
   });
 }
 
-export async function updateEntityRow<T extends UpdatableTable>(
+export async function updateEntityRow<T extends SoftDeletableTable>(
   tx: AppDbTransaction,
   table: T,
   id: string,

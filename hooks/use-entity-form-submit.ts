@@ -19,7 +19,7 @@ export function useEntityFormSubmit({
   reset,
   createMessage,
   updateMessage,
-  errorMessage,
+  errorMessage = "Save failed",
 }: UseEntityFormSubmitOptions) {
   const { isLoading, run } = useAsyncAction();
 

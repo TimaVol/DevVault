@@ -1,15 +1,10 @@
 import { NotesClient } from "@/features/notes/components/notes-client";
 import { getNoteById, getNotes } from "@/features/notes/server/queries";
 import { parseNoteParams } from "@/features/notes/server/params";
+import type { SearchParamsPageProps } from "@/server/queries/load-list-page";
 
-export default async function NotesPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const params = await searchParams;
-  const filters = parseNoteParams(params);
-
+export default async function NotesPage({ searchParams }: SearchParamsPageProps) {
+  const filters = parseNoteParams(await searchParams);
   const [{ items, total, page, pageSize }, activeNoteFallback] =
     await Promise.all([
       getNotes(filters),

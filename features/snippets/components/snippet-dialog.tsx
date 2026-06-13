@@ -75,7 +75,6 @@ export function SnippetDialog({ open, onOpenChange, entity }: SnippetDialogProps
       onSubmit={handleSubmit}
       isLoading={isLoading}
       onBeforeClose={reset}
-      contentClassName="max-w-2xl border-border bg-popover backdrop-blur-sm"
     >
       <Field>
         <FieldLabel htmlFor="snippet-title">Title</FieldLabel>

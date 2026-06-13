@@ -1,9 +1,14 @@
 import "server-only";
 
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 import { createChildStringsListQuery } from "@/server/queries/aggregate-child-strings";
 import { paginatedList } from "@/server/queries/paginated-list";
-import { ilikeAny, notDeleted } from "@/server/queries/filters";
+import {
+  childStringIlikeExists,
+  notDeleted,
+  textSearchCondition,
+} from "@/server/queries/filters";
+import { defaultListParams } from "@/server/pagination";
 import { projects, projectTechStack } from "@/lib/db/schema";
 import type { ProjectListParams } from "./params";
 
@@ -26,16 +31,23 @@ function buildProjectFilters(params: ProjectListParams) {
     conditions.push(eq(projects.status, params.tab));
   }
 
-  if (params.q) {
+  const textSearch = textSearchCondition(
+    params.q,
+    projects.name,
+    projects.description,
+  );
+  if (textSearch) {
     const pattern = `%${params.q}%`;
     conditions.push(
       or(
-        ilikeAny(pattern, projects.name, projects.description),
-        sql`exists (
-          select 1 from ${projectTechStack}
-          where ${projectTechStack.projectId} = ${projects.id}
-          and ${projectTechStack.tech} ilike ${pattern}
-        )`,
+        textSearch,
+        childStringIlikeExists(
+          projectTechStack,
+          projectTechStack.projectId,
+          projectTechStack.tech,
+          projects.id,
+          pattern,
+        ),
       )!,
     );
   }
@@ -44,7 +56,7 @@ function buildProjectFilters(params: ProjectListParams) {
 }
 
 export async function getProjects(
-  params: ProjectListParams = { q: undefined, tab: "all", page: 1, pageSize: 50 },
+  params: ProjectListParams = defaultListParams({ tab: "all" }),
 ) {
   const where = buildProjectFilters(params);
 

@@ -35,26 +35,21 @@ const syncSnippetTags = createChildStringSyncer({
 
 const NOT_FOUND = "Snippet not found or unauthorized";
 
-export async function createSnippet(data: {
-  title: string;
-  content: string;
-  language: string;
-  tags?: string[];
-  isPinned?: boolean;
-}) {
+export async function createSnippet(data: z.input<typeof insertSnippetSchema>) {
   const parsed = insertSnippetSchema.safeParse(data);
   if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
+    const { tags, ...snippetData } = parsed.data;
+
     const newSnippet = await ctx.rls(async (tx) => {
       const snippet = await insertWithUserId(tx, snippets, ctx.user.id, {
-        title: parsed.data.title,
-        content: parsed.data.content,
-        language: parsed.data.language ?? "javascript",
-        isPinned: parsed.data.isPinned ?? false,
+        language: "javascript",
+        isPinned: false,
+        ...snippetData,
       });
 
-      await syncSnippetTags(tx, snippet.id, parsed.data.tags);
+      await syncSnippetTags(tx, snippet.id, tags);
 
       return snippet;
     });
@@ -66,13 +61,7 @@ export async function createSnippet(data: {
 
 export async function updateSnippet(
   id: string,
-  data: {
-    title?: string;
-    content?: string;
-    language?: string;
-    tags?: string[];
-    isPinned?: boolean;
-  },
+  data: z.input<typeof updateSnippetSchema>,
 ) {
   const idError = parseIdOrFail(id);
   if (idError) return idError;
