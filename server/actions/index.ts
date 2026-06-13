@@ -6,7 +6,7 @@ import {
   actionSuccess,
 } from "@/shared/action-result";
 import type { DrizzleSupabaseContext } from "@/lib/db/create-drizzle-supabase-client";
-import { getErrorMessage } from "@/utils/errors";
+import { getClientErrorMessage, getPgErrorMessage } from "@/utils/errors";
 
 export type {
   ActionFailure,
@@ -45,6 +45,7 @@ export async function withAuthedAction<
   try {
     return await fn(ctx);
   } catch (err: unknown) {
-    return actionFailure(getErrorMessage(err));
+    console.error("[action]", getPgErrorMessage(err));
+    return actionFailure(getClientErrorMessage(err));
   }
 }

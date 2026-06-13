@@ -5,6 +5,11 @@ import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { projects, projectTechStack } from "@/lib/db/schema";
 import { serverFields } from "@/server/actions";
 import {
+  descriptionField,
+  nameField,
+  techStackField,
+} from "@/server/validation/fields";
+import {
   insertWithUserId,
   runCreateAction,
   runDeleteAction,
@@ -12,19 +17,21 @@ import {
   updateEntityRow,
 } from "@/server/actions/entity-mutations";
 import { createChildStringSyncer } from "@/server/db/sync-child-strings";
+import { LIMITS } from "@/server/validation/limits";
 
 const urlField = z
   .string()
   .url("Invalid URL")
+  .max(LIMITS.description)
   .nullish()
   .or(z.literal(""))
   .transform((v) => v || null);
 
-const techStackField = z.array(z.string()).optional();
-
 const insertProjectSchema = createInsertSchema(projects)
   .omit(serverFields)
   .extend({
+    name: nameField,
+    description: descriptionField,
     repositoryUrl: urlField,
     demoUrl: urlField,
     techStack: techStackField,
@@ -33,6 +40,8 @@ const insertProjectSchema = createInsertSchema(projects)
 const updateProjectSchema = createUpdateSchema(projects)
   .omit(serverFields)
   .extend({
+    name: nameField.optional(),
+    description: descriptionField,
     repositoryUrl: urlField,
     demoUrl: urlField,
     techStack: techStackField,

@@ -1,3 +1,5 @@
+import { LIMITS, MAX_PAGE } from "@/server/validation/limits";
+
 export type PaginationMeta = {
   total: number;
   page: number;
@@ -9,14 +11,17 @@ export const DEFAULT_PAGE_SIZE = 50;
 export function parsePageParam(value: string | string[] | undefined): number {
   const raw = Array.isArray(value) ? value[0] : value;
   const parsed = Number.parseInt(raw ?? "1", 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  if (!Number.isFinite(parsed) || parsed <= 0) return 1;
+  return Math.min(parsed, MAX_PAGE);
 }
 
 export function parseStringParam(
   value: string | string[] | undefined,
 ): string | undefined {
   const raw = Array.isArray(value) ? value[0] : value;
-  return raw?.trim() || undefined;
+  const trimmed = raw?.trim();
+  if (!trimmed) return undefined;
+  return trimmed.slice(0, LIMITS.searchQuery);
 }
 
 export function getOffset(page: number, pageSize: number): number {

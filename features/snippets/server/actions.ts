@@ -5,6 +5,11 @@ import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { snippets, snippetTags } from "@/lib/db/schema";
 import { serverFields } from "@/server/actions";
 import {
+  contentField,
+  tagsField,
+  titleField,
+} from "@/server/validation/fields";
+import {
   insertWithUserId,
   runCreateAction,
   runDeleteAction,
@@ -13,14 +18,20 @@ import {
 } from "@/server/actions/entity-mutations";
 import { createChildStringSyncer } from "@/server/db/sync-child-strings";
 
-const tagsField = z.array(z.string()).optional();
-
 const insertSnippetSchema = createInsertSchema(snippets)
   .omit(serverFields)
-  .extend({ tags: tagsField });
+  .extend({
+    title: titleField,
+    content: contentField,
+    tags: tagsField,
+  });
 const updateSnippetSchema = createUpdateSchema(snippets)
   .omit(serverFields)
-  .extend({ tags: tagsField });
+  .extend({
+    title: titleField.optional(),
+    content: contentField.optional(),
+    tags: tagsField,
+  });
 
 const syncSnippetTags = createChildStringSyncer({
   childTable: snippetTags,

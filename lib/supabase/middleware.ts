@@ -22,7 +22,13 @@ function redirectWithCookies(
 
 export async function updateSession(request: NextRequest) {
   const supabaseEnv = getSupabasePublicEnv();
+  const isDashboardRoute = request.nextUrl.pathname.startsWith(ROUTES.dashboard);
+  const isLoginRoute = request.nextUrl.pathname === ROUTES.login;
+
   if (!supabaseEnv) {
+    if (process.env.NODE_ENV === "production" && isDashboardRoute) {
+      return redirectWithCookies(request, ROUTES.login);
+    }
     return NextResponse.next({ request });
   }
 
@@ -50,9 +56,6 @@ export async function updateSession(request: NextRequest) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-
-  const isDashboardRoute = request.nextUrl.pathname.startsWith(ROUTES.dashboard);
-  const isLoginRoute = request.nextUrl.pathname === ROUTES.login;
 
   if (isDashboardRoute && !user) {
     return redirectWithCookies(request, ROUTES.login);

@@ -2,13 +2,8 @@ import { getPgErrorMessage } from "@/utils/errors";
 import { applyRlsSession, resetRlsSession } from "./rls-session";
 import type { AppDatabase, AppDbTransaction, SupabaseToken } from "./types";
 
-const ALLOWED_ROLES = new Set(["anon", "authenticated", "service_role"]);
-
-function resolveRole(role: string | undefined): string {
-  if (role && ALLOWED_ROLES.has(role)) {
-    return role;
-  }
-  return "anon";
+function resolveRole(role: string | undefined): "anon" | "authenticated" {
+  return role === "authenticated" ? "authenticated" : "anon";
 }
 
 export function createDrizzle(
@@ -28,9 +23,8 @@ export function createDrizzle(
         try {
           return await transaction(tx);
         } catch (err) {
-          throw new Error(`RLS query failed: ${getPgErrorMessage(err)}`, {
-            cause: err,
-          });
+          console.error("[rls]", getPgErrorMessage(err));
+          throw new Error("Database operation failed", { cause: err });
         } finally {
           try {
             await resetRlsSession(tx);

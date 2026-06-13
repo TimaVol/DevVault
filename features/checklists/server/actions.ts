@@ -20,18 +20,28 @@ import {
 import { syncChecklistItems } from "@/server/db/sync-checklist-items";
 import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseIdOrFail } from "@/server/validation/action";
-
-const itemsField = z
-  .array(z.string().min(1, "Item cannot be empty"))
-  .min(1, "At least one item required");
+import {
+  checklistItemsField,
+  descriptionField,
+  optionalChecklistItemsField,
+  titleField,
+} from "@/server/validation/fields";
 
 const insertChecklistSchema = createInsertSchema(checklists)
   .omit(serverFields)
-  .extend({ items: itemsField });
+  .extend({
+    title: titleField,
+    description: descriptionField,
+    items: checklistItemsField,
+  });
 
 const updateChecklistSchema = createUpdateSchema(checklists)
   .omit(serverFields)
-  .extend({ items: itemsField.optional() });
+  .extend({
+    title: titleField.optional(),
+    description: descriptionField,
+    items: optionalChecklistItemsField,
+  });
 
 const NOT_FOUND = "Checklist not found or unauthorized";
 

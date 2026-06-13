@@ -10,6 +10,10 @@ import {
 const serverEnvSchema = publicEnvSchema.extend({
   DATABASE_URL: z.string().min(1),
   ADMIN_DATABASE_URL: z.string().min(1),
+  DISABLE_SIGNUP: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
 });
 
 export const env = serverEnvSchema.parse(process.env);

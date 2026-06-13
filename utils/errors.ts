@@ -1,10 +1,20 @@
+const GENERIC_CLIENT_ERROR = "An unexpected error occurred";
+
 export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (error && typeof error === "object" && "message" in error) {
     return String(error.message);
   }
   if (typeof error === "string") return error;
-  return "An unexpected error occurred";
+  return GENERIC_CLIENT_ERROR;
+}
+
+/** Safe message for API/action responses — hides internals in production. */
+export function getClientErrorMessage(error: unknown): string {
+  if (process.env.NODE_ENV !== "production") {
+    return getErrorMessage(error);
+  }
+  return GENERIC_CLIENT_ERROR;
 }
 
 /** Surface Postgres / postgres.js error details in dev. */
