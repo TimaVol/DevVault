@@ -1,9 +1,12 @@
 import { eq, type InferInsertModel } from "drizzle-orm";
+import type { z } from "zod";
+import type { DrizzleSupabaseContext } from "@/lib/db/create-drizzle-supabase-client";
 import type { AppDbTransaction, SoftDeletableTable } from "@/lib/db/types";
 import type { ActionResult } from "@/shared/action-result";
 import {
   actionFailure,
   actionOk,
+  actionSuccess,
   type ServerManagedKey,
   withAuthedAction,
 } from "@/server/actions";
@@ -12,7 +15,7 @@ import {
   revalidateEntityPaths,
   type RevalidateRouteKey,
 } from "@/server/revalidation";
-import { parseIdOrFail } from "@/server/validation/action";
+import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
 type EntityRow<T extends SoftDeletableTable> = T["$inferSelect"];
 
@@ -75,4 +78,63 @@ export async function updateEntityRow<T extends SoftDeletableTable>(
     .returning()) as EntityRow<T>[];
 
   return rows[0] ?? null;
+}
+
+export async function runCreateAction<
+  TData,
+  TEntity,
+  TKey extends string,
+>(
+  data: unknown,
+  options: {
+    schema: z.ZodType<TData>;
+    resultKey: TKey;
+    revalidate: RevalidateRouteKey[];
+    mutate: (ctx: DrizzleSupabaseContext, data: TData) => Promise<TEntity>;
+  },
+): Promise<ActionResult<Record<TKey, TEntity>>> {
+  const parsed = options.schema.safeParse(data);
+  if (!parsed.success) return zodFailure(parsed);
+
+  return withAuthedAction(async (ctx) => {
+    const entity = await options.mutate(ctx, parsed.data);
+    revalidateEntityPaths(...options.revalidate);
+    return actionSuccess({ [options.resultKey]: entity } as Record<TKey, TEntity>);
+  });
+}
+
+export async function runUpdateAction<
+  TData,
+  TEntity,
+  TKey extends string,
+>(
+  id: string,
+  data: unknown,
+  options: {
+    schema: z.ZodType<TData>;
+    resultKey: TKey;
+    revalidate: RevalidateRouteKey[];
+    notFoundMessage: string;
+    mutate: (
+      ctx: DrizzleSupabaseContext,
+      id: string,
+      data: TData,
+    ) => Promise<TEntity | null>;
+  },
+): Promise<ActionResult<Record<TKey, TEntity>>> {
+  const idError = parseIdOrFail(id);
+  if (idError) return idError;
+
+  const parsed = options.schema.safeParse(data);
+  if (!parsed.success) return zodFailure(parsed);
+
+  return withAuthedAction(async (ctx) => {
+    const entity = await options.mutate(ctx, id, parsed.data);
+    if (!entity) {
+      return actionFailure(options.notFoundMessage);
+    }
+
+    revalidateEntityPaths(...options.revalidate);
+    return actionSuccess({ [options.resultKey]: entity } as Record<TKey, TEntity>);
+  });
 }

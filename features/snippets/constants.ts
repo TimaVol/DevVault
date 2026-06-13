@@ -12,3 +12,10 @@ export const LANGUAGES = [
   { value: "yaml", label: "YAML" },
   { value: "plaintext", label: "Plaintext" },
 ] as const;
+
+export function getLanguageOptions(extra?: string) {
+  if (extra && !LANGUAGES.some((lang) => lang.value === extra)) {
+    return [...LANGUAGES, { value: extra, label: extra }];
+  }
+  return LANGUAGES;
+}

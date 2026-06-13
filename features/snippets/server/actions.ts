@@ -3,20 +3,15 @@
 import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { snippets, snippetTags } from "@/lib/db/schema";
-import {
-  actionFailure,
-  actionSuccess,
-  serverFields,
-  withAuthedAction,
-} from "@/server/actions";
+import { serverFields } from "@/server/actions";
 import {
   insertWithUserId,
+  runCreateAction,
   runDeleteAction,
+  runUpdateAction,
   updateEntityRow,
 } from "@/server/actions/entity-mutations";
 import { createChildStringSyncer } from "@/server/db/sync-child-strings";
-import { revalidateEntityPaths } from "@/server/revalidation";
-import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
 const tagsField = z.array(z.string()).optional();
 
@@ -36,26 +31,25 @@ const syncSnippetTags = createChildStringSyncer({
 const NOT_FOUND = "Snippet not found or unauthorized";
 
 export async function createSnippet(data: z.input<typeof insertSnippetSchema>) {
-  const parsed = insertSnippetSchema.safeParse(data);
-  if (!parsed.success) return zodFailure(parsed);
+  return runCreateAction(data, {
+    schema: insertSnippetSchema,
+    resultKey: "snippet",
+    revalidate: ["dashboard", "snippets"],
+    mutate: (ctx, parsed) => {
+      const { tags, ...snippetData } = parsed;
 
-  return withAuthedAction(async (ctx) => {
-    const { tags, ...snippetData } = parsed.data;
+      return ctx.rls(async (tx) => {
+        const snippet = await insertWithUserId(tx, snippets, ctx.user.id, {
+          language: "javascript",
+          isPinned: false,
+          ...snippetData,
+        });
 
-    const newSnippet = await ctx.rls(async (tx) => {
-      const snippet = await insertWithUserId(tx, snippets, ctx.user.id, {
-        language: "javascript",
-        isPinned: false,
-        ...snippetData,
+        await syncSnippetTags(tx, snippet.id, tags);
+
+        return snippet;
       });
-
-      await syncSnippetTags(tx, snippet.id, tags);
-
-      return snippet;
-    });
-
-    revalidateEntityPaths("dashboard", "snippets");
-    return actionSuccess({ snippet: newSnippet });
+    },
   });
 }
 
@@ -63,30 +57,23 @@ export async function updateSnippet(
   id: string,
   data: z.input<typeof updateSnippetSchema>,
 ) {
-  const idError = parseIdOrFail(id);
-  if (idError) return idError;
+  return runUpdateAction(id, data, {
+    schema: updateSnippetSchema,
+    resultKey: "snippet",
+    revalidate: ["dashboard", "snippets"],
+    notFoundMessage: NOT_FOUND,
+    mutate: (ctx, entityId, parsed) => {
+      const { tags: tagValues, ...snippetData } = parsed;
 
-  const parsed = updateSnippetSchema.safeParse(data);
-  if (!parsed.success) return zodFailure(parsed);
+      return ctx.rls(async (tx) => {
+        const snippet = await updateEntityRow(tx, snippets, entityId, snippetData);
+        if (!snippet) return null;
 
-  return withAuthedAction(async (ctx) => {
-    const { tags: tagValues, ...snippetData } = parsed.data;
+        await syncSnippetTags(tx, entityId, tagValues);
 
-    const updatedSnippet = await ctx.rls(async (tx) => {
-      const snippet = await updateEntityRow(tx, snippets, id, snippetData);
-      if (!snippet) return null;
-
-      await syncSnippetTags(tx, id, tagValues);
-
-      return snippet;
-    });
-
-    if (!updatedSnippet) {
-      return actionFailure(NOT_FOUND);
-    }
-
-    revalidateEntityPaths("dashboard", "snippets");
-    return actionSuccess({ snippet: updatedSnippet });
+        return snippet;
+      });
+    },
   });
 }
 

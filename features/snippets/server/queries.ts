@@ -1,13 +1,11 @@
 import "server-only";
 
-import { and, desc, eq, or } from "drizzle-orm";
-import { requireDrizzle } from "@/server/auth/require-user";
+import { and, desc, eq } from "drizzle-orm";
 import { createChildStringsListQuery } from "@/server/queries/aggregate-child-strings";
 import { paginatedList } from "@/server/queries/paginated-list";
 import {
-  childStringIlikeExists,
   notDeleted,
-  textSearchCondition,
+  textSearchWithChildStrings,
 } from "@/server/queries/filters";
 import { defaultListParams } from "@/server/pagination";
 import { snippets, snippetTags } from "@/lib/db/schema";
@@ -32,21 +30,19 @@ function buildSnippetFilters(params: SnippetListParams) {
     conditions.push(eq(snippets.language, params.lang));
   }
 
-  const textSearch = textSearchCondition(params.q, snippets.title, snippets.content);
+  const textSearch = textSearchWithChildStrings(
+    params.q,
+    {
+      childTable: snippetTags,
+      childParentIdCol: snippetTags.snippetId,
+      childValueCol: snippetTags.tag,
+      parentIdCol: snippets.id,
+    },
+    snippets.title,
+    snippets.content,
+  );
   if (textSearch) {
-    const pattern = `%${params.q}%`;
-    conditions.push(
-      or(
-        textSearch,
-        childStringIlikeExists(
-          snippetTags,
-          snippetTags.snippetId,
-          snippetTags.tag,
-          snippets.id,
-          pattern,
-        ),
-      )!,
-    );
+    conditions.push(textSearch);
   }
 
   return and(...conditions);
@@ -65,16 +61,3 @@ export async function getSnippets(
   });
 }
 
-export async function getSnippetLanguages(): Promise<string[]> {
-  const db = await requireDrizzle();
-
-  const rows = await db.rls((tx) =>
-    tx
-      .selectDistinct({ language: snippets.language })
-      .from(snippets)
-      .where(notDeleted(snippets))
-      .orderBy(snippets.language),
-  );
-
-  return rows.map((row) => row.language);
-}

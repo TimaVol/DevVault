@@ -3,20 +3,15 @@
 import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { projects, projectTechStack } from "@/lib/db/schema";
-import {
-  actionFailure,
-  actionSuccess,
-  serverFields,
-  withAuthedAction,
-} from "@/server/actions";
+import { serverFields } from "@/server/actions";
 import {
   insertWithUserId,
+  runCreateAction,
   runDeleteAction,
+  runUpdateAction,
   updateEntityRow,
 } from "@/server/actions/entity-mutations";
 import { createChildStringSyncer } from "@/server/db/sync-child-strings";
-import { revalidateEntityPaths } from "@/server/revalidation";
-import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
 const urlField = z
   .string()
@@ -52,25 +47,24 @@ const syncProjectTechStack = createChildStringSyncer({
 const NOT_FOUND = "Project not found or unauthorized";
 
 export async function createProject(data: z.input<typeof insertProjectSchema>) {
-  const parsed = insertProjectSchema.safeParse(data);
-  if (!parsed.success) return zodFailure(parsed);
+  return runCreateAction(data, {
+    schema: insertProjectSchema,
+    resultKey: "project",
+    revalidate: ["dashboard", "projects"],
+    mutate: (ctx, parsed) => {
+      const { techStack, ...projectData } = parsed;
 
-  return withAuthedAction(async (ctx) => {
-    const { techStack, ...projectData } = parsed.data;
+      return ctx.rls(async (tx) => {
+        const project = await insertWithUserId(tx, projects, ctx.user.id, {
+          status: "active",
+          ...projectData,
+        });
 
-    const newProject = await ctx.rls(async (tx) => {
-      const project = await insertWithUserId(tx, projects, ctx.user.id, {
-        status: "active",
-        ...projectData,
+        await syncProjectTechStack(tx, project.id, techStack);
+
+        return project;
       });
-
-      await syncProjectTechStack(tx, project.id, techStack);
-
-      return project;
-    });
-
-    revalidateEntityPaths("dashboard", "projects");
-    return actionSuccess({ project: newProject });
+    },
   });
 }
 
@@ -78,30 +72,23 @@ export async function updateProject(
   id: string,
   data: z.input<typeof updateProjectSchema>,
 ) {
-  const idError = parseIdOrFail(id);
-  if (idError) return idError;
+  return runUpdateAction(id, data, {
+    schema: updateProjectSchema,
+    resultKey: "project",
+    revalidate: ["dashboard", "projects"],
+    notFoundMessage: NOT_FOUND,
+    mutate: (ctx, entityId, parsed) => {
+      const { techStack: stackValues, ...projectData } = parsed;
 
-  const parsed = updateProjectSchema.safeParse(data);
-  if (!parsed.success) return zodFailure(parsed);
+      return ctx.rls(async (tx) => {
+        const project = await updateEntityRow(tx, projects, entityId, projectData);
+        if (!project) return null;
 
-  return withAuthedAction(async (ctx) => {
-    const { techStack: stackValues, ...projectData } = parsed.data;
+        await syncProjectTechStack(tx, entityId, stackValues);
 
-    const updatedProject = await ctx.rls(async (tx) => {
-      const project = await updateEntityRow(tx, projects, id, projectData);
-      if (!project) return null;
-
-      await syncProjectTechStack(tx, id, stackValues);
-
-      return project;
-    });
-
-    if (!updatedProject) {
-      return actionFailure(NOT_FOUND);
-    }
-
-    revalidateEntityPaths("dashboard", "projects");
-    return actionSuccess({ project: updatedProject });
+        return project;
+      });
+    },
   });
 }
 

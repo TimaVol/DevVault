@@ -16,13 +16,11 @@ const SNIPPET_FILTER_DEFAULTS = { q: "", lang: "all", page: "1" };
 
 type SnippetsClientProps = {
   initialSnippets: Snippet[];
-  languages: string[];
   pagination: PaginationMeta;
 };
 
 export function SnippetsClient({
   initialSnippets,
-  languages,
   pagination,
 }: SnippetsClientProps) {
   const {
@@ -52,7 +50,6 @@ export function SnippetsClient({
           <SnippetsFilterBar
             search={filters.q}
             language={filters.lang}
-            languages={languages}
             onDebouncedSearchChange={(value) => setFilter("q", value, { resetPage: true })}
             onLanguageChange={(value) => setFilter("lang", value, { resetPage: true })}
           />

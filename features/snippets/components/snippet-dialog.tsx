@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useEntityFormSubmit } from "@/hooks/use-entity-form-submit";
-import { LANGUAGES } from "@/features/snippets/constants";
+import { getLanguageOptions } from "@/features/snippets/constants";
 import { createSnippet, updateSnippet } from "@/features/snippets/server/actions";
 import type { Snippet } from "@/features/snippets/types";
 import { parseCommaList } from "@/utils/normalize-list";
@@ -33,6 +33,8 @@ export function SnippetDialog({ open, onOpenChange, entity }: SnippetDialogProps
   const [language, setLanguage] = useState(entity?.language ?? "javascript");
   const [tagsInput, setTagsInput] = useState(entity?.tags?.join(", ") ?? "");
   const [isPinned, setIsPinned] = useState(entity?.isPinned ?? false);
+
+  const languageOptions = getLanguageOptions(entity?.language);
 
   const reset = () => {
     setTitle("");
@@ -93,7 +95,7 @@ export function SnippetDialog({ open, onOpenChange, entity }: SnippetDialogProps
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {LANGUAGES.map((lang) => (
+              {languageOptions.map((lang) => (
                 <SelectItem key={lang.value} value={lang.value}>
                   {lang.label}
                 </SelectItem>

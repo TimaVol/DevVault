@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
-import { asc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { checklists, checklistItems } from "@/lib/db/schema";
 import {
   actionFailure,
@@ -12,11 +12,14 @@ import {
 } from "@/server/actions";
 import {
   insertWithUserId,
+  runCreateAction,
   runDeleteAction,
+  runUpdateAction,
   updateEntityRow,
 } from "@/server/actions/entity-mutations";
+import { syncChecklistItems } from "@/server/db/sync-checklist-items";
 import { revalidateEntityPaths } from "@/server/revalidation";
-import { parseIdOrFail, zodFailure } from "@/server/validation/action";
+import { parseIdOrFail } from "@/server/validation/action";
 
 const itemsField = z
   .array(z.string().min(1, "Item cannot be empty"))
@@ -35,34 +38,26 @@ const NOT_FOUND = "Checklist not found or unauthorized";
 export async function createChecklist(
   data: z.input<typeof insertChecklistSchema>,
 ) {
-  const parsed = insertChecklistSchema.safeParse(data);
-  if (!parsed.success) return zodFailure(parsed);
+  return runCreateAction(data, {
+    schema: insertChecklistSchema,
+    resultKey: "checklist",
+    revalidate: ["dashboard", "checklists"],
+    mutate: (ctx, parsed) => {
+      const { items, ...checklistData } = parsed;
 
-  return withAuthedAction(async (ctx) => {
-    const { items, ...checklistData } = parsed.data;
+      return ctx.rls(async (tx) => {
+        const checklist = await insertWithUserId(
+          tx,
+          checklists,
+          ctx.user.id,
+          checklistData,
+        );
 
-    const newChecklist = await ctx.rls(async (tx) => {
-      const checklist = await insertWithUserId(
-        tx,
-        checklists,
-        ctx.user.id,
-        checklistData,
-      );
+        await syncChecklistItems(tx, checklist.id, items);
 
-      const itemsToInsert = items.map((content, idx) => ({
-        checklistId: checklist.id,
-        content,
-        isCompleted: false,
-        position: idx,
-      }));
-
-      await tx.insert(checklistItems).values(itemsToInsert);
-
-      return checklist;
-    });
-
-    revalidateEntityPaths("dashboard", "checklists");
-    return actionSuccess({ checklist: newChecklist });
+        return checklist;
+      });
+    },
   });
 }
 
@@ -70,49 +65,25 @@ export async function updateChecklist(
   id: string,
   data: z.input<typeof updateChecklistSchema>,
 ) {
-  const idError = parseIdOrFail(id);
-  if (idError) return idError;
+  return runUpdateAction(id, data, {
+    schema: updateChecklistSchema,
+    resultKey: "checklist",
+    revalidate: ["dashboard", "checklists"],
+    notFoundMessage: NOT_FOUND,
+    mutate: (ctx, entityId, parsed) => {
+      const { items: itemValues, ...checklistData } = parsed;
 
-  const parsed = updateChecklistSchema.safeParse(data);
-  if (!parsed.success) return zodFailure(parsed);
+      return ctx.rls(async (tx) => {
+        const checklist = await updateEntityRow(tx, checklists, entityId, checklistData);
+        if (!checklist) return null;
 
-  return withAuthedAction(async (ctx) => {
-    const { items: itemValues, ...checklistData } = parsed.data;
+        if (itemValues) {
+          await syncChecklistItems(tx, entityId, itemValues);
+        }
 
-    const updatedChecklist = await ctx.rls(async (tx) => {
-      const checklist = await updateEntityRow(tx, checklists, id, checklistData);
-      if (!checklist) return null;
-
-      if (itemValues) {
-        const existingItems = await tx
-          .select()
-          .from(checklistItems)
-          .where(eq(checklistItems.checklistId, id))
-          .orderBy(asc(checklistItems.position));
-
-        await tx.delete(checklistItems).where(eq(checklistItems.checklistId, id));
-        await tx.insert(checklistItems).values(
-          itemValues.map((content, idx) => ({
-            checklistId: id,
-            content,
-            isCompleted:
-              existingItems[idx]?.content === content
-                ? existingItems[idx].isCompleted
-                : false,
-            position: idx,
-          })),
-        );
-      }
-
-      return checklist;
-    });
-
-    if (!updatedChecklist) {
-      return actionFailure(NOT_FOUND);
-    }
-
-    revalidateEntityPaths("dashboard", "checklists");
-    return actionSuccess({ checklist: updatedChecklist });
+        return checklist;
+      });
+    },
   });
 }
 

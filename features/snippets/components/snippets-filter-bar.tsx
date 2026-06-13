@@ -9,11 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LANGUAGES } from "@/features/snippets/constants";
 
 type SnippetsFilterBarProps = {
   search: string;
   language: string;
-  languages: string[];
   onDebouncedSearchChange: (value: string) => void;
   onLanguageChange: (value: string) => void;
 };
@@ -21,7 +21,6 @@ type SnippetsFilterBarProps = {
 export function SnippetsFilterBar({
   search,
   language,
-  languages,
   onDebouncedSearchChange,
   onLanguageChange,
 }: SnippetsFilterBarProps) {
@@ -39,9 +38,9 @@ export function SnippetsFilterBar({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All languages</SelectItem>
-          {languages.map((lang) => (
-            <SelectItem key={lang} value={lang}>
-              {lang}
+          {LANGUAGES.map((lang) => (
+            <SelectItem key={lang.value} value={lang.value}>
+              {lang.label}
             </SelectItem>
           ))}
         </SelectContent>

@@ -29,3 +29,30 @@ export function childStringIlikeExists(
     and ${childValueCol} ilike ${pattern}
   )`;
 }
+
+type ChildStringSearchConfig = {
+  childTable: AnyPgTable;
+  childParentIdCol: AnyPgColumn;
+  childValueCol: AnyPgColumn;
+  parentIdCol: AnyPgColumn;
+};
+
+export function textSearchWithChildStrings(
+  q: string | undefined,
+  childConfig: ChildStringSearchConfig,
+  ...parentColumns: Column[]
+) {
+  const textSearch = textSearchCondition(q, ...parentColumns);
+  if (!textSearch || !q) return undefined;
+
+  return or(
+    textSearch,
+    childStringIlikeExists(
+      childConfig.childTable,
+      childConfig.childParentIdCol,
+      childConfig.childValueCol,
+      childConfig.parentIdCol,
+      `%${q}%`,
+    ),
+  )!;
+}

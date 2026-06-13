@@ -1,5 +1,5 @@
 import { SnippetsClient } from "@/features/snippets/components/snippets-client";
-import { getSnippetLanguages, getSnippets } from "@/features/snippets/server/queries";
+import { getSnippets } from "@/features/snippets/server/queries";
 import { parseSnippetParams } from "@/features/snippets/server/params";
 import {
   loadPaginatedPage,
@@ -12,12 +12,10 @@ export default async function SnippetsPage({ searchParams }: SearchParamsPagePro
     parseSnippetParams,
     getSnippets,
   );
-  const languages = await getSnippetLanguages();
 
   return (
     <SnippetsClient
       initialSnippets={items}
-      languages={languages}
       pagination={{ total, page, pageSize }}
     />
   );

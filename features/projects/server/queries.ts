@@ -1,12 +1,11 @@
 import "server-only";
 
-import { and, desc, eq, or } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { createChildStringsListQuery } from "@/server/queries/aggregate-child-strings";
 import { paginatedList } from "@/server/queries/paginated-list";
 import {
-  childStringIlikeExists,
   notDeleted,
-  textSearchCondition,
+  textSearchWithChildStrings,
 } from "@/server/queries/filters";
 import { defaultListParams } from "@/server/pagination";
 import { projects, projectTechStack } from "@/lib/db/schema";
@@ -31,25 +30,19 @@ function buildProjectFilters(params: ProjectListParams) {
     conditions.push(eq(projects.status, params.tab));
   }
 
-  const textSearch = textSearchCondition(
+  const textSearch = textSearchWithChildStrings(
     params.q,
+    {
+      childTable: projectTechStack,
+      childParentIdCol: projectTechStack.projectId,
+      childValueCol: projectTechStack.tech,
+      parentIdCol: projects.id,
+    },
     projects.name,
     projects.description,
   );
   if (textSearch) {
-    const pattern = `%${params.q}%`;
-    conditions.push(
-      or(
-        textSearch,
-        childStringIlikeExists(
-          projectTechStack,
-          projectTechStack.projectId,
-          projectTechStack.tech,
-          projects.id,
-          pattern,
-        ),
-      )!,
-    );
+    conditions.push(textSearch);
   }
 
   return and(...conditions);
