@@ -1,4 +1,4 @@
-import { getPgErrorMessage } from "@/utils/pg-error";
+import { getPgErrorMessage } from "@/utils/errors";
 import { applyRlsSession, resetRlsSession } from "./rls-session";
 import type { AppDatabase, AppDbTransaction, SupabaseToken } from "./types";
 
