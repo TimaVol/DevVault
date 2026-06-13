@@ -108,7 +108,7 @@ export function FeaturesSection() {
           </div>
           <div className="flex flex-col gap-2">
             <Link
-              href={ROUTES.login}
+              href={ROUTES.signup}
               className={cn(buttonVariants({ size: 'lg' }))}
             >
               {cta.button}

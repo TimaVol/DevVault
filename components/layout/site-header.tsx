@@ -39,7 +39,7 @@ export function SiteHeader() {
           >
             Log in
           </Link>
-          <Link href={ROUTES.login} className={cn(buttonVariants({ size: "sm" }))}>
+          <Link href={ROUTES.signup} className={cn(buttonVariants({ size: "sm" }))}>
             Get Started
           </Link>
         </div>

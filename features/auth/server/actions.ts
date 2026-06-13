@@ -8,27 +8,24 @@ import { headers } from "next/headers";
 import { ROUTES } from "@/shared/routes";
 import { env, getSiteUrl } from "@/lib/env";
 import { checkRateLimit, getClientIp } from "@/server/auth/rate-limit";
-import { LIMITS } from "@/server/validation/limits";
+import {
+  emailField,
+  passwordField,
+  resetPasswordSchema,
+} from "@/server/validation/auth";
 
 const AUTH_RATE_LIMIT = { maxAttempts: 10, windowMs: 15 * 60 * 1000 };
 
-const passwordField = z
-  .string()
-  .min(8, "Password must be at least 8 characters")
-  .max(LIMITS.password, "Password is too long")
-  .regex(/[a-zA-Z]/, "Password must contain a letter")
-  .regex(/[0-9]/, "Password must contain a number");
-
-const authenticateFormSchema = z.object({
-  mode: z.enum(["signin", "signup"]),
-  email: z
-    .string()
-    .email("Invalid email address")
-    .max(LIMITS.email, "Email is too long"),
+const credentialsSchema = z.object({
+  email: emailField,
   password: passwordField,
 });
 
-type AuthState = {
+const forgotPasswordSchema = z.object({
+  email: emailField,
+});
+
+export type AuthState = {
   error?: string;
   message?: string;
 } | null;
@@ -49,15 +46,14 @@ async function rateLimitAuth(action: string): Promise<AuthState | null> {
   return null;
 }
 
-export async function authenticate(
+export async function signIn(
   prevState: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  const limited = await rateLimitAuth("authenticate");
+  const limited = await rateLimitAuth("sign-in");
   if (limited) return limited;
 
-  const result = authenticateFormSchema.safeParse({
-    mode: formData.get("mode"),
+  const result = credentialsSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
@@ -65,28 +61,7 @@ export async function authenticate(
     return { error: result.error.issues[0].message };
   }
 
-  if (result.data.mode === "signup" && env.DISABLE_SIGNUP) {
-    return { error: "Sign up is currently disabled." };
-  }
-
   const supabase = await createClient();
-
-  if (result.data.mode === "signup") {
-    const { error } = await supabase.auth.signUp({
-      email: result.data.email,
-      password: result.data.password,
-      options: {
-        emailRedirectTo: `${getSiteUrl()}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      return { error: "Unable to create account. Please try again." };
-    }
-
-    return { message: "Check your email for the confirmation link!" };
-  }
-
   const { error } = await supabase.auth.signInWithPassword({
     email: result.data.email,
     password: result.data.password,
@@ -94,6 +69,119 @@ export async function authenticate(
 
   if (error) {
     return { error: "Invalid email or password." };
+  }
+
+  revalidatePath("/", "layout");
+  redirect(ROUTES.dashboard);
+}
+
+export async function signUp(
+  prevState: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const limited = await rateLimitAuth("sign-up");
+  if (limited) return limited;
+
+  if (env.DISABLE_SIGNUP) {
+    return { error: "Sign up is currently disabled." };
+  }
+
+  const result = credentialsSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+  if (!result.success) {
+    return { error: result.error.issues[0].message };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signUp({
+    email: result.data.email,
+    password: result.data.password,
+    options: {
+      emailRedirectTo: `${getSiteUrl()}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    return { error: "Unable to create account. Please try again." };
+  }
+
+  return { message: "Check your email for the confirmation link!" };
+}
+
+export async function requestPasswordReset(
+  prevState: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const limited = await rateLimitAuth("password-reset");
+  if (limited) return limited;
+
+  const result = forgotPasswordSchema.safeParse({
+    email: formData.get("email"),
+  });
+  if (!result.success) {
+    return { error: result.error.issues[0].message };
+  }
+
+  const supabase = await createClient();
+  const next = encodeURIComponent(ROUTES.resetPassword);
+
+  const { error } = await supabase.auth.resetPasswordForEmail(result.data.email, {
+    redirectTo: `${getSiteUrl()}/auth/callback?next=${next}`,
+  });
+
+  if (error) {
+    const isRateLimited =
+      error.status === 429 ||
+      error.message.toLowerCase().includes("rate limit");
+
+    if (isRateLimited) {
+      return {
+        error:
+          "Too many reset emails sent. Please wait a few minutes and try again.",
+      };
+    }
+
+    console.error("[auth] resetPasswordForEmail failed:", error.message);
+  }
+
+  return {
+    message:
+      "If an account exists with that email, you will receive a reset link shortly.",
+  };
+}
+
+export async function updatePassword(
+  prevState: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const limited = await rateLimitAuth("update-password");
+  if (limited) return limited;
+
+  const result = resetPasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+  if (!result.success) {
+    return { error: result.error.issues[0].message };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Your reset session has expired. Please request a new link." };
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: result.data.password,
+  });
+
+  if (error) {
+    return { error: "Unable to update password. Please try again." };
   }
 
   revalidatePath("/", "layout");

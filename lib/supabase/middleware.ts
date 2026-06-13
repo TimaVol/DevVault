@@ -22,8 +22,11 @@ function redirectWithCookies(
 
 export async function updateSession(request: NextRequest) {
   const supabaseEnv = getSupabasePublicEnv();
-  const isDashboardRoute = request.nextUrl.pathname.startsWith(ROUTES.dashboard);
-  const isLoginRoute = request.nextUrl.pathname === ROUTES.login;
+  const pathname = request.nextUrl.pathname;
+  const isDashboardRoute = pathname.startsWith(ROUTES.dashboard);
+  const guestAuthRoutes = [ROUTES.login, ROUTES.signup, ROUTES.forgotPassword] as string[];
+  const isGuestAuthRoute = guestAuthRoutes.includes(pathname);
+  const isResetPasswordRoute = pathname === ROUTES.resetPassword;
 
   if (!supabaseEnv) {
     if (process.env.NODE_ENV === "production" && isDashboardRoute) {
@@ -61,7 +64,11 @@ export async function updateSession(request: NextRequest) {
     return redirectWithCookies(request, ROUTES.login);
   }
 
-  if (isLoginRoute && user) {
+  if (isResetPasswordRoute && !user) {
+    return redirectWithCookies(request, ROUTES.forgotPassword);
+  }
+
+  if (isGuestAuthRoute && user) {
     return redirectWithCookies(request, ROUTES.dashboard);
   }
 

@@ -4,8 +4,15 @@ import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader2 } from "lucide-react";
 
-export function SubmitButton({ isSignUp }: { isSignUp: boolean }) {
+type SubmitButtonProps = {
+  isSignUp?: boolean;
+  label?: string;
+};
+
+export function SubmitButton({ isSignUp, label }: SubmitButtonProps) {
   const { pending } = useFormStatus();
+  const text =
+    label ?? (isSignUp ? "Sign up" : "Sign in");
 
   return (
     <Button type="submit" className="w-full" disabled={pending}>
@@ -13,7 +20,7 @@ export function SubmitButton({ isSignUp }: { isSignUp: boolean }) {
         <Loader2 className="animate-spin" />
       ) : (
         <>
-          {isSignUp ? "Sign up" : "Sign in"}
+          {text}
           <ArrowRight />
         </>
       )}

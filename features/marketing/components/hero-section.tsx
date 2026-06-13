@@ -32,7 +32,7 @@ export function HeroSection() {
         </p>
 
         <div className="flex flex-col items-center justify-center gap-4 pt-2 sm:flex-row">
-          <Link href={ROUTES.login} className={cn(buttonVariants({ size: "lg" }))}>
+          <Link href={ROUTES.signup} className={cn(buttonVariants({ size: "lg" }))}>
             Get Started
             <ArrowRight data-icon="inline-end" />
           </Link>

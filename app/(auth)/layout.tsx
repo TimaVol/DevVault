@@ -1,16 +1,16 @@
-import { cn } from '@/utils/cn'
+import { cn } from "@/utils/cn";
 
-export default function LoginLayout({
+export default function AuthLayout({
   children,
   className,
 }: {
-  children: React.ReactNode
-  className?: string
+  children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <div
       className={cn(
-        'relative flex min-h-svh flex-col items-center justify-center px-4 py-12 overflow-hidden',
+        "relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-4 py-12",
         className,
       )}
     >
@@ -24,5 +24,5 @@ export default function LoginLayout({
       />
       <div className="relative z-10 w-full max-w-md">{children}</div>
     </div>
-  )
+  );
 }

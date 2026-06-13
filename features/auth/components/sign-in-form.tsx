@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useEffect } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,47 +14,33 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { authenticate, signInWithGoogle } from "@/features/auth/server/actions";
+import { signIn, signInWithGoogle } from "@/features/auth/server/actions";
+import { useAuthCallbackError } from "@/features/auth/hooks/use-auth-callback-error";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { SubmitButton } from "./submit-button";
+import { ROUTES } from "@/shared/routes";
 
-export function AuthForm({ callbackError }: { callbackError?: string }) {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [state, formAction] = useActionState(authenticate, null);
+export function SignInForm({ callbackError }: { callbackError?: string }) {
+  const [state, formAction] = useActionState(signIn, null);
 
-  // After a successful signup the server returns a message; derive sign-in
-  // mode from that so the UI switches without a setState call inside an effect.
-  const mode = isSignUp && !state?.message ? "signup" : "signin";
-
-  useEffect(() => {
-    if (callbackError) {
-      toast.error("Sign in failed. Please try again.");
-    }
-  }, [callbackError]);
+  useAuthCallbackError(callbackError);
 
   useEffect(() => {
     if (state?.error) {
       toast.error(state.error);
-    } else if (state?.message) {
-      toast.success(state.message);
     }
   }, [state]);
 
   return (
     <>
       <CardHeader className="pt-2">
-        <CardTitle className="text-headline-md">
-          {mode === "signup" ? "Create workspace" : "Welcome back"}
-        </CardTitle>
+        <CardTitle className="text-headline-md">Welcome back</CardTitle>
         <CardDescription>
-          {mode === "signup"
-            ? "Sign up for your personal developer vault"
-            : "Sign in to manage snippets, projects, and notes"}
+          Sign in to manage snippets, projects, and notes
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 px-6 pb-6">
         <form action={formAction}>
-          <input type="hidden" name="mode" value={mode} />
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="email">
@@ -66,22 +53,32 @@ export function AuthForm({ callbackError }: { callbackError?: string }) {
                 type="email"
                 placeholder="you@example.com"
                 required
+                autoComplete="email"
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="password">
-                <Lock className="size-3.5" />
-                Password
-              </FieldLabel>
+              <div className="flex items-center justify-between">
+                <FieldLabel htmlFor="password">
+                  <Lock className="size-3.5" />
+                  Password
+                </FieldLabel>
+                <Link
+                  href={ROUTES.forgotPassword}
+                  className="text-xs text-muted-foreground hover:text-primary"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 name="password"
                 type="password"
                 placeholder="••••••••"
                 required
+                autoComplete="current-password"
               />
             </Field>
-            <SubmitButton isSignUp={mode === "signup"} />
+            <SubmitButton label="Sign in" />
           </FieldGroup>
         </form>
 
@@ -100,25 +97,14 @@ export function AuthForm({ callbackError }: { callbackError?: string }) {
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          {mode === "signup" ? "Already have an account? " : "Don't have an account? "}
-          <Button
-            variant="link"
-            size="sm"
-            onClick={() => setIsSignUp(mode === "signin")}
+          Don&apos;t have an account?{" "}
+          <Link
+            href={ROUTES.signup}
             className="font-medium text-primary hover:underline"
           >
-            {mode === "signup" ? "Sign in" : "Create account"}
-          </Button>
+            Create account
+          </Link>
         </p>
-
-        <div className="flex justify-center gap-4 pt-2">
-          <a href="#" className="text-label-mono text-muted-foreground hover:text-foreground">
-            Privacy Policy
-          </a>
-          <a href="#" className="text-label-mono text-muted-foreground hover:text-foreground">
-            Terms of Service
-          </a>
-        </div>
       </CardContent>
     </>
   );
