@@ -9,6 +9,7 @@ import {
   withAuthedAction,
 } from "@/server/actions";
 import {
+  insertWithUserId,
   runDeleteAction,
   updateEntityRow,
 } from "@/server/actions/entity-mutations";
@@ -29,16 +30,12 @@ export async function createNote(data: {
   if (!parsed.success) return zodFailure(parsed);
 
   return withAuthedAction(async (ctx) => {
-    const [newNote] = await ctx.rls((tx) =>
-      tx
-        .insert(notes)
-        .values({
-          userId: ctx.user.id,
-          title: parsed.data.title,
-          content: parsed.data.content,
-          isPinned: parsed.data.isPinned ?? false,
-        })
-        .returning(),
+    const newNote = await ctx.rls((tx) =>
+      insertWithUserId(tx, notes, ctx.user.id, {
+        title: parsed.data.title,
+        content: parsed.data.content,
+        isPinned: parsed.data.isPinned ?? false,
+      }),
     );
 
     revalidateEntityPaths("dashboard", "notes");

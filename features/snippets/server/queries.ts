@@ -1,20 +1,24 @@
 import "server-only";
 
-import {
-  and,
-  count,
-  desc,
-  eq,
-  getTableColumns,
-  or,
-  sql,
-} from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
+import { createChildStringsListQuery } from "@/server/queries/aggregate-child-strings";
 import { paginatedList } from "@/server/queries/paginated-list";
 import { ilikeAny, notDeleted } from "@/server/queries/filters";
 import { snippets, snippetTags } from "@/lib/db/schema";
-import type { AppDbTransaction } from "@/lib/db/types";
 import type { SnippetListParams } from "./params";
+
+type SnippetRow = typeof snippets.$inferSelect & { tags: string[] };
+
+const snippetListQuery = createChildStringsListQuery({
+  parentTable: snippets,
+  parentIdColumn: snippets.id,
+  parentCreatedAtColumn: snippets.createdAt,
+  childTable: snippetTags,
+  childParentIdColumn: snippetTags.snippetId,
+  childValueColumn: snippetTags.tag,
+  aggregateKey: "tags",
+});
 
 function buildSnippetFilters(params: SnippetListParams) {
   const conditions = [notDeleted(snippets)];
@@ -40,50 +44,16 @@ function buildSnippetFilters(params: SnippetListParams) {
   return and(...conditions);
 }
 
-async function fetchSnippetRows(
-  tx: AppDbTransaction,
-  where: ReturnType<typeof buildSnippetFilters>,
-  limit: number,
-  offset: number,
-) {
-  return tx
-    .select({
-      ...getTableColumns(snippets),
-      tags: sql<string[]>`coalesce(
-        array_agg(${snippetTags.tag}) filter (where ${snippetTags.tag} is not null),
-        array[]::text[]
-      )`,
-    })
-    .from(snippets)
-    .leftJoin(snippetTags, eq(snippets.id, snippetTags.snippetId))
-    .where(where)
-    .groupBy(snippets.id)
-    .orderBy(desc(snippets.createdAt))
-    .limit(limit)
-    .offset(offset);
-}
-
-async function countDistinctSnippets(
-  tx: AppDbTransaction,
-  where: ReturnType<typeof buildSnippetFilters>,
-) {
-  const [countResult] = await tx
-    .select({ value: count(sql`distinct ${snippets.id}`) })
-    .from(snippets)
-    .leftJoin(snippetTags, eq(snippets.id, snippetTags.snippetId))
-    .where(where);
-  return countResult?.value ?? 0;
-}
-
 export async function getSnippets(
   params: SnippetListParams = { q: undefined, lang: "all", page: 1, pageSize: 50 },
 ) {
   const where = buildSnippetFilters(params);
 
-  return paginatedList({
+  return paginatedList<SnippetRow>({
     params,
-    countRows: (tx) => countDistinctSnippets(tx, where),
-    fetchRows: (tx, limit, offset) => fetchSnippetRows(tx, where, limit, offset),
+    countRows: (tx) => snippetListQuery.countDistinct(tx, where),
+    fetchRows: (tx, limit, offset) =>
+      snippetListQuery.fetchRows<SnippetRow>(tx, where, limit, offset),
   });
 }
 

@@ -11,6 +11,7 @@ import {
   withAuthedAction,
 } from "@/server/actions";
 import {
+  insertWithUserId,
   runDeleteAction,
   updateEntityRow,
 } from "@/server/actions/entity-mutations";
@@ -41,14 +42,10 @@ export async function createChecklist(data: {
 
   return withAuthedAction(async (ctx) => {
     const newChecklist = await ctx.rls(async (tx) => {
-      const [checklist] = await tx
-        .insert(checklists)
-        .values({
-          userId: ctx.user.id,
-          title: parsed.data.title,
-          description: parsed.data.description ?? null,
-        })
-        .returning();
+      const checklist = await insertWithUserId(tx, checklists, ctx.user.id, {
+        title: parsed.data.title,
+        description: parsed.data.description ?? null,
+      });
 
       const itemsToInsert = parsed.data.items.map((content, idx) => ({
         checklistId: checklist.id,

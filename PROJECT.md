@@ -73,6 +73,10 @@ features/<name>/
 - Implement proper Row Level Security in Supabase
 - Keep code clean, well-typed and maintainable
 
+### Entity UX exceptions
+
+Most CRUD features (snippets, projects, checklists) use dialog forms with `useEntityListPage` and `useEntityFormSubmit`. **Notes** intentionally differs: master-detail layout with sidebar selection, inline editor, and autosave. Do not force notes onto the dialog/list-page pattern unless product requirements change.
+
 ## Authentication
 - Email + Password
 - Google OAuth (via Supabase)

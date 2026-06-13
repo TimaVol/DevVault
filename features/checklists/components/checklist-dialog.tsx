@@ -131,7 +131,7 @@ export function ChecklistDialog({
           <ul className="space-y-1 rounded-md border p-2">
             {items.map((item, idx) => (
               <li
-                key={idx}
+                key={`${idx}-${item}`}
                 className="flex items-center justify-between gap-2 text-sm"
               >
                 <span>{item}</span>

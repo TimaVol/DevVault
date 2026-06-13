@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, type InferInsertModel } from "drizzle-orm";
 import type { AppDbTransaction } from "@/lib/db/types";
 import {
   checklists,
@@ -27,6 +27,36 @@ type SoftDeletableTable =
 
 type UpdatableTable = SoftDeletableTable;
 
+type ServerManagedKeys =
+  | "id"
+  | "userId"
+  | "createdAt"
+  | "updatedAt"
+  | "deletedAt";
+
+type EntityRow<T extends SoftDeletableTable> = T["$inferSelect"];
+
+type EntityInsertData<T extends SoftDeletableTable> = Omit<
+  InferInsertModel<T>,
+  ServerManagedKeys
+>;
+
+type EntityUpdateData<T extends UpdatableTable> = Partial<EntityInsertData<T>>;
+
+export async function insertWithUserId<T extends SoftDeletableTable>(
+  tx: AppDbTransaction,
+  table: T,
+  userId: string,
+  data: EntityInsertData<T>,
+): Promise<EntityRow<T>> {
+  const rows = await tx
+    .insert(table)
+    .values({ ...data, userId } as InferInsertModel<T>)
+    .returning();
+
+  return rows[0] as EntityRow<T>;
+}
+
 export async function runDeleteAction(
   id: string,
   table: SoftDeletableTable,
@@ -50,17 +80,17 @@ export async function runDeleteAction(
   });
 }
 
-export async function updateEntityRow(
+export async function updateEntityRow<T extends UpdatableTable>(
   tx: AppDbTransaction,
-  table: UpdatableTable,
+  table: T,
   id: string,
-  data: Record<string, unknown>,
-) {
-  const rows = await tx
+  data: EntityUpdateData<T>,
+): Promise<EntityRow<T> | null> {
+  const rows = (await tx
     .update(table)
-    .set({ ...data, updatedAt: new Date() })
+    .set({ ...data, updatedAt: new Date() } as never)
     .where(eq(table.id, id))
-    .returning();
+    .returning()) as EntityRow<T>[];
 
   return rows[0] ?? null;
 }

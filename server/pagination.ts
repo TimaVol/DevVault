@@ -1,36 +1,36 @@
 export type ListParams = {
-  q?: string
-  page?: number
-  pageSize?: number
-}
+  q?: string;
+  page?: number;
+  pageSize?: number;
+};
 
 export type PaginationMeta = {
-  total: number
-  page: number
-  pageSize: number
-}
+  total: number;
+  page: number;
+  pageSize: number;
+};
 
 export type PaginatedResult<T> = PaginationMeta & {
-  items: T[]
-}
+  items: T[];
+};
 
-export const DEFAULT_PAGE_SIZE = 50
+export const DEFAULT_PAGE_SIZE = 50;
 
 export function parsePageParam(value: string | string[] | undefined): number {
-  const raw = Array.isArray(value) ? value[0] : value
-  const parsed = Number.parseInt(raw ?? '1', 10)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number.parseInt(raw ?? "1", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
 export function parseStringParam(
   value: string | string[] | undefined,
 ): string | undefined {
-  const raw = Array.isArray(value) ? value[0] : value
-  return raw?.trim() || undefined
+  const raw = Array.isArray(value) ? value[0] : value;
+  return raw?.trim() || undefined;
 }
 
 export function getOffset(page: number, pageSize: number): number {
-  return (page - 1) * pageSize
+  return (page - 1) * pageSize;
 }
 
 export function parseBaseListParams(
@@ -40,7 +40,7 @@ export function parseBaseListParams(
     q: parseStringParam(searchParams.q),
     page: parsePageParam(searchParams.page),
     pageSize: DEFAULT_PAGE_SIZE,
-  }
+  };
 }
 
 export function parseListParams<T extends Record<string, unknown>>(
@@ -52,10 +52,10 @@ export function parseListParams<T extends Record<string, unknown>>(
   return {
     ...parseBaseListParams(searchParams),
     ...parseExtra(searchParams),
-  }
+  };
 }
 
-export type BaseListParams = ReturnType<typeof parseBaseListParams>
+export type BaseListParams = ReturnType<typeof parseBaseListParams>;
 
 export function createListParamsParser<TExtra extends Record<string, unknown>>(
   parseExtra: (
@@ -64,5 +64,5 @@ export function createListParamsParser<TExtra extends Record<string, unknown>>(
 ) {
   return (
     searchParams: Record<string, string | string[] | undefined>,
-  ): BaseListParams & TExtra => parseListParams(searchParams, parseExtra)
+  ): BaseListParams & TExtra => parseListParams(searchParams, parseExtra);
 }

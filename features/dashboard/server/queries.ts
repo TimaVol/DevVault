@@ -1,7 +1,8 @@
 import "server-only";
 
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { requireDrizzle } from "@/server/auth/require-user";
+import { notDeleted } from "@/server/queries/filters";
 import { checklists, notes, projects, snippets } from "@/lib/db/schema";
 
 export async function getDashboardOverview() {
@@ -33,14 +34,14 @@ export async function getDashboardOverview() {
     const recentSnippets = await tx
       .select()
       .from(snippets)
-      .where(isNull(snippets.deletedAt))
+      .where(notDeleted(snippets))
       .orderBy(desc(snippets.createdAt))
       .limit(3);
 
     const activeProjects = await tx
       .select()
       .from(projects)
-      .where(and(isNull(projects.deletedAt), eq(projects.status, "active")))
+      .where(and(notDeleted(projects), eq(projects.status, "active")))
       .orderBy(desc(projects.createdAt))
       .limit(3);
 

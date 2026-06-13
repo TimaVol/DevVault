@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
-import { eq } from "drizzle-orm";
 import { projects, projectTechStack } from "@/lib/db/schema";
 import {
   actionFailure,
@@ -11,10 +10,11 @@ import {
   withAuthedAction,
 } from "@/server/actions";
 import {
+  insertWithUserId,
   runDeleteAction,
   updateEntityRow,
 } from "@/server/actions/entity-mutations";
-import { syncChildStrings } from "@/server/db/sync-child-strings";
+import { createChildStringSyncer } from "@/server/db/sync-child-strings";
 import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
@@ -43,6 +43,12 @@ const updateProjectSchema = createUpdateSchema(projects)
     techStack: techStackField,
   });
 
+const syncProjectTechStack = createChildStringSyncer({
+  childTable: projectTechStack,
+  parentIdColumn: projectTechStack.projectId,
+  buildRow: (projectId, tech) => ({ projectId, tech }),
+});
+
 const NOT_FOUND = "Project not found or unauthorized";
 
 export async function createProject(data: {
@@ -58,27 +64,15 @@ export async function createProject(data: {
 
   return withAuthedAction(async (ctx) => {
     const newProject = await ctx.rls(async (tx) => {
-      const [project] = await tx
-        .insert(projects)
-        .values({
-          userId: ctx.user.id,
-          name: parsed.data.name,
-          description: parsed.data.description ?? null,
-          repositoryUrl: parsed.data.repositoryUrl ?? null,
-          demoUrl: parsed.data.demoUrl ?? null,
-          status: parsed.data.status ?? "active",
-        })
-        .returning();
-
-      await syncChildStrings({
-        values: parsed.data.techStack,
-        delete: () =>
-          tx.delete(projectTechStack).where(eq(projectTechStack.projectId, project.id)),
-        insert: (stack) =>
-          tx
-            .insert(projectTechStack)
-            .values(stack.map((tech) => ({ projectId: project.id, tech }))),
+      const project = await insertWithUserId(tx, projects, ctx.user.id, {
+        name: parsed.data.name,
+        description: parsed.data.description ?? null,
+        repositoryUrl: parsed.data.repositoryUrl ?? null,
+        demoUrl: parsed.data.demoUrl ?? null,
+        status: parsed.data.status ?? "active",
       });
+
+      await syncProjectTechStack(tx, project.id, parsed.data.techStack);
 
       return project;
     });
@@ -112,15 +106,7 @@ export async function updateProject(
       const project = await updateEntityRow(tx, projects, id, projectData);
       if (!project) return null;
 
-      await syncChildStrings({
-        values: stackValues,
-        delete: () =>
-          tx.delete(projectTechStack).where(eq(projectTechStack.projectId, id)),
-        insert: (stack) =>
-          tx
-            .insert(projectTechStack)
-            .values(stack.map((tech) => ({ projectId: id, tech }))),
-      });
+      await syncProjectTechStack(tx, id, stackValues);
 
       return project;
     });

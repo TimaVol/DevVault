@@ -1,9 +1,7 @@
 "use client";
 
 import { CheckSquare } from "lucide-react";
-import { DebouncedSearchInput } from "@/components/shared/debounced-search-input";
 import { EntityListLayout } from "@/components/shared/entity-list-layout";
-import { ListFilterBar } from "@/components/shared/list-filter-bar";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { useEntityListPage } from "@/hooks/use-entity-list-page";
 import { useShellCreateAction } from "@/hooks/use-shell-create-action";
@@ -12,6 +10,7 @@ import { deleteChecklist, toggleChecklistItem } from "@/features/checklists/serv
 import type { Checklist } from "@/features/checklists/types";
 import { ChecklistCard } from "./checklist-card";
 import { ChecklistDialog } from "./checklist-dialog";
+import { ChecklistsFilterBar } from "./checklists-filter-bar";
 
 const CHECKLIST_FILTER_DEFAULTS = { q: "", page: "1" };
 
@@ -53,14 +52,10 @@ export function ChecklistsClient({
     <>
       <EntityListLayout
         filterBar={
-          <ListFilterBar>
-            <DebouncedSearchInput
-              placeholder="Search checklists…"
-              value={filters.q}
-              onDebouncedChange={(value) => setFilter("q", value, { resetPage: true })}
-              className="sm:max-w-xs"
-            />
-          </ListFilterBar>
+          <ChecklistsFilterBar
+            search={filters.q}
+            onDebouncedSearchChange={(value) => setFilter("q", value, { resetPage: true })}
+          />
         }
         isEmpty={initialChecklists.length === 0}
         emptyState={{

@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
-import { eq } from "drizzle-orm";
 import { snippets, snippetTags } from "@/lib/db/schema";
 import {
   actionFailure,
@@ -11,10 +10,11 @@ import {
   withAuthedAction,
 } from "@/server/actions";
 import {
+  insertWithUserId,
   runDeleteAction,
   updateEntityRow,
 } from "@/server/actions/entity-mutations";
-import { syncChildStrings } from "@/server/db/sync-child-strings";
+import { createChildStringSyncer } from "@/server/db/sync-child-strings";
 import { revalidateEntityPaths } from "@/server/revalidation";
 import { parseIdOrFail, zodFailure } from "@/server/validation/action";
 
@@ -26,6 +26,12 @@ const insertSnippetSchema = createInsertSchema(snippets)
 const updateSnippetSchema = createUpdateSchema(snippets)
   .omit(serverFields)
   .extend({ tags: tagsField });
+
+const syncSnippetTags = createChildStringSyncer({
+  childTable: snippetTags,
+  parentIdColumn: snippetTags.snippetId,
+  buildRow: (snippetId, tag) => ({ snippetId, tag }),
+});
 
 const NOT_FOUND = "Snippet not found or unauthorized";
 
@@ -41,26 +47,14 @@ export async function createSnippet(data: {
 
   return withAuthedAction(async (ctx) => {
     const newSnippet = await ctx.rls(async (tx) => {
-      const [snippet] = await tx
-        .insert(snippets)
-        .values({
-          userId: ctx.user.id,
-          title: parsed.data.title,
-          content: parsed.data.content,
-          language: parsed.data.language ?? "javascript",
-          isPinned: parsed.data.isPinned ?? false,
-        })
-        .returning();
-
-      await syncChildStrings({
-        values: parsed.data.tags,
-        delete: () =>
-          tx.delete(snippetTags).where(eq(snippetTags.snippetId, snippet.id)),
-        insert: (tags) =>
-          tx
-            .insert(snippetTags)
-            .values(tags.map((tag) => ({ snippetId: snippet.id, tag }))),
+      const snippet = await insertWithUserId(tx, snippets, ctx.user.id, {
+        title: parsed.data.title,
+        content: parsed.data.content,
+        language: parsed.data.language ?? "javascript",
+        isPinned: parsed.data.isPinned ?? false,
       });
+
+      await syncSnippetTags(tx, snippet.id, parsed.data.tags);
 
       return snippet;
     });
@@ -93,12 +87,7 @@ export async function updateSnippet(
       const snippet = await updateEntityRow(tx, snippets, id, snippetData);
       if (!snippet) return null;
 
-      await syncChildStrings({
-        values: tagValues,
-        delete: () => tx.delete(snippetTags).where(eq(snippetTags.snippetId, id)),
-        insert: (tags) =>
-          tx.insert(snippetTags).values(tags.map((tag) => ({ snippetId: id, tag }))),
-      });
+      await syncSnippetTags(tx, id, tagValues);
 
       return snippet;
     });

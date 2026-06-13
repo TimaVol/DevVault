@@ -9,7 +9,7 @@
 - Use TypeScript strictly
 - Prefer Server Components
 - Colocate domain code under `features/<name>/`
-- Put reads in `features/<name>/server/queries.ts`, mutations in `server/actions.ts`
+- Put reads in `features/<name>/server/queries.ts`, mutations in `features/<name>/server/actions.ts`
 - Derive feature types from query return types (`Awaited<ReturnType<typeof getX>>`)
 - Create reusable components
 - Add proper loading & error states
