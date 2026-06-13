@@ -1,26 +1,8 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
+import { CodePreview } from "@/components/shared/code-preview";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/utils/cn";
-
-type SnippetCodePreviewProps = {
-  content: string;
-  className?: string;
-};
-
-export function SnippetCodePreview({ content, className }: SnippetCodePreviewProps) {
-  return (
-    <pre
-      className={cn(
-        "overflow-hidden rounded-md border border-border bg-[#0e0e0e] font-mono leading-relaxed text-muted-foreground",
-        className,
-      )}
-    >
-      {content}
-    </pre>
-  );
-}
 
 type SnippetPreviewCardProps = {
   id: string;
@@ -47,7 +29,7 @@ export function SnippetPreviewCard({
         </Badge>
       </div>
       <h4 className="truncate text-sm font-medium">{title}</h4>
-      <SnippetCodePreview content={content} className="max-h-24 p-2 text-[11px]" />
+      <CodePreview content={content} className="max-h-24 p-2 text-[11px]" />
       <div className="mt-auto flex items-center justify-between border-t border-border pt-2">
         <span className="text-label-caps text-muted-foreground">
           {language.toUpperCase()}

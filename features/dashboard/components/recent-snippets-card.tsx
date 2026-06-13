@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Clock3 } from "lucide-react";
 import { ListEmptyState } from "@/components/shared/list-empty-state";
-import { SnippetPreviewCard } from "@/components/shared/snippet-preview";
+import { SnippetPreviewCard } from "@/features/dashboard/components/snippet-preview-card";
 import { buttonVariants } from "@/components/ui/button";
 import type { DashboardOverview } from "@/features/dashboard/types";
 import { useClipboard } from "@/hooks/use-clipboard";

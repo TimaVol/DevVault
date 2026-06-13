@@ -2,7 +2,7 @@
 
 import { Check, Copy, Pin } from "lucide-react";
 import { CardEditDeleteActions } from "@/components/shared/card-edit-delete-actions";
-import { SnippetCodePreview } from "@/components/shared/snippet-preview";
+import { CodePreview } from "@/components/shared/code-preview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,7 +37,7 @@ export function SnippetMobileCard({
         <p className="truncate font-medium">{snippet.title}</p>
         {snippet.isPinned ? <Pin className="size-3.5 shrink-0 text-primary" /> : null}
       </div>
-      <SnippetCodePreview
+      <CodePreview
         content={snippet.content}
         className="max-h-16 p-2 text-[10px]"
       />

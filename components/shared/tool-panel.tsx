@@ -50,89 +50,25 @@ export function ToolPanel({
   );
 }
 
-type ToolIoColumnsProps = {
-  inputLabel?: string;
-  outputLabel?: string;
-  inputValue: string;
-  outputValue: string;
-  onInputChange: (value: string) => void;
-  inputPlaceholder?: string;
-  outputPlaceholder?: string;
-  copySuccessMessage?: string;
-};
-
-export function ToolIoColumns({
-  inputLabel = "Input String",
-  outputLabel = "Output",
-  inputValue,
-  outputValue,
-  onInputChange,
-  inputPlaceholder,
-  outputPlaceholder = "// Result will appear here",
-  copySuccessMessage = "Output copied to clipboard!",
-}: ToolIoColumnsProps) {
-  const { copy, isCopied } = useClipboard();
-
-  return (
-    <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
-      <div className="flex flex-col gap-2">
-        <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          {inputLabel}
-        </FieldLabel>
-        <Textarea
-          placeholder={inputPlaceholder}
-          value={inputValue}
-          onChange={(e) => onInputChange(e.target.value)}
-          className="min-h-[220px] flex-1 font-mono text-xs"
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            {outputLabel}
-          </FieldLabel>
-          {outputValue ? (
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={() => copy(outputValue, "default", { successMessage: copySuccessMessage })}
-            >
-              {isCopied() ? (
-                <Check className="h-3 w-3 text-primary" />
-              ) : (
-                <Copy className="h-3 w-3" />
-              )}
-            </Button>
-          ) : null}
-        </div>
-        <Textarea
-          readOnly
-          placeholder={outputPlaceholder}
-          value={outputValue}
-          className="min-h-[220px] flex-1 font-mono text-xs"
-        />
-      </div>
-    </div>
-  );
-}
-
-type ToolOutputColumnProps = {
+type CopyableOutputFieldProps = {
   label: string;
   value: string;
   placeholder?: string;
   labelClassName?: string;
   copyId?: string;
   copySuccessMessage?: string;
+  textareaClassName?: string;
 };
 
-export function ToolOutputColumn({
+function CopyableOutputField({
   label,
   value,
   placeholder,
   labelClassName,
   copyId = "default",
   copySuccessMessage = "Output copied to clipboard!",
-}: ToolOutputColumnProps) {
+  textareaClassName = "min-h-[160px]",
+}: CopyableOutputFieldProps) {
   const { copy, isCopied } = useClipboard();
 
   return (
@@ -164,8 +100,82 @@ export function ToolOutputColumn({
         readOnly
         placeholder={placeholder}
         value={value}
-        className="min-h-[160px] flex-1 font-mono text-xs"
+        className={cn("flex-1 font-mono text-xs", textareaClassName)}
       />
     </div>
+  );
+}
+
+type ToolIoColumnsProps = {
+  inputLabel?: string;
+  outputLabel?: string;
+  inputValue: string;
+  outputValue: string;
+  onInputChange: (value: string) => void;
+  inputPlaceholder?: string;
+  outputPlaceholder?: string;
+  copySuccessMessage?: string;
+};
+
+export function ToolIoColumns({
+  inputLabel = "Input String",
+  outputLabel = "Output",
+  inputValue,
+  outputValue,
+  onInputChange,
+  inputPlaceholder,
+  outputPlaceholder = "// Result will appear here",
+  copySuccessMessage = "Output copied to clipboard!",
+}: ToolIoColumnsProps) {
+  return (
+    <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="flex flex-col gap-2">
+        <FieldLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {inputLabel}
+        </FieldLabel>
+        <Textarea
+          placeholder={inputPlaceholder}
+          value={inputValue}
+          onChange={(e) => onInputChange(e.target.value)}
+          className="min-h-[220px] flex-1 font-mono text-xs"
+        />
+      </div>
+      <CopyableOutputField
+        label={outputLabel}
+        value={outputValue}
+        placeholder={outputPlaceholder}
+        copySuccessMessage={copySuccessMessage}
+        textareaClassName="min-h-[220px]"
+      />
+    </div>
+  );
+}
+
+type ToolOutputColumnProps = {
+  label: string;
+  value: string;
+  placeholder?: string;
+  labelClassName?: string;
+  copyId?: string;
+  copySuccessMessage?: string;
+};
+
+export function ToolOutputColumn({
+  label,
+  value,
+  placeholder,
+  labelClassName,
+  copyId = "default",
+  copySuccessMessage = "Output copied to clipboard!",
+}: ToolOutputColumnProps) {
+  return (
+    <CopyableOutputField
+      label={label}
+      value={value}
+      placeholder={placeholder}
+      labelClassName={labelClassName}
+      copyId={copyId}
+      copySuccessMessage={copySuccessMessage}
+    />
   );
 }
