@@ -1,6 +1,5 @@
 import "server-only";
 
-import { headers } from "next/headers";
 import { z } from "zod";
 import {
   getSiteUrl,
@@ -18,21 +17,5 @@ const serverEnvSchema = publicEnvSchema.extend({
 });
 
 export const env = serverEnvSchema.parse(process.env);
-
-/** Redirect origin for OAuth/email — uses the live request host on Vercel. */
-export async function getRequestSiteUrl(): Promise<string> {
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL;
-  }
-
-  const headersList = await headers();
-  const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
-  if (host && !host.startsWith("localhost")) {
-    const proto = headersList.get("x-forwarded-proto") ?? "https";
-    return `${proto}://${host}`;
-  }
-
-  return getSiteUrl();
-}
 
 export { getSiteUrl, getSupabasePublicEnv };
