@@ -4,6 +4,7 @@ export const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().startsWith("G-").optional(),
 });
 
 /** Supabase public vars safe to reference from edge middleware when present. */
@@ -22,4 +23,8 @@ export function getSiteUrl(fallback = "http://localhost:3000"): string {
     return url;
   }
   return fallback;
+}
+
+export function getGaMeasurementId(): string | null {
+  return process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? null;
 }

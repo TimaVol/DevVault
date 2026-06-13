@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { AppGoogleAnalytics } from "@/components/analytics/google-analytics";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -47,6 +48,7 @@ export default function RootLayout({
           <Toaster richColors closeButton position="bottom-right" />
         </ThemeProvider>
       </body>
+      <AppGoogleAnalytics />
     </html>
   );
 }
