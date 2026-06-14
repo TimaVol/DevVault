@@ -1,6 +1,7 @@
 "use client";
 
-import { ExternalLink, Github } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import { GithubIcon } from "@/components/icons/github-icon";
 import { CardEditDeleteActions } from "@/components/shared/card-edit-delete-actions";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -53,7 +54,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
               rel="noreferrer"
               className="flex items-center gap-1.5 text-label-mono text-muted-foreground transition-colors hover:text-primary"
             >
-              <Github className="size-4" />
+              <GithubIcon />
               <span className="hidden sm:inline">Repo</span>
             </a>
           ) : null}
