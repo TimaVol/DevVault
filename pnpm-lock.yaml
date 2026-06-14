@@ -27,11 +27,11 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       drizzle-orm:
-        specifier: 1.0.0-beta.22
-        version: 1.0.0-beta.22(postgres@3.4.9)(zod@4.4.3)
+        specifier: 1.0.0-rc.4-273829f
+        version: 1.0.0-rc.4-273829f(postgres@3.4.9)(zod@4.4.3)
       drizzle-zod:
         specifier: ^0.8.3
-        version: 0.8.3(drizzle-orm@1.0.0-beta.22(postgres@3.4.9)(zod@4.4.3))(zod@4.4.3)
+        version: 0.8.3(drizzle-orm@1.0.0-rc.4-273829f(postgres@3.4.9)(zod@4.4.3))(zod@4.4.3)
       jose:
         specifier: ^6.0.11
         version: 6.2.3
@@ -82,8 +82,8 @@ importers:
         specifier: ^16.1.4
         version: 16.6.1
       drizzle-kit:
-        specifier: 1.0.0-beta.22
-        version: 1.0.0-beta.22
+        specifier: 1.0.0-rc.4-273829f
+        version: 1.0.0-rc.4-273829f
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.7.0)
@@ -1597,17 +1597,16 @@ packages:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
-  drizzle-kit@1.0.0-beta.22:
-    resolution: {integrity: sha512-9HTZuQRljQKTgCx4UhiGn8KYYfHGk4+B/bRR1714W67kz0qgJvdrG527i8rQD8uUyET9UTGR1u8syySJD4znGw==}
+  drizzle-kit@1.0.0-rc.4-273829f:
+    resolution: {integrity: sha512-VaF0Rlvk+0OScBWUbvk91wqlBPffPFE4dmZX//NTyzoC15BCeqiq0zP3xWXnAucOV10j+1Rb0T+b4SInzOMfNg==}
     hasBin: true
 
-  drizzle-orm@1.0.0-beta.22:
-    resolution: {integrity: sha512-F+DZyVIvH0oVKa/w08Cle1xfoH+pc+htIXHG/frnMLG72aby9NYYr9oc+9XvghnoO4umxFItduz0OMmQJMnenw==}
+  drizzle-orm@1.0.0-rc.4-273829f:
+    resolution: {integrity: sha512-Ivv1KCkrSdgku9K3RGAqwlAqg3wLhv1NG40gOS3RROmL5tE/1p2+I7LJDHQiu8gYxQgTC068m7vRnCQCEAV7jw==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
-      '@effect/sql': ^0.48.5
-      '@effect/sql-pg': ^0.49.7
+      '@effect/sql-pg': '>=4.0.0-beta.58 || >=4.0.0'
       '@electric-sql/pglite': '>=0.2.0'
       '@libsql/client': '>=0.10.0'
       '@libsql/client-wasm': '>=0.10.0'
@@ -1631,8 +1630,8 @@ packages:
       arktype: '>=2.0.0'
       better-sqlite3: '>=9.3.0'
       bun-types: '*'
+      effect: '>=4.0.0-beta.58 || >=4.0.0'
       expo-sqlite: '>=14.0.0'
-      gel: '>=2'
       mssql: ^11.0.1
       mysql2: '>=2'
       pg: '>=8'
@@ -1646,8 +1645,6 @@ packages:
       '@aws-sdk/client-rds-data':
         optional: true
       '@cloudflare/workers-types':
-        optional: true
-      '@effect/sql':
         optional: true
       '@effect/sql-pg':
         optional: true
@@ -1697,9 +1694,9 @@ packages:
         optional: true
       bun-types:
         optional: true
-      expo-sqlite:
+      effect:
         optional: true
-      gel:
+      expo-sqlite:
         optional: true
       mssql:
         optional: true
@@ -4850,7 +4847,7 @@ snapshots:
 
   dotenv@17.4.2: {}
 
-  drizzle-kit@1.0.0-beta.22:
+  drizzle-kit@1.0.0-rc.4-273829f:
     dependencies:
       '@drizzle-team/brocli': 0.11.0
       '@js-temporal/polyfill': 0.5.1
@@ -4858,14 +4855,14 @@ snapshots:
       get-tsconfig: 4.14.0
       jiti: 2.7.0
 
-  drizzle-orm@1.0.0-beta.22(postgres@3.4.9)(zod@4.4.3):
+  drizzle-orm@1.0.0-rc.4-273829f(postgres@3.4.9)(zod@4.4.3):
     optionalDependencies:
       postgres: 3.4.9
       zod: 4.4.3
 
-  drizzle-zod@0.8.3(drizzle-orm@1.0.0-beta.22(postgres@3.4.9)(zod@4.4.3))(zod@4.4.3):
+  drizzle-zod@0.8.3(drizzle-orm@1.0.0-rc.4-273829f(postgres@3.4.9)(zod@4.4.3))(zod@4.4.3):
     dependencies:
-      drizzle-orm: 1.0.0-beta.22(postgres@3.4.9)(zod@4.4.3)
+      drizzle-orm: 1.0.0-rc.4-273829f(postgres@3.4.9)(zod@4.4.3)
       zod: 4.4.3
 
   dunder-proto@1.0.1:
