@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { AppGoogleAnalytics } from "@/components/analytics/google-analytics";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { getSiteUrl } from "@/lib/env/public";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,9 +22,31 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = getSiteUrl();
+const title = "DevVault";
+const description =
+  "DevVault centralizes your technical ecosystem. Manage snippets, orchestrate projects, and automate tasks in a high-density environment designed for power users.";
+
 export const metadata: Metadata = {
-  title: "DevVault",
-  description: "Your personal developer workspace",
+  title: {
+    default: title,
+    template: `%s | ${title}`,
+  },
+  description,
+  metadataBase: new URL(siteUrl),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteUrl,
+    siteName: title,
+    title,
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export default function RootLayout({
