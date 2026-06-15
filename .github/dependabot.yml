@@ -12,7 +12,7 @@ updates:
           - drizzle-zod
     ignore:
       - dependency-name: "drizzle-orm"
-        versions: ["1.0.0-beta*", "1.0.0-rc*"]
+        versions: ["beta", "rc"]
       - dependency-name: "drizzle-kit"
-        versions: ["1.0.0-beta*", "1.0.0-rc*"]
+        versions: ["beta", "rc"]
     open-pull-requests-limit: 5
