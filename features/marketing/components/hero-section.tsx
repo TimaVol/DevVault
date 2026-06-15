@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/utils/cn";
 import { ROUTES } from "@/shared/routes";
 import { hero } from "@/features/marketing/content";
+import { ViewDemoButton } from "@/features/marketing/components/view-demo-button";
 
 export function HeroSection() {
   return (
@@ -36,12 +37,7 @@ export function HeroSection() {
             Get Started
             <ArrowRight data-icon="inline-end" />
           </Link>
-          <Link
-            href="#features"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-          >
-            View Demo
-          </Link>
+          <ViewDemoButton />
         </div>
 
         <div className="relative mx-auto mt-12 max-w-5xl">

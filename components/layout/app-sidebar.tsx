@@ -48,22 +48,32 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SideNavFooter({ userEmail }: { userEmail: string | null }) {
-  if (!userEmail) return null;
+function SideNavFooter({
+  userEmail,
+  isDemoUser,
+}: {
+  userEmail: string | null;
+  isDemoUser: boolean;
+}) {
+  if (!userEmail && !isDemoUser) return null;
+
+  const displayOptions = { isDemo: isDemoUser };
 
   return (
     <div className="mt-auto space-y-1 border-t border-sidebar-border p-3">
       <div className="flex items-center gap-3 px-3 py-2">
         <Avatar className="size-8 rounded-md">
           <AvatarFallback className="rounded-md bg-muted text-xs">
-            {getUserInitial(userEmail)}
+            {getUserInitial(userEmail, displayOptions)}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium capitalize">
-            {getUserDisplayName(userEmail)}
+            {getUserDisplayName(userEmail, displayOptions)}
           </p>
-          <p className="truncate text-xs text-muted-foreground">{userEmail}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {isDemoUser ? "Anonymous demo session" : userEmail}
+          </p>
         </div>
       </div>
       <form action={signOut}>
@@ -96,10 +106,12 @@ function SideNavBrand() {
 
 function SideNavPanel({
   userEmail,
+  isDemoUser,
   onNavigate,
   className,
 }: {
   userEmail: string | null;
+  isDemoUser: boolean;
   onNavigate?: () => void;
   className?: string;
 }) {
@@ -112,12 +124,18 @@ function SideNavPanel({
     >
       <SideNavBrand />
       <NavLinks onNavigate={onNavigate} />
-      <SideNavFooter userEmail={userEmail} />
+      <SideNavFooter userEmail={userEmail} isDemoUser={isDemoUser} />
     </aside>
   );
 }
 
-export function AppSideNav({ userEmail }: { userEmail: string | null }) {
+export function AppSideNav({
+  userEmail,
+  isDemoUser = false,
+}: {
+  userEmail: string | null;
+  isDemoUser?: boolean;
+}) {
   const pathname = usePathname();
   const { mobileNavOpen, setMobileNavOpen } = useAppShellContext();
   const isFirstRoute = useRef(true);
@@ -133,7 +151,7 @@ export function AppSideNav({ userEmail }: { userEmail: string | null }) {
   return (
     <>
       <div className="hidden md:flex md:fixed md:inset-y-0 md:left-0 md:z-50">
-        <SideNavPanel userEmail={userEmail} />
+        <SideNavPanel userEmail={userEmail} isDemoUser={isDemoUser} />
       </div>
 
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
@@ -143,6 +161,7 @@ export function AppSideNav({ userEmail }: { userEmail: string | null }) {
           </SheetHeader>
           <SideNavPanel
             userEmail={userEmail}
+            isDemoUser={isDemoUser}
             onNavigate={() => setMobileNavOpen(false)}
             className="w-full border-r-0"
           />

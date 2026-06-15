@@ -190,6 +190,25 @@ export async function updatePassword(
   redirect(ROUTES.dashboard);
 }
 
+export async function enterDemo(
+  prevState: AuthState,
+  _formData: FormData,
+): Promise<AuthState> {
+  const limited = await rateLimitAuth("demo");
+  if (limited) return limited;
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInAnonymously();
+
+  if (error) {
+    console.error("[auth] signInAnonymously failed:", error.message);
+    return { error: "Unable to start demo. Please try again." };
+  }
+
+  revalidatePath("/", "layout");
+  redirect(ROUTES.dashboard);
+}
+
 export async function signInWithGoogle() {
   const limited = await rateLimitAuth("google");
   if (limited) {

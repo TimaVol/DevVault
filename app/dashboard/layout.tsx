@@ -11,8 +11,13 @@ export default async function DashboardLayoutWrapper({
     data: { user },
   } = await supabase.auth.getUser();
 
+  const isDemoUser = user?.is_anonymous === true;
+
   return (
-    <DashboardLayout userEmail={user?.email ?? null}>
+    <DashboardLayout
+      userEmail={isDemoUser ? null : (user?.email ?? null)}
+      isDemoUser={isDemoUser}
+    >
       {children}
     </DashboardLayout>
   );

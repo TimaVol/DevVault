@@ -10,9 +10,10 @@ import { getUserInitial } from "@/shared/user-display";
 
 type AppTopNavProps = {
   userEmail: string | null;
+  isDemoUser?: boolean;
 };
 
-export function AppTopNav({ userEmail }: AppTopNavProps) {
+export function AppTopNav({ userEmail, isDemoUser = false }: AppTopNavProps) {
   const pathname = usePathname();
   const { title, actions, setMobileNavOpen } = useAppShellContext();
   const displayTitle = title ?? getRouteTitle(pathname) ?? "DevVault";
@@ -34,10 +35,10 @@ export function AppTopNav({ userEmail }: AppTopNavProps) {
 
       <div className="flex shrink-0 items-center gap-3">
         {actions}
-        {userEmail ? (
+        {userEmail || isDemoUser ? (
           <Avatar className="size-8 rounded-full border border-border">
             <AvatarFallback className="rounded-full bg-muted text-xs">
-              {getUserInitial(userEmail)}
+              {getUserInitial(userEmail, { isDemo: isDemoUser })}
             </AvatarFallback>
           </Avatar>
         ) : null}
