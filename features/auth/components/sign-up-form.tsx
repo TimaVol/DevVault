@@ -15,20 +15,34 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { signInWithGoogle, signUp } from "@/features/auth/server/actions";
+import {
+  CaptchaFormFields,
+  useAuthCaptcha,
+} from "@/features/auth/components/captcha-form-fields";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { SubmitButton } from "./submit-button";
 import { ROUTES } from "@/shared/routes";
 
 export function SignUpForm() {
   const [state, formAction] = useActionState(signUp, null);
+  const {
+    captchaToken,
+    setCaptchaToken,
+    captchaKey,
+    resetCaptcha,
+    captchaReady,
+    captchaRequired,
+  } = useAuthCaptcha();
 
   useEffect(() => {
     if (state?.error) {
       toast.error(state.error);
+      resetCaptcha();
     } else if (state?.message) {
       toast.success(state.message);
+      resetCaptcha();
     }
-  }, [state]);
+  }, [state, resetCaptcha]);
 
   return (
     <>
@@ -69,7 +83,16 @@ export function SignUpForm() {
                 autoComplete="new-password"
               />
             </Field>
-            <SubmitButton label="Sign up" />
+            {captchaRequired ? (
+              <div className="overflow-hidden rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                <CaptchaFormFields
+                  captchaKey={captchaKey}
+                  captchaToken={captchaToken}
+                  onTokenChange={setCaptchaToken}
+                />
+              </div>
+            ) : null}
+            <SubmitButton label="Sign up" disabled={!captchaReady} />
           </FieldGroup>
         </form>
 

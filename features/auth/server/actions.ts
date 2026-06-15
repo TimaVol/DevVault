@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { ROUTES } from "@/shared/routes";
 import { env, getSiteUrl } from "@/lib/env";
 import { checkRateLimit, getClientIp } from "@/server/auth/rate-limit";
+import { resolveCaptchaOptions } from "@/server/auth/captcha";
 import {
   emailField,
   passwordField,
@@ -61,10 +62,14 @@ export async function signIn(
     return { error: result.error.issues[0].message };
   }
 
+  const captcha = resolveCaptchaOptions(formData);
+  if (!captcha.ok) return captcha.state;
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
     email: result.data.email,
     password: result.data.password,
+    options: captcha.options,
   });
 
   if (error) {
@@ -94,6 +99,9 @@ export async function signUp(
     return { error: result.error.issues[0].message };
   }
 
+  const captcha = resolveCaptchaOptions(formData);
+  if (!captcha.ok) return captcha.state;
+
   const supabase = await createClient();
   const siteUrl = getSiteUrl();
   const { error } = await supabase.auth.signUp({
@@ -101,6 +109,7 @@ export async function signUp(
     password: result.data.password,
     options: {
       emailRedirectTo: `${siteUrl}/auth/callback`,
+      ...captcha.options,
     },
   });
 
@@ -125,12 +134,16 @@ export async function requestPasswordReset(
     return { error: result.error.issues[0].message };
   }
 
+  const captcha = resolveCaptchaOptions(formData);
+  if (!captcha.ok) return captcha.state;
+
   const supabase = await createClient();
   const next = encodeURIComponent(ROUTES.resetPassword);
   const siteUrl = getSiteUrl();
 
   const { error } = await supabase.auth.resetPasswordForEmail(result.data.email, {
     redirectTo: `${siteUrl}/auth/callback?next=${next}`,
+    ...captcha.options,
   });
 
   if (error) {
@@ -192,13 +205,18 @@ export async function updatePassword(
 
 export async function enterDemo(
   prevState: AuthState,
-  _formData: FormData,
+  formData: FormData,
 ): Promise<AuthState> {
   const limited = await rateLimitAuth("demo");
   if (limited) return limited;
 
+  const captcha = resolveCaptchaOptions(formData);
+  if (!captcha.ok) return captcha.state;
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInAnonymously();
+  const { error } = await supabase.auth.signInAnonymously({
+    options: captcha.options,
+  });
 
   if (error) {
     console.error("[auth] signInAnonymously failed:", error.message);

@@ -5,6 +5,7 @@ export const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().startsWith("G-").optional(),
+  NEXT_PUBLIC_HCAPTCHA_SITE_KEY: z.string().min(1).optional(),
 });
 
 /** Supabase public vars safe to reference from edge middleware when present. */

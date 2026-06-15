@@ -9,6 +9,10 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { requestPasswordReset } from "@/features/auth/server/actions";
 import { useAuthCallbackError } from "@/features/auth/hooks/use-auth-callback-error";
+import {
+  CaptchaFormFields,
+  useAuthCaptcha,
+} from "@/features/auth/components/captcha-form-fields";
 import { SubmitButton } from "@/features/auth/components/submit-button";
 import { ROUTES } from "@/shared/routes";
 
@@ -18,16 +22,26 @@ export function ForgotPasswordForm({
   callbackError?: string;
 }) {
   const [state, formAction] = useActionState(requestPasswordReset, null);
+  const {
+    captchaToken,
+    setCaptchaToken,
+    captchaKey,
+    resetCaptcha,
+    captchaReady,
+    captchaRequired,
+  } = useAuthCaptcha();
 
   useAuthCallbackError(callbackError);
 
   useEffect(() => {
     if (state?.error) {
       toast.error(state.error);
+      resetCaptcha();
     } else if (state?.message) {
       toast.success(state.message);
+      resetCaptcha();
     }
-  }, [state]);
+  }, [state, resetCaptcha]);
 
   return (
     <>
@@ -54,7 +68,16 @@ export function ForgotPasswordForm({
                 autoComplete="email"
               />
             </Field>
-            <SubmitButton label="Send reset link" />
+            {captchaRequired ? (
+              <div className="overflow-hidden rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                <CaptchaFormFields
+                  captchaKey={captchaKey}
+                  captchaToken={captchaToken}
+                  onTokenChange={setCaptchaToken}
+                />
+              </div>
+            ) : null}
+            <SubmitButton label="Send reset link" disabled={!captchaReady} />
           </FieldGroup>
         </form>
 

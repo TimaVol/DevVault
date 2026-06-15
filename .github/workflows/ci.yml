@@ -65,5 +65,6 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+          NEXT_PUBLIC_HCAPTCHA_SITE_KEY: ci-placeholder
           DATABASE_URL: postgresql://user:pass@localhost:5432/postgres
           ADMIN_DATABASE_URL: postgresql://user:pass@localhost:5432/postgres

@@ -16,20 +16,33 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { signIn, signInWithGoogle } from "@/features/auth/server/actions";
 import { useAuthCallbackError } from "@/features/auth/hooks/use-auth-callback-error";
+import {
+  CaptchaFormFields,
+  useAuthCaptcha,
+} from "@/features/auth/components/captcha-form-fields";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { SubmitButton } from "./submit-button";
 import { ROUTES } from "@/shared/routes";
 
 export function SignInForm({ callbackError }: { callbackError?: string }) {
   const [state, formAction] = useActionState(signIn, null);
+  const {
+    captchaToken,
+    setCaptchaToken,
+    captchaKey,
+    resetCaptcha,
+    captchaReady,
+    captchaRequired,
+  } = useAuthCaptcha();
 
   useAuthCallbackError(callbackError);
 
   useEffect(() => {
     if (state?.error) {
       toast.error(state.error);
+      resetCaptcha();
     }
-  }, [state]);
+  }, [state, resetCaptcha]);
 
   return (
     <>
@@ -78,7 +91,16 @@ export function SignInForm({ callbackError }: { callbackError?: string }) {
                 autoComplete="current-password"
               />
             </Field>
-            <SubmitButton label="Sign in" />
+            {captchaRequired ? (
+              <div className="overflow-hidden rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+                <CaptchaFormFields
+                  captchaKey={captchaKey}
+                  captchaToken={captchaToken}
+                  onTokenChange={setCaptchaToken}
+                />
+              </div>
+            ) : null}
+            <SubmitButton label="Sign in" disabled={!captchaReady} />
           </FieldGroup>
         </form>
 
