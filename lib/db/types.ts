@@ -1,5 +1,5 @@
+import type { EmptyRelations } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import type * as schema from "./schema";
 import {
   checklists,
   notes,
@@ -19,7 +19,7 @@ export type SupabaseToken = {
   role?: string;
 };
 
-export type AppDatabase = PostgresJsDatabase<typeof schema>;
+export type AppDatabase = PostgresJsDatabase<EmptyRelations>;
 export type AppDbTransaction = Parameters<
   Parameters<AppDatabase["transaction"]>[0]
 >[0];
