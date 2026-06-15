@@ -68,3 +68,5 @@ jobs:
           NEXT_PUBLIC_HCAPTCHA_SITE_KEY: ci-placeholder
           DATABASE_URL: postgresql://user:pass@localhost:5432/postgres
           ADMIN_DATABASE_URL: postgresql://user:pass@localhost:5432/postgres
+          UPSTASH_REDIS_REST_URL: https://ci-placeholder.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: ci-placeholder

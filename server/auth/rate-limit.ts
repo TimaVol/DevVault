@@ -1,30 +1,26 @@
-type RateLimitEntry = {
-  count: number;
-  resetAt: number;
-};
+import "server-only";
 
-const store = new Map<string, RateLimitEntry>();
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+const redis = Redis.fromEnv();
+
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "15 m"),
+  prefix: "auth",
+  analytics: true,
+});
 
 /** Returns true when the request is allowed, false when rate-limited. */
-export function checkRateLimit(
-  key: string,
-  maxAttempts: number,
-  windowMs: number,
-): boolean {
-  const now = Date.now();
-  const entry = store.get(key);
-
-  if (!entry || now >= entry.resetAt) {
-    store.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-
-  if (entry.count >= maxAttempts) {
+export async function checkRateLimit(key: string): Promise<boolean> {
+  try {
+    const { success } = await ratelimit.limit(key);
+    return success;
+  } catch (error) {
+    console.error("[rate-limit] Redis check failed:", error);
     return false;
   }
-
-  entry.count += 1;
-  return true;
 }
 
 export function getClientIp(headers: Headers): string {

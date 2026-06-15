@@ -15,8 +15,6 @@ import {
   resetPasswordSchema,
 } from "@/server/validation/auth";
 
-const AUTH_RATE_LIMIT = { maxAttempts: 10, windowMs: 15 * 60 * 1000 };
-
 const credentialsSchema = z.object({
   email: emailField,
   password: passwordField,
@@ -34,11 +32,7 @@ export type AuthState = {
 async function rateLimitAuth(action: string): Promise<AuthState | null> {
   const headersList = await headers();
   const ip = getClientIp(headersList);
-  const allowed = checkRateLimit(
-    `${action}:${ip}`,
-    AUTH_RATE_LIMIT.maxAttempts,
-    AUTH_RATE_LIMIT.windowMs,
-  );
+  const allowed = await checkRateLimit(`${action}:${ip}`);
 
   if (!allowed) {
     return { error: "Too many attempts. Please try again later." };
