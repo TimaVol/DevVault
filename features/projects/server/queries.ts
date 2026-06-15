@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { createChildStringsListQuery } from "@/server/queries/aggregate-child-strings";
 import { paginatedList } from "@/server/queries/paginated-list";
 import {
