@@ -82,6 +82,9 @@ Most CRUD features (snippets, projects, checklists) use dialog forms with `useEn
 - Google OAuth (via Supabase)
 - Protected routes
 
+Auth mutations use Next.js `useActionState` and return `AuthState` (`{ error?: string; message?: string } | null`).
+For user-facing failures (rate limits, OAuth initiation errors), do not `throw` from `use server` actions—return `{ error }` so the client can toast consistently.
+
 ## Current Status
 This is an MVP project. Focus on quality and clean architecture.
 

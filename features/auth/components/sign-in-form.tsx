@@ -26,6 +26,10 @@ import { ROUTES } from "@/shared/routes";
 
 export function SignInForm({ callbackError }: { callbackError?: string }) {
   const [state, formAction] = useActionState(signIn, null);
+  const [googleState, googleFormAction] = useActionState(
+    signInWithGoogle,
+    null,
+  );
   const {
     captchaToken,
     setCaptchaToken,
@@ -43,6 +47,11 @@ export function SignInForm({ callbackError }: { callbackError?: string }) {
       resetCaptcha();
     }
   }, [state, resetCaptcha]);
+
+  useEffect(() => {
+    if (!googleState?.error) return;
+    toast.error(googleState.error);
+  }, [googleState]);
 
   return (
     <>
@@ -111,7 +120,7 @@ export function SignInForm({ callbackError }: { callbackError?: string }) {
           </span>
         </div>
 
-        <form action={signInWithGoogle}>
+        <form action={googleFormAction}>
           <Button type="submit" variant="secondary" className="w-full">
             <GoogleIcon data-icon="inline-start" />
             Continue with Google

@@ -25,6 +25,10 @@ import { ROUTES } from "@/shared/routes";
 
 export function SignUpForm() {
   const [state, formAction] = useActionState(signUp, null);
+  const [googleState, googleFormAction] = useActionState(
+    signInWithGoogle,
+    null,
+  );
   const {
     captchaToken,
     setCaptchaToken,
@@ -43,6 +47,11 @@ export function SignUpForm() {
       resetCaptcha();
     }
   }, [state, resetCaptcha]);
+
+  useEffect(() => {
+    if (!googleState?.error) return;
+    toast.error(googleState.error);
+  }, [googleState]);
 
   return (
     <>
@@ -103,7 +112,7 @@ export function SignUpForm() {
           </span>
         </div>
 
-        <form action={signInWithGoogle}>
+        <form action={googleFormAction}>
           <Button type="submit" variant="secondary" className="w-full">
             <GoogleIcon data-icon="inline-start" />
             Continue with Google

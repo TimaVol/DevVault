@@ -221,11 +221,12 @@ export async function enterDemo(
   redirect(ROUTES.dashboard);
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(
+  _prevState: AuthState,
+  _formData: FormData,
+): Promise<AuthState> {
   const limited = await rateLimitAuth("google");
-  if (limited) {
-    throw new Error(limited.error);
-  }
+  if (limited) return limited;
 
   const supabase = await createClient();
   const siteUrl = getSiteUrl();
@@ -238,7 +239,7 @@ export async function signInWithGoogle() {
   });
 
   if (error || !data.url) {
-    throw new Error("Failed to initiate Google sign-in");
+    return { error: "Failed to initiate Google sign-in" };
   }
 
   redirect(data.url);
